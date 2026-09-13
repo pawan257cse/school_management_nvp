@@ -106,11 +106,11 @@ router.post('/login', async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // Create JWT Token
+    // Create JWT Token (90-day persistent session for mobile & web)
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '90d' }
     );
 
     // Audit log

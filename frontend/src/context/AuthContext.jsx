@@ -24,13 +24,17 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const res = await getMeApi();
-          if (res.data.success) {
+          if (res.data && res.data.success) {
             setUser(res.data.user);
             localStorage.setItem('nvp_user', JSON.stringify(res.data.user));
           }
         } catch (err) {
-          console.error('Session validation failed:', err);
-          logout();
+          console.warn('Session verification note:', err.message);
+          // Only clear session if server explicitly rejected the token with 401
+          if (err.response && err.response.status === 401) {
+            logout();
+          }
+          // If it was a network glitch or Render cold-start, keep saved user active!
         }
       }
       setLoading(false);
