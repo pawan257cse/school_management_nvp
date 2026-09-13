@@ -102,18 +102,18 @@ export default function Login({ isAdminMode = false }) {
       <div className="w-full max-w-md z-10 my-auto">
         {/* Official School Header Branding */}
         <div className="text-center mb-6 sm:mb-8 space-y-2">
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center mb-2.5">
             <img 
               src="/logo.png" 
               alt="NVP English Medium School" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-full shadow-2xl border-2 border-indigo-500/30 p-1 bg-white/5 backdrop-blur-md hover:scale-105 transition-transform" 
+              className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-full shadow-2xl shadow-amber-500/20 ring-4 ring-amber-400/50 p-1 bg-white hover:scale-105 transition-transform" 
             />
           </div>
           <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-white tracking-tight">
             NVP ENGLISH MEDIUM SCHOOL
           </h1>
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-black uppercase tracking-wider">
-            <span>NIMBI JODHAN</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-wider">
+            <span>NIMBI JODHAN • DIDWANA • KUCHAMAN</span>
           </div>
 
           {/* Subtitle changes only when URL is /admin */}

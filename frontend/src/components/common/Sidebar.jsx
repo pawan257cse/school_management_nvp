@@ -210,11 +210,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
               <img 
                 src="/logo.png" 
                 alt="NVP English Medium School" 
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-contain p-0.5 bg-white/10 border border-indigo-400/40 shadow-md shrink-0" 
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-contain p-0.5 bg-white ring-2 ring-amber-400/80 shadow-md shrink-0" 
               />
               <div>
                 <h1 className="font-heading font-extrabold text-xs sm:text-sm tracking-wide text-white leading-tight">NVP ENGLISH MEDIUM</h1>
-                <p className="text-[9px] sm:text-[10px] text-indigo-400 font-bold tracking-wider uppercase">NIMBI JODHAN</p>
+                <p className="text-[9px] sm:text-[10px] text-amber-400 font-extrabold tracking-wider uppercase">NIMBI JODHAN</p>
               </div>
             </div>
             <button
