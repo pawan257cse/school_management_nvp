@@ -1,0 +1,20 @@
+{
+  "name": "nvp-school-app",
+  "version": "1.0.0",
+  "description": "NVP School Management Official Android Mobile App",
+  "private": true,
+  "scripts": {
+    "init:android": "npx cap add android",
+    "open:android": "npx cap open android",
+    "sync": "npx cap sync android",
+    "build:apk": "npx cap sync android && cd android && gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/status-bar": "^6.0.1",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/app": "^6.0.1"
+  }
+}

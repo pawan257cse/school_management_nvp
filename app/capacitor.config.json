@@ -1,0 +1,31 @@
+{
+  "appId": "com.nvpschool.app",
+  "appName": "NVP School",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://school-management-nvp.vercel.app",
+    "cleartext": true,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*.vercel.app",
+      "*.onrender.com",
+      "localhost",
+      "10.0.2.2"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#0f172a",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f172a"
+    }
+  }
+}
