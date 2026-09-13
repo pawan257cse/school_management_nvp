@@ -3,34 +3,22 @@ const User = require('../models/User');
 const Class = require('../models/Class');
 const Subject = require('../models/Subject');
 const Setting = require('../models/Setting');
-const Student = require('../models/Student');
-const Parent = require('../models/Parent');
-const Staff = require('../models/Staff');
-const QuestionPaper = require('../models/QuestionPaper');
-const Assignment = require('../models/Assignment');
-const StudyMaterial = require('../models/StudyMaterial');
-const Attendance = require('../models/Attendance');
-const Result = require('../models/Result');
-const Notification = require('../models/Notification');
-const Announcement = require('../models/Announcement');
-const TeacherAttendance = require('../models/TeacherAttendance');
-const Transport = require('../models/Transport');
 const Timetable = require('../models/Timetable');
-const { FeeStructure, FeePayment } = require('../models/Fee');
-const Promotion = require('../models/Promotion');
 
 /**
- * Clean System Initializer:
- * - Purges ALL dummy teachers, principals, students, and mock records.
- * - Leaves ONLY the Head Administrator account.
- * - Pre-configures standard classes (Nursery to 10) and subjects ready for real use.
+ * Clean & Robust System Initializer:
+ * - Ensures All Standard Subjects (English, Hindi, Math, Science, SST, Computer, Sanskrit, GK, EVS, Oral, etc.)
+ * - Ensures All 10 Real Classes (PG, LKG, UKG, 1, 2, 3, 4, 5, 6, 7)
+ * - Ensures All 10 Real Teachers + Principal + Head Administrator exist and have their
+ *   full assignedClasses, assignedSubjects, and Class Teacher assignments permanently configured.
+ * - Ensures all 10 Timetables are populated and linked with real Subject & Teacher IDs.
  */
 const seedInitialData = async () => {
   try {
     console.log('[System Init] Verifying core system configuration...');
 
-    // 2. Ensure Standard Subjects are available for syllabus assignment
-    const defaultSubjects = [
+    // 1. Standard Subjects
+    const standardSubjectsDef = [
       { name: 'English', code: 'ENG' },
       { name: 'Hindi', code: 'HIN' },
       { name: 'Mathematics', code: 'MATH' },
@@ -39,42 +27,54 @@ const seedInitialData = async () => {
       { name: 'Computer', code: 'CS' },
       { name: 'Sanskrit', code: 'SKT' },
       { name: 'General Knowledge', code: 'GK' },
-      { name: 'EVS', code: 'EVS' }
+      { name: 'EVS', code: 'EVS' },
+      { name: 'Oral', code: 'ORAL' },
+      { name: 'Games & Activity', code: 'GAME' },
+      { name: 'Diary & Rhymes', code: 'DIARY' },
+      { name: 'Activity / Self Study', code: 'ACT' },
+      { name: 'Hindi Grammar', code: 'HING' }
     ];
 
-    for (const sub of defaultSubjects) {
-      await Subject.findOneAndUpdate(
-        { name: sub.name },
-        { name: sub.name, code: sub.code, status: 'active' },
+    const subMap = {};
+    for (const s of standardSubjectsDef) {
+      const doc = await Subject.findOneAndUpdate(
+        { name: s.name },
+        { name: s.name, code: s.code, status: 'active' },
         { upsert: true, new: true }
       );
+      subMap[s.name.toUpperCase()] = doc;
+      subMap[s.code.toUpperCase()] = doc;
     }
 
-    const allSubjects = await Subject.find();
-    const subjectIds = allSubjects.map(s => s._id);
+    const allSubjectDocs = await Subject.find({ status: 'active' });
+    const allSubjectIds = allSubjectDocs.map(s => s._id);
 
-    // 3. Ensure Standard Classes exist (PG to 7) without overwriting class teacher or enrollment
+    // 2. Standard Classes (PG to 7)
     const standardClassNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
+    const classMap = {};
+
     for (const name of standardClassNames) {
-      await Class.findOneAndUpdate(
-        { name, section: 'A' },
-        {
-          $setOnInsert: {
-            name,
-            section: 'A',
-            subjects: subjectIds,
-            classTeacher: null,
-            studentCount: 0,
-            status: 'active'
-          }
-        },
-        { upsert: true, new: true }
-      );
+      let cls = await Class.findOne({ name, section: 'A' });
+      if (!cls) {
+        cls = await Class.create({
+          name,
+          section: 'A',
+          subjects: allSubjectIds,
+          studentCount: 0,
+          status: 'active'
+        });
+      } else {
+        cls.subjects = allSubjectIds;
+        cls.status = 'active';
+        await cls.save();
+      }
+      classMap[name] = cls;
     }
-    // Remove unused classes
+
+    // Delete obsolete classes
     await Class.deleteMany({ name: { $in: ['Nursery', '8', '9', '10'] } });
 
-    // 4. Ensure Default School Information
+    // 3. Ensure Default School Setting
     const existingSetting = await Setting.findOne();
     if (!existingSetting) {
       await Setting.create({
@@ -92,18 +92,16 @@ const seedInitialData = async () => {
       });
     }
 
-    // 5. Ensure Head Administrator account exists
-    const existingHead = await User.findOne({ role: 'HEAD' });
-    if (!existingHead) {
-      const initialHeadPass = process.env.HEAD_PASSWORD || 'Head@12345';
+    // 4. Head Administrator
+    let headDoc = await User.findOne({ role: 'HEAD' });
+    if (!headDoc) {
       const salt = await bcrypt.genSalt(10);
-      const headPasswordHash = await bcrypt.hash(initialHeadPass, salt);
-
-      await User.create({
+      const headPasswordHash = await bcrypt.hash('Head@12345', salt);
+      headDoc = await User.create({
         name: 'Head Administrator',
         email: (process.env.HEAD_EMAIL || 'head@school.local').toLowerCase().trim(),
         passwordHash: headPasswordHash,
-        generatedPassword: initialHeadPass,
+        generatedPassword: 'Head@12345',
         role: 'HEAD',
         mobile: '+91 98290 00000',
         employeeId: 'EMP-HEAD',
@@ -112,127 +110,212 @@ const seedInitialData = async () => {
         joiningDate: new Date(),
         status: 'active'
       });
-      console.log('[System Init] Head Administrator verified: head@school.local');
+      console.log('[System Init] Head Administrator created');
     }
 
-    // 6. Ensure Principal account exists
-    const existingPrincipal = await User.findOne({ role: 'PRINCIPAL' });
-    let principalUser = existingPrincipal;
-    if (!existingPrincipal) {
-      const princPass = 'Megha@123';
-      const salt = await bcrypt.genSalt(10);
-      const princHash = await bcrypt.hash(princPass, salt);
-      principalUser = await User.create({
+    // 5. Faculty / Teachers (10 Real Teachers + Principal)
+    const realFacultyDef = [
+      {
+        name: 'Priti',
+        email: 'priti@school.local',
+        empId: 'EMP-T001',
+        mobile: '+91 98000 00001',
+        qual: 'B.A., D.El.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'PG',
+        pass: 'Priti@123',
+        teachingClasses: ['PG'],
+        teachingSubjects: ['English', 'Hindi', 'Mathematics', 'General Knowledge', 'Oral']
+      },
+      {
+        name: 'Lalita',
+        email: 'lalita@school.local',
+        empId: 'EMP-T002',
+        mobile: '+91 98000 00002',
+        qual: 'B.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'LKG',
+        pass: 'Lalita@123',
+        teachingClasses: ['LKG'],
+        teachingSubjects: ['Hindi', 'Mathematics', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Priya',
+        email: 'priya@school.local',
+        empId: 'EMP-T003',
+        mobile: '+91 98000 00003',
+        qual: 'B.Sc., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'UKG',
+        pass: 'Priya@123',
+        teachingClasses: ['UKG'],
+        teachingSubjects: ['Mathematics', 'Hindi', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Sarita',
+        email: 'sarita@school.local',
+        empId: 'EMP-T004',
+        mobile: '+91 98000 00004',
+        qual: 'M.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '1',
+        pass: 'Sarita@123',
+        teachingClasses: ['1', '2', '3', '4', '5'],
+        teachingSubjects: ['EVS', 'Mathematics', 'Hindi', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Durga',
+        email: 'durga@school.local',
+        empId: 'EMP-T005',
+        mobile: '+91 98000 00005',
+        qual: 'M.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '2',
+        pass: 'Durga@123',
+        teachingClasses: ['1', '2', '3', '4', '6', '7'],
+        teachingSubjects: ['Hindi', 'General Knowledge']
+      },
+      {
+        name: 'Pawan',
+        email: 'pawan@school.local',
+        empId: 'EMP-T006',
+        mobile: '+91 98000 00006',
+        qual: 'B.Tech (CS), MCA',
+        gender: 'Male',
+        role: 'TEACHER',
+        ctClass: '3',
+        pass: 'Pawan@123',
+        teachingClasses: ['1', '2', '3', '4', '5', '6', '7'],
+        teachingSubjects: ['Computer', 'Science']
+      },
+      {
+        name: 'Vanshika',
+        email: 'vanshika@school.local',
+        empId: 'EMP-T007',
+        mobile: '+91 98000 00007',
+        qual: 'B.Sc., M.Sc.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '4',
+        pass: 'Vanshika@123',
+        teachingClasses: ['3', '4', '5', '6', '7'],
+        teachingSubjects: ['English', 'EVS', 'Social Science', 'General Knowledge']
+      },
+      {
+        name: 'Chanchal',
+        email: 'chanchal@school.local',
+        empId: 'EMP-T008',
+        mobile: '+91 98000 00008',
+        qual: 'M.Sc. (Math), B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '5',
+        pass: 'Chanchal@123',
+        teachingClasses: ['3', '4', '5', '6', '7'],
+        teachingSubjects: ['Mathematics', 'Sanskrit', 'General Knowledge']
+      },
+      {
+        name: 'Kavita',
+        email: 'kavita@school.local',
+        empId: 'EMP-T009',
+        mobile: '+91 98000 00009',
+        qual: 'M.A. (English), B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '6',
+        pass: 'Kavita@123',
+        teachingClasses: ['4', '6', '7'],
+        teachingSubjects: ['English', 'Science']
+      },
+      {
         name: 'Megha',
         email: 'pk621913@gmail.com',
-        passwordHash: princHash,
-        generatedPassword: princPass,
-        role: 'PRINCIPAL',
+        empId: 'EMP-P001',
         mobile: '+91 82270 31017',
-        employeeId: 'EMP-P001',
+        qual: 'M.A., B.Ed., M.Ed.',
         gender: 'Female',
-        qualification: 'M.A., B.Ed., M.Ed.',
-        status: 'active'
-      });
-      console.log('[System Init] Principal verified: pk621913@gmail.com');
-    }
-
-    // 7. Ensure All 10 Real Teachers exist and are linked as Class Teachers
-    const realTeachersDef = [
-      { name: 'Priti', email: 'priti@school.local', empId: 'EMP-T001', mobile: '+91 98000 00001', qual: 'B.A., D.El.Ed.', ctClass: 'PG', pass: 'Priti@123' },
-      { name: 'Lalita', email: 'lalita@school.local', empId: 'EMP-T002', mobile: '+91 98000 00002', qual: 'B.A., B.Ed.', ctClass: 'LKG', pass: 'Lalita@123' },
-      { name: 'Priya', email: 'priya@school.local', empId: 'EMP-T003', mobile: '+91 98000 00003', qual: 'B.Sc., B.Ed.', ctClass: 'UKG', pass: 'Priya@123' },
-      { name: 'Sarita', email: 'sarita@school.local', empId: 'EMP-T004', mobile: '+91 98000 00004', qual: 'M.A., B.Ed.', ctClass: '1', pass: 'Sarita@123' },
-      { name: 'Durga', email: 'durga@school.local', empId: 'EMP-T005', mobile: '+91 98000 00005', qual: 'M.A., B.Ed.', ctClass: '2', pass: 'Durga@123' },
-      { name: 'Pawan', email: 'pawan@school.local', empId: 'EMP-T006', mobile: '+91 98000 00006', qual: 'B.Tech (CS), MCA', ctClass: '3', pass: 'Pawan@123' },
-      { name: 'Vanshika', email: 'vanshika@school.local', empId: 'EMP-T007', mobile: '+91 98000 00007', qual: 'B.Sc., M.Sc.', ctClass: '4', pass: 'Vanshika@123' },
-      { name: 'Chanchal', email: 'chanchal@school.local', empId: 'EMP-T008', mobile: '+91 98000 00008', qual: 'M.Sc. (Math), B.Ed.', ctClass: '5', pass: 'Chanchal@123' },
-      { name: 'Kavita', email: 'kavita@school.local', empId: 'EMP-T009', mobile: '+91 98000 00009', qual: 'M.A. (English), B.Ed.', ctClass: '6', pass: 'Kavita@123' },
+        role: 'PRINCIPAL',
+        ctClass: '7',
+        pass: 'Megha@123',
+        teachingClasses: ['1', '2', '5', '6', '7'],
+        teachingSubjects: ['English', 'Hindi', 'Sanskrit']
+      }
     ];
 
     const teacherMap = {};
-    if (principalUser) {
-      teacherMap['MEGHA'] = principalUser;
-    }
 
-    for (const t of realTeachersDef) {
-      let tDoc = await User.findOne({
+    for (const f of realFacultyDef) {
+      let userDoc = await User.findOne({
         $or: [
-          { email: t.email.toLowerCase() },
-          { name: { $regex: new RegExp(`^${t.name}$`, 'i') } }
+          { email: f.email.toLowerCase() },
+          { name: { $regex: new RegExp(`^${f.name}$`, 'i') } }
         ]
       });
 
-      if (!tDoc) {
-        const salt = await bcrypt.genSalt(10);
-        const passHash = await bcrypt.hash(t.pass, salt);
-        tDoc = await User.create({
-          name: t.name,
-          email: t.email.toLowerCase(),
+      const salt = await bcrypt.genSalt(10);
+      const passHash = await bcrypt.hash(f.pass, salt);
+
+      const assignedSubjectIds = f.teachingSubjects
+        .map(subName => subMap[subName.toUpperCase()]?._id)
+        .filter(Boolean);
+
+      const assignedClassIds = f.teachingClasses
+        .map(cName => classMap[cName]?._id)
+        .filter(Boolean);
+
+      const ctClassDoc = classMap[f.ctClass];
+      if (ctClassDoc && !assignedClassIds.some(id => id.toString() === ctClassDoc._id.toString())) {
+        assignedClassIds.push(ctClassDoc._id);
+      }
+
+      if (!userDoc) {
+        userDoc = await User.create({
+          name: f.name,
+          email: f.email.toLowerCase(),
           passwordHash: passHash,
-          generatedPassword: t.pass,
-          role: 'TEACHER',
-          mobile: t.mobile,
-          employeeId: t.empId,
-          gender: 'Female',
-          qualification: t.qual,
-          status: 'active'
+          generatedPassword: f.pass,
+          role: f.role,
+          mobile: f.mobile,
+          employeeId: f.empId,
+          gender: f.gender,
+          qualification: f.qual,
+          status: 'active',
+          assignedClasses: assignedClassIds,
+          assignedSubjects: assignedSubjectIds,
+          attendanceClasses: ctClassDoc ? [ctClassDoc._id] : []
         });
+      } else {
+        userDoc.name = f.name;
+        userDoc.email = f.email.toLowerCase();
+        userDoc.role = f.role;
+        userDoc.mobile = f.mobile;
+        userDoc.employeeId = f.empId;
+        userDoc.gender = f.gender;
+        userDoc.qualification = f.qual;
+        userDoc.status = 'active';
+        userDoc.assignedClasses = assignedClassIds;
+        userDoc.assignedSubjects = assignedSubjectIds;
+        userDoc.attendanceClasses = ctClassDoc ? [ctClassDoc._id] : [];
+        if (!userDoc.generatedPassword) userDoc.generatedPassword = f.pass;
+        await userDoc.save();
       }
-      teacherMap[t.name.toUpperCase()] = tDoc;
 
-      // Link as Class Teacher in Class model
-      const targetClass = await Class.findOne({ name: t.ctClass });
-      if (targetClass) {
-        targetClass.classTeacher = tDoc._id;
-        targetClass.attendanceTeacher = tDoc._id;
-        await targetClass.save();
+      teacherMap[f.name.toUpperCase()] = userDoc;
 
-        // Update assignedClasses on Teacher
-        await User.findByIdAndUpdate(tDoc._id, {
-          $addToSet: { assignedClasses: targetClass._id }
-        });
+      // Link Class Teacher in Class document
+      if (ctClassDoc) {
+        ctClassDoc.classTeacher = userDoc._id;
+        ctClassDoc.attendanceTeacher = userDoc._id;
+        await ctClassDoc.save();
       }
     }
 
-    // Link Principal (Megha) as Class 7 Class Teacher
-    const class7 = await Class.findOne({ name: '7' });
-    if (class7 && principalUser) {
-      class7.classTeacher = principalUser._id;
-      class7.attendanceTeacher = principalUser._id;
-      await class7.save();
-    }
-
-    // 8. Ensure Class Timetables are Seeded for PG to 7
-    const classes = await Class.find({ status: 'active' });
-    const classMap = {};
-    classes.forEach(c => { classMap[c.name] = c; });
-
-    const subjects = await Subject.find({ status: 'active' });
-    const subjectMap = {};
-    subjects.forEach(s => { subjectMap[s.name.toUpperCase()] = s; });
-
-    const findSubjectDoc = (name) => {
-      if (!name) return null;
-      const upper = name.toUpperCase();
-      if (subjectMap[upper]) return subjectMap[upper];
-      if (upper.includes('MATH')) return subjectMap['MATHEMATICS'] || subjectMap['MATH'];
-      if (upper.includes('HIN')) return subjectMap['HINDI'] || subjectMap['HIN'];
-      if (upper.includes('ENG')) return subjectMap['ENGLISH'] || subjectMap['ENG'];
-      if (upper.includes('EVS')) return subjectMap['EVS'];
-      if (upper.includes('S.S.T') || upper.includes('SST')) return subjectMap['SOCIAL SCIENCE'] || subjectMap['SST'];
-      if (upper.includes('SCI')) return subjectMap['SCIENCE'] || subjectMap['SCI'];
-      if (upper.includes('COM')) return subjectMap['COMPUTER'] || subjectMap['CS'];
-      if (upper.includes('SAN') || upper.includes('SANSKRIT')) return subjectMap['SANSKRIT'] || subjectMap['SKT'];
-      if (upper.includes('GK') || upper.includes('G.K')) return subjectMap['GENERAL KNOWLEDGE'] || subjectMap['GK'];
-      return subjectMap['GENERAL KNOWLEDGE'] || subjects[0];
-    };
-
-    const findTeacherDoc = (name) => {
-      if (!name) return null;
-      return teacherMap[name.toUpperCase()] || teacherMap['PAWAN'] || principalUser;
-    };
-
+    // 6. Timetable Setup (PG to 7)
     const periodTimes = [
       { periodNumber: 1, periodTitle: 'Period 1', startTime: '08:00 AM', endTime: '08:45 AM' },
       { periodNumber: 2, periodTitle: 'Period 2', startTime: '08:45 AM', endTime: '09:30 AM' },
@@ -377,8 +460,8 @@ const seedInitialData = async () => {
           };
         }
 
-        const subDoc = findSubjectDoc(item.sub);
-        const teachDoc = findTeacherDoc(item.teacher);
+        const subDoc = subMap[item.sub.toUpperCase()] || subMap['GK'];
+        const teachDoc = teacherMap[item.teacher.toUpperCase()];
 
         return {
           periodNumber: pTime.periodNumber,
@@ -412,7 +495,7 @@ const seedInitialData = async () => {
       );
     }
 
-    console.log('[System Init] Core faculty & timetable verification completed successfully.');
+    console.log('[System Init] Core faculty & timetable verified successfully.');
   } catch (error) {
     console.error('[System Init Error]:', error.message);
   }

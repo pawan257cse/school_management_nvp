@@ -121,7 +121,7 @@ router.post('/login', async (req, res) => {
     let classTeacherOf = [];
     let allAssignedClasses = user.assignedClasses || [];
 
-    if (user.role === 'TEACHER') {
+    if (user.role === 'TEACHER' || user.role === 'PRINCIPAL') {
       const classesWhereCT = await Class.find({
         status: 'active',
         $or: [
@@ -195,7 +195,7 @@ router.get('/me', protect, async (req, res) => {
     let classTeacherOf = [];
     let allAssignedClasses = user.assignedClasses || [];
 
-    if (user.role === 'TEACHER') {
+    if (user.role === 'TEACHER' || user.role === 'PRINCIPAL') {
       const classesWhereCT = await Class.find({
         status: 'active',
         $or: [
