@@ -128,11 +128,12 @@ router.post('/change-password', protect, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(newPassword, salt);
     user.mustChangePassword = false;
+    user.generatedPassword = ''; // Clear admin-visible temp password — user now owns their password
     await user.save();
 
     await logActivity(req, 'CHANGE_PASSWORD', 'User', user._id);
 
-    res.json({ success: true, message: 'Password changed successfully.' });
+    res.json({ success: true, message: 'Password changed successfully. You can now use your new password to log in.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

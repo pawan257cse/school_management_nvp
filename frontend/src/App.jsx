@@ -32,6 +32,7 @@ import NoticeBoard from './pages/head/NoticeBoard';
 import FacultyAttendance from './pages/head/TeacherAttendance';
 import TransportManagement from './pages/head/TransportManagement';
 import HeadAssignmentManagement from './pages/head/HeadAssignmentManagement';
+import CredentialsManagement from './pages/head/CredentialsManagement';
 
 // Timetable & Student Portal Pages
 import TimetableManagement from './pages/principal/TimetableManagement';
@@ -147,6 +148,7 @@ export default function App() {
           <Route path="/head/login-history" element={<ProtectedLayout allowedRoles={['HEAD']}><LoginHistory /></ProtectedLayout>} />
           <Route path="/head/settings" element={<ProtectedLayout allowedRoles={['HEAD']}><SystemSettings /></ProtectedLayout>} />
           <Route path="/head/assignments" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><HeadAssignmentManagement /></ProtectedLayout>} />
+          <Route path="/head/credentials" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CredentialsManagement /></ProtectedLayout>} />
 
           {/* PRINCIPAL Routes */}
           <Route path="/principal-dashboard" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><PrincipalDashboard /></ProtectedLayout>} />

@@ -48,6 +48,12 @@ export const updateUserApi = (id, userData) => API.put(`/users/${id}`, userData)
 export const resetUserPasswordApi = (id, newPassword) => API.put(`/users/${id}/reset-password`, { newPassword });
 export const updateUserPermissionsApi = (id, permissions) => API.put(`/users/${id}/permissions`, { permissions });
 export const deleteUserApi = (id) => API.delete(`/users/${id}`);
+// Credentials panel — shows email + generated passwords (HEAD/PRINCIPAL only)
+export const getCredentialsApi = (params) => API.get('/users/credentials', { params });
+// Bulk create student portal accounts for all students in one click
+export const bulkCreateStudentsApi = () => API.post('/users/bulk-create-students');
+// Reset password (can auto-generate if no password provided)
+export const autoResetPasswordApi = (id) => API.put(`/users/${id}/reset-password`, {});
 
 // Academic Services
 export const getClassesApi = () => API.get('/classes');
