@@ -65,14 +65,15 @@ export default function TeacherTimetable() {
 
   const teacherSchedule = data?.teacherSchedule || [];
 
-  // Selected Day Periods
+  // Selected Day Periods (Exclude Lunch Breaks from Teaching Classes)
   const selectedDayData = teacherSchedule.find(s => s.day === selectedDay) || { day: selectedDay, periods: [] };
-  const selectedPeriods = selectedDayData.periods || [];
+  const rawPeriods = selectedDayData.periods || [];
+  const selectedPeriods = rawPeriods.filter(p => !p.isBreak && p.subjectName !== 'Lunch Break');
 
-  // Metrics across entire week
-  const totalWeeklyPeriods = teacherSchedule.reduce((acc, d) => acc + (d.periods?.length || 0), 0);
+  // Metrics across entire week (Exclude Lunch Breaks)
+  const totalWeeklyPeriods = teacherSchedule.reduce((acc, d) => acc + (d.periods?.filter(p => !p.isBreak && p.subjectName !== 'Lunch Break').length || 0), 0);
   const distinctClasses = Array.from(new Set(
-    teacherSchedule.flatMap(d => (d.periods || []).map(p => p.className)).filter(Boolean)
+    teacherSchedule.flatMap(d => (d.periods || []).filter(p => !p.isBreak && p.subjectName !== 'Lunch Break').map(p => p.className)).filter(Boolean)
   ));
 
   if (loading && !data) {
@@ -288,7 +289,7 @@ export default function TeacherTimetable() {
               const isSelected = selectedDay === day;
               const isToday = !isSunday && currentDayName === day;
               const dayData = teacherSchedule.find(s => s.day === day);
-              const count = dayData?.periods?.length || 0;
+              const count = (dayData?.periods || []).filter(p => !p.isBreak && p.subjectName !== 'Lunch Break').length;
 
               return (
                 <button
@@ -324,14 +325,14 @@ export default function TeacherTimetable() {
               <div>
                 <h2 className="font-heading font-black text-slate-900 text-sm flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-blue-600" />
-                  {selectedDay}'s Routine ({selectedPeriods.length} Classes)
+                  {selectedDay}'s Routine ({selectedPeriods.length} {selectedPeriods.length === 1 ? 'Class' : 'Classes'})
                 </h2>
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   List of periods, timings, assigned classes, and subjects for {selectedDay}.
                 </p>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-50 text-blue-800 rounded-lg border border-blue-200 self-start sm:self-auto">
-                {selectedPeriods.length} Periods Scheduled
+                {selectedPeriods.length} {selectedPeriods.length === 1 ? 'Period' : 'Periods'} Scheduled
               </span>
             </div>
 

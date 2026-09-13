@@ -114,7 +114,7 @@ router.get('/my-timetable', protect, async (req, res) => {
           const dayData = tt.schedule.find(s => s.day === dayName);
           if (dayData && Array.isArray(dayData.periods)) {
             dayData.periods.forEach(p => {
-              if (p.teacher && p.teacher.toString() === user._id.toString()) {
+              if (p.teacher && p.teacher.toString() === user._id.toString() && !p.isBreak && p.subjectName !== 'Lunch Break') {
                 dayPeriods.push({
                   classId: tt.class?._id,
                   className: tt.className,

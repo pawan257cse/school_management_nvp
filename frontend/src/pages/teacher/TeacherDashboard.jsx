@@ -80,7 +80,7 @@ export default function TeacherDashboard() {
             )}
           </div>
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl tracking-tight">
-            Good Morning, {user?.name}!
+            Hello, {user?.name}!
           </h2>
           <p className="text-blue-200 text-xs max-w-xl">
             You are currently assigned to <strong className="text-white">{assignedClasses.length} Classes</strong> and <strong className="text-white">{assignedSubjects.length} Subjects</strong>.
