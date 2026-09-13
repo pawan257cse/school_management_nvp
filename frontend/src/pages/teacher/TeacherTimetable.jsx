@@ -11,7 +11,7 @@ import {
   List
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getMyTimetableApi } from '../../services/api';
+import { getMyTimetableApi, getHolidaysApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -27,6 +27,44 @@ const TIME_SLOTS = [
   { periodNumber: 8, displayPeriodNumber: 7, title: 'Period 7', time: '11:50 - 12:25 PM' },
   { periodNumber: 9, displayPeriodNumber: 8, title: 'Period 8', time: '12:25 - 01:00 PM' },
 ];
+
+const getDayDateString = (dayName) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const targetIdx = days.indexOf(dayName);
+  if (targetIdx === -1) return null;
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istDate = new Date(now.getTime() + istOffset);
+  const currentIdx = istDate.getDay();
+  const diff = targetIdx - currentIdx;
+  const targetDate = new Date(istDate.getTime() + diff * 24 * 60 * 60 * 1000);
+  return targetDate.toISOString().split('T')[0];
+};
+
+const findHolidayForDay = (dayName, holidays = [], todayHoliday = null) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istDate = new Date(now.getTime() + istOffset);
+  const todayName = days[istDate.getDay()];
+  const todayStr = istDate.toISOString().split('T')[0];
+
+  if (dayName === todayName && todayHoliday) {
+    return todayHoliday;
+  }
+
+  const targetDateStr = getDayDateString(dayName);
+  if (!targetDateStr || !Array.isArray(holidays)) return null;
+
+  return holidays.find(h => {
+    if (!h.date) return false;
+    const hDate = typeof h.date === 'string' ? h.date.split('T')[0] : '';
+    const hEnd = h.endDate ? (typeof h.endDate === 'string' ? h.endDate.split('T')[0] : '') : null;
+    if (hDate === targetDateStr) return true;
+    if (hEnd && targetDateStr >= hDate && targetDateStr <= hEnd) return true;
+    return false;
+  }) || null;
+};
 
 export default function TeacherTimetable() {
   const { user } = useAuth();
@@ -47,9 +85,19 @@ export default function TeacherTimetable() {
     else setLoading(true);
 
     try {
-      const res = await getMyTimetableApi();
+      const [res, holRes] = await Promise.all([
+        getMyTimetableApi(),
+        getHolidaysApi().catch(() => ({ data: { holidays: [] } }))
+      ]);
+
       if (res.data?.success) {
-        setData(res.data);
+        const holList = holRes?.data?.holidays || res.data.holidays || [];
+        const todayHoliday = holRes?.data?.todayHoliday || res.data.todayHoliday || null;
+        setData({
+          ...res.data,
+          holidays: holList,
+          todayHoliday: todayHoliday
+        });
       }
     } catch (err) {
       console.error('Error fetching teacher timetable:', err);
@@ -234,6 +282,43 @@ export default function TeacherTimetable() {
                   const dayData = teacherSchedule.find(s => s.day === day);
                   const periods = dayData?.periods || [];
                   const isToday = !isSunday && currentDayName === day;
+                  const dayHoliday = findHolidayForDay(day, data?.holidays, data?.todayHoliday);
+
+                  if (dayHoliday) {
+                    return (
+                      <tr 
+                        key={day} 
+                        className={`bg-amber-50/80 border-b border-amber-200 transition-colors ${
+                          isToday ? 'ring-2 ring-amber-400' : ''
+                        }`}
+                      >
+                        {/* Day Column */}
+                        <td className="py-2.5 px-2.5 font-heading font-black text-amber-950 text-[11px] bg-amber-100/90 border-r border-amber-200 sticky left-0 z-10">
+                          <div className="flex items-center gap-1">
+                            <span>{day}</span>
+                            {isToday && (
+                              <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Full Width Holiday Notice */}
+                        <td colSpan={TIME_SLOTS.length} className="py-2.5 px-4 text-center border-l border-amber-200">
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 font-black text-[10px] uppercase">
+                              🎉 School Holiday
+                            </span>
+                            <span className="font-extrabold text-amber-950 text-xs">
+                              {dayHoliday.title}
+                            </span>
+                            <span className="text-amber-800 text-[11px] font-semibold">
+                              — Campus Closed (No Regular Classes)
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
 
                   return (
                     <tr 
@@ -309,6 +394,7 @@ export default function TeacherTimetable() {
               const isToday = !isSunday && currentDayName === day;
               const dayData = teacherSchedule.find(s => s.day === day);
               const count = (dayData?.periods || []).filter(p => !p.isBreak && p.subjectName !== 'Lunch Break').length;
+              const dayHoliday = findHolidayForDay(day, data?.holidays, data?.todayHoliday);
 
               return (
                 <button
@@ -316,16 +402,24 @@ export default function TeacherTimetable() {
                   onClick={() => setSelectedDay(day)}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? (dayHoliday ? 'bg-amber-600 text-white shadow-xs' : 'bg-blue-600 text-white shadow-xs')
+                      : (dayHoliday ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900')
                   }`}
                 >
                   <span>{day}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {count} {count === 1 ? 'Class' : 'Classes'}
-                  </span>
+                  {dayHoliday ? (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                      isSelected ? 'bg-white text-amber-900' : 'bg-amber-200 text-amber-950'
+                    }`}>
+                      🎉 Holiday
+                    </span>
+                  ) : (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {count} {count === 1 ? 'Class' : 'Classes'}
+                    </span>
+                  )}
                   {isToday && (
                     <span className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
                       isSelected ? 'bg-emerald-400 text-emerald-950' : 'bg-emerald-100 text-emerald-800'
@@ -340,76 +434,111 @@ export default function TeacherTimetable() {
 
           {/* Day Schedule List */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-              <div>
-                <h2 className="font-heading font-black text-slate-900 text-sm flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  {selectedDay}'s Routine ({selectedPeriods.length} {selectedPeriods.length === 1 ? 'Class' : 'Classes'})
-                </h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  List of periods, timings, assigned classes, and subjects for {selectedDay}.
-                </p>
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-50 text-blue-800 rounded-lg border border-blue-200 self-start sm:self-auto">
-                {selectedPeriods.length} {selectedPeriods.length === 1 ? 'Period' : 'Periods'} Scheduled
-              </span>
-            </div>
+            {(() => {
+              const selectedDayHoliday = findHolidayForDay(selectedDay, data?.holidays, data?.todayHoliday);
 
-            {selectedPeriods.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 text-xs font-medium">
-                <Calendar className="w-8 h-8 mx-auto mb-1.5 text-slate-300" />
-                No classes scheduled for you on {selectedDay}.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {selectedPeriods.map((p, idx) => {
-                  const pNum = Number(p.rawPeriodNumber || p.periodNumber) || 1;
-                  const displayNum = pNum > 5 ? pNum - 1 : pNum;
-                  const clampedNum = displayNum > 8 ? 8 : displayNum;
-
-                  return (
-                    <div
-                      key={idx}
-                      className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white shadow-2xs"
-                    >
-                      {/* Left: Period Badge & Time */}
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-2xs">
-                          P{clampedNum}
-                        </span>
-                        <div>
-                          <span className="font-mono font-extrabold text-xs text-slate-900 block">
-                            {p.startTime} - {p.endTime}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Period {clampedNum}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Middle: Subject Name */}
-                      <div className="flex-1 sm:px-3">
-                        <strong className="text-xs sm:text-sm font-black text-slate-900 block">
-                          {p.subjectName || 'Academic Subject'}
-                        </strong>
-                      </div>
-
-                      {/* Right: Class, Section & Room */}
-                      <div className="flex items-center gap-1.5 flex-wrap sm:justify-end shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-black text-[10px]">
-                          {p.className} ({p.section || 'A'})
-                        </span>
-
-                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400" />
-                          <span>{p.roomNo || `Class ${p.className}`}</span>
-                        </span>
-                      </div>
+              if (selectedDayHoliday) {
+                return (
+                  <div className="p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/60 border-2 border-amber-300 text-center space-y-4 shadow-sm">
+                    <div className="w-16 h-16 rounded-2xl bg-amber-500 text-white flex items-center justify-center mx-auto shadow-md text-3xl">
+                      🎉
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div className="space-y-1">
+                      <span className="px-3 py-1 rounded-full bg-amber-200 text-amber-950 font-black text-xs uppercase tracking-wider">
+                        Official School Holiday ({selectedDayHoliday.type || 'Festival'})
+                      </span>
+                      <h3 className="font-heading font-black text-xl sm:text-2xl text-slate-900 mt-2">
+                        {selectedDayHoliday.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm font-semibold text-amber-900 max-w-lg mx-auto">
+                        {selectedDayHoliday.description || 'School campus is officially closed on account of this declared holiday. No teaching periods or classes will be held.'}
+                      </p>
+                    </div>
+                    <div className="pt-2">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-amber-950 font-extrabold text-xs border border-amber-300 shadow-2xs">
+                        <Calendar className="w-4 h-4 text-amber-600" />
+                        Campus Closed • Regular Classes Suspended
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                    <div>
+                      <h2 className="font-heading font-black text-slate-900 text-sm flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-blue-600" />
+                        {selectedDay}'s Routine ({selectedPeriods.length} {selectedPeriods.length === 1 ? 'Class' : 'Classes'})
+                      </h2>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        List of periods, timings, assigned classes, and subjects for {selectedDay}.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-50 text-blue-800 rounded-lg border border-blue-200 self-start sm:self-auto">
+                      {selectedPeriods.length} {selectedPeriods.length === 1 ? 'Period' : 'Periods'} Scheduled
+                    </span>
+                  </div>
+
+                  {selectedPeriods.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-xs font-medium">
+                      <Calendar className="w-8 h-8 mx-auto mb-1.5 text-slate-300" />
+                      No classes scheduled for you on {selectedDay}.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedPeriods.map((p, idx) => {
+                        const pNum = Number(p.rawPeriodNumber || p.periodNumber) || 1;
+                        const displayNum = pNum > 5 ? pNum - 1 : pNum;
+                        const clampedNum = displayNum > 8 ? 8 : displayNum;
+
+                        return (
+                          <div
+                            key={idx}
+                            className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white shadow-2xs"
+                          >
+                            {/* Left: Period Badge & Time */}
+                            <div className="flex items-center gap-2.5 shrink-0">
+                              <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-2xs">
+                                P{clampedNum}
+                              </span>
+                              <div>
+                                <span className="font-mono font-extrabold text-xs text-slate-900 block">
+                                  {p.startTime} - {p.endTime}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  Period {clampedNum}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Middle: Subject Name */}
+                            <div className="flex-1 sm:px-3">
+                              <strong className="text-xs sm:text-sm font-black text-slate-900 block">
+                                {p.subjectName || 'Academic Subject'}
+                              </strong>
+                            </div>
+
+                            {/* Right: Class, Section & Room */}
+                            <div className="flex items-center gap-1.5 flex-wrap sm:justify-end shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                              <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-black text-[10px]">
+                                {p.className} ({p.section || 'A'})
+                              </span>
+
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-slate-400" />
+                                <span>{p.roomNo || `Class ${p.className}`}</span>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -209,38 +209,53 @@ export default function StudentDashboard() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
-            {liveSchedule.todayPeriods.map((p) => {
-              const isLunch = p.isBreak || p.subjectName === 'Lunch Break';
-              const displayNum = isLunch ? null : (p.periodNumber > 5 ? p.periodNumber - 1 : p.periodNumber);
-              const badgeLabel = isLunch ? 'Lunch Break' : `P${displayNum}`;
+          {liveSchedule.isHoliday ? (
+            <div className="p-6 rounded-2xl bg-amber-50/70 border border-amber-200 text-center space-y-1.5">
+              <p className="text-xs font-extrabold text-amber-950">
+                🎉 No classes scheduled today due to {liveSchedule.todayHoliday?.title || (liveSchedule.isSunday ? 'Sunday Holiday' : 'declared school holiday')}.
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Regular timetable and scheduled classes will resume on the next working day.
+              </p>
+            </div>
+          ) : liveSchedule.todayPeriods.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+              No periods scheduled for today.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+              {liveSchedule.todayPeriods.map((p) => {
+                const isLunch = p.isBreak || p.subjectName === 'Lunch Break';
+                const displayNum = isLunch ? null : (p.periodNumber > 5 ? p.periodNumber - 1 : p.periodNumber);
+                const badgeLabel = isLunch ? 'Lunch Break' : `P${displayNum}`;
 
-              return (
-                <div
-                  key={p._id || p.periodNumber}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    isLunch
-                      ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                      : 'bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-white text-slate-800'
-                  }`}
-                >
-                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase block">
-                    {badgeLabel}
-                  </span>
-                  <div className="text-xs font-black text-slate-900 mt-1 truncate" title={p.subjectName}>
-                    {p.subjectName}
+                return (
+                  <div
+                    key={p._id || p.periodNumber}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      isLunch
+                        ? 'bg-amber-50/70 border-amber-200 text-amber-900'
+                        : 'bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-white text-slate-800'
+                    }`}
+                  >
+                    <span className="text-[10px] font-mono font-bold text-slate-500 uppercase block">
+                      {badgeLabel}
+                    </span>
+                    <div className="text-xs font-black text-slate-900 mt-1 truncate" title={p.subjectName}>
+                      {p.subjectName}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      {p.startTime}
+                    </div>
+                    <div className="text-[10px] font-bold text-indigo-700 mt-1 flex items-center justify-center gap-0.5 truncate">
+                      <MapPin className="w-2.5 h-2.5" />
+                      <span>{p.roomNo}</span>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                    {p.startTime}
-                  </div>
-                  <div className="text-[10px] font-bold text-indigo-700 mt-1 flex items-center justify-center gap-0.5 truncate">
-                    <MapPin className="w-2.5 h-2.5" />
-                    <span>{p.roomNo}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
