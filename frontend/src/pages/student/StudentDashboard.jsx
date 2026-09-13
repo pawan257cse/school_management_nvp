@@ -192,7 +192,10 @@ export default function StudentDashboard() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
             {liveSchedule.todayPeriods.map((p) => {
-              const isLunch = p.isBreak;
+              const isLunch = p.isBreak || p.subjectName === 'Lunch Break';
+              const displayNum = isLunch ? null : (p.periodNumber > 5 ? p.periodNumber - 1 : p.periodNumber);
+              const badgeLabel = isLunch ? 'Lunch Break' : `P${displayNum}`;
+
               return (
                 <div
                   key={p._id || p.periodNumber}
@@ -203,7 +206,7 @@ export default function StudentDashboard() {
                   }`}
                 >
                   <span className="text-[10px] font-mono font-bold text-slate-500 uppercase block">
-                    {p.periodTitle || `P${p.periodNumber}`}
+                    {badgeLabel}
                   </span>
                   <div className="text-xs font-black text-slate-900 mt-1 truncate" title={p.subjectName}>
                     {p.subjectName}

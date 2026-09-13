@@ -17,15 +17,15 @@ import { useAuth } from '../../context/AuthContext';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const TIME_SLOTS = [
-  { periodNumber: 1, title: 'Period 1', time: '08:00 - 08:40 AM' },
-  { periodNumber: 2, title: 'Period 2', time: '08:40 - 09:10 AM' },
-  { periodNumber: 3, title: 'Period 3', time: '09:10 - 09:45 AM' },
-  { periodNumber: 4, title: 'Period 4', time: '09:45 - 10:20 AM' },
-  { periodNumber: 5, title: 'Lunch Break', time: '10:20 - 10:40 AM', isBreak: true },
-  { periodNumber: 6, title: 'Period 5', time: '10:40 - 11:20 AM' },
-  { periodNumber: 7, title: 'Period 6', time: '11:20 - 11:50 AM' },
-  { periodNumber: 8, title: 'Period 7', time: '11:50 - 12:25 PM' },
-  { periodNumber: 9, title: 'Period 8', time: '12:25 - 01:00 PM' },
+  { periodNumber: 1, displayPeriodNumber: 1, title: 'Period 1', time: '08:00 - 08:40 AM' },
+  { periodNumber: 2, displayPeriodNumber: 2, title: 'Period 2', time: '08:40 - 09:10 AM' },
+  { periodNumber: 3, displayPeriodNumber: 3, title: 'Period 3', time: '09:10 - 09:45 AM' },
+  { periodNumber: 4, displayPeriodNumber: 4, title: 'Period 4', time: '09:45 - 10:20 AM' },
+  { periodNumber: 5, displayPeriodNumber: null, title: 'Lunch Break', time: '10:20 - 10:40 AM', isBreak: true },
+  { periodNumber: 6, displayPeriodNumber: 5, title: 'Period 5', time: '10:40 - 11:20 AM' },
+  { periodNumber: 7, displayPeriodNumber: 6, title: 'Period 6', time: '11:20 - 11:50 AM' },
+  { periodNumber: 8, displayPeriodNumber: 7, title: 'Period 7', time: '11:50 - 12:25 PM' },
+  { periodNumber: 9, displayPeriodNumber: 8, title: 'Period 8', time: '12:25 - 01:00 PM' },
 ];
 
 export default function TeacherTimetable() {
@@ -246,7 +246,7 @@ export default function TeacherTimetable() {
                           );
                         }
 
-                        const match = periods.find(p => p.periodNumber === slot.periodNumber);
+                        const match = periods.find(p => p.rawPeriodNumber === slot.periodNumber || p.periodNumber === slot.displayPeriodNumber || p.periodNumber === slot.periodNumber);
 
                         if (match) {
                           return (

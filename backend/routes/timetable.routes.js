@@ -115,12 +115,20 @@ router.get('/my-timetable', protect, async (req, res) => {
           if (dayData && Array.isArray(dayData.periods)) {
             dayData.periods.forEach(p => {
               if (p.teacher && p.teacher.toString() === user._id.toString() && !p.isBreak && p.subjectName !== 'Lunch Break') {
+                const pNum = Number(p.periodNumber) || 1;
+                // If period is after Lunch Break (slot 5), display as Period 5, 6, 7, 8 sequentially
+                const displayNum = pNum > 5 ? pNum - 1 : pNum;
+                const displayTitle = (p.periodTitle && !p.periodTitle.includes('Lunch'))
+                  ? p.periodTitle
+                  : `Period ${displayNum}`;
+
                 dayPeriods.push({
                   classId: tt.class?._id,
                   className: tt.className,
                   section: tt.section,
-                  periodNumber: p.periodNumber,
-                  periodTitle: p.periodTitle || `Period ${p.periodNumber}`,
+                  periodNumber: displayNum,
+                  rawPeriodNumber: pNum,
+                  periodTitle: displayTitle,
                   startTime: p.startTime,
                   endTime: p.endTime,
                   subjectName: p.subjectName || p.subject?.name || 'Academic Class',
