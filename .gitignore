@@ -3,10 +3,15 @@ node_modules/
 frontend/node_modules/
 backend/node_modules/
 
-# Environment Files (NEVER commit these)
+# Environment & Confidential Files (NEVER commit these)
 .env
 backend/.env
 frontend/.env
+*.pdf
+backend/*.pdf
+NVP_School_Master_Guide.html
+ADMIN_RECOVERY.md
+backend/scripts/generate_pdf_guide.py
 
 # Build output
 frontend/dist/

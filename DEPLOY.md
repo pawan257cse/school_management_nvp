@@ -109,7 +109,7 @@ Agar Head Administrator apna password bhool jaye, toh reset karne ke **2 aasan t
 #### Method 1: Secret `/admin` Web Portal Se
 1. Browser me open karein: `https://your-frontend.vercel.app/admin` *(Normal login page par yeh kisi ko nahi dikhega)*.
 2. **"Emergency Recovery"** par click karein.
-3. Apna Admin Email (`head@school.local`), **Master Recovery Key** (`NVP-HEAD-RECOVERY-KEY-2026`), aur naya password dalein.
+3. Apna Admin Email (`head@school.local`), **Master Recovery Key** *(jo aapne backend/.env ya Render environment me set ki hai)*, aur naya password dalein.
 4. **"Reset Admin Password"** dabayein — password turant update ho jayega aur aap login kar payenge!
 
 #### Method 2: Render Ke Web Shell Se (Bina Kisi Key Ke Direct Reset)
