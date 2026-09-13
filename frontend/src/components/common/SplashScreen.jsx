@@ -47,14 +47,14 @@ export default function SplashScreen({ onFinish }) {
           NVP ENGLISH MEDIUM SCHOOL
         </h1>
 
-        {/* Text Line 2: NIMBI JODHAN */}
-        <p className="mt-2 text-xs sm:text-sm md:text-base font-bold uppercase tracking-[0.3em] text-amber-400 drop-shadow">
-          NIMBI JODHAN
+        {/* Text Line 2: NIMBI JODHAN BASS */}
+        <p className="mt-2 text-xs sm:text-sm md:text-base font-extrabold uppercase tracking-[0.25em] text-amber-400 drop-shadow">
+          NIMBI JODHAN BASS
         </p>
 
         {/* Subtle 2-second progress indicator bar */}
-        <div className="mt-8 w-36 h-1 bg-slate-800/80 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-amber-400 to-indigo-500 rounded-full animate-[progress_2s_ease-out_forwards]" />
+        <div className="mt-6 w-36 h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-amber-400 to-indigo-500 rounded-full w-full animate-pulse" />
         </div>
       </div>
     </div>
