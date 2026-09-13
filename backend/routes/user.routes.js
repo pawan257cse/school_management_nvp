@@ -182,8 +182,8 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
 
 // ─── POST /api/users/bulk-create-students ──────────────────────────────────────
 // Bulk create student accounts from all students without portal accounts
-// Access: HEAD only
-router.post('/bulk-create-students', protect, checkRole('HEAD'), async (req, res) => {
+// Access: HEAD, PRINCIPAL
+router.post('/bulk-create-students', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
     const students = await Student.find().populate('class', 'name section');
     const created = [];
@@ -345,8 +345,8 @@ router.put('/:id/permissions', protect, checkRole('HEAD'), async (req, res) => {
 });
 
 // ─── DELETE /api/users/:id ────────────────────────────────────────────────────
-// Delete user account (HEAD only)
-router.delete('/:id', protect, checkRole('HEAD'), async (req, res) => {
+// Delete user account (HEAD, PRINCIPAL)
+router.delete('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
     const targetUser = await User.findById(req.params.id);
     if (!targetUser) {
@@ -354,6 +354,9 @@ router.delete('/:id', protect, checkRole('HEAD'), async (req, res) => {
     }
     if (targetUser._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ success: false, message: 'You cannot delete your own account.' });
+    }
+    if (req.user.role === 'PRINCIPAL' && (targetUser.role === 'HEAD' || targetUser.role === 'PRINCIPAL')) {
+      return res.status(403).json({ success: false, message: 'Principals cannot delete Head or Principal accounts.' });
     }
     await User.findByIdAndDelete(req.params.id);
     await logActivity(req, 'DELETE_USER', 'User', targetUser._id, { name: targetUser.name, role: targetUser.role });

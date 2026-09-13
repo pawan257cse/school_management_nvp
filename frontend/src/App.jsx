@@ -154,15 +154,15 @@ export default function App() {
           {/* HEAD Super Admin Routes */}
           <Route path="/head-dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
           <Route path="/dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
-          <Route path="/head/users" element={<ProtectedLayout allowedRoles={['HEAD']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/accounts/users" element={<ProtectedLayout allowedRoles={['HEAD']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/head/teachers" element={<ProtectedLayout allowedRoles={['HEAD']}><TeacherManagement /></ProtectedLayout>} />
+          <Route path="/head/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
+          <Route path="/accounts/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
+          <Route path="/head/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
           <Route path="/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/head/principal" element={<ProtectedLayout allowedRoles={['HEAD']}><PrincipalManagement /></ProtectedLayout>} />
-          <Route path="/head/classes" element={<ProtectedLayout allowedRoles={['HEAD']}><ClassManagement /></ProtectedLayout>} />
+          <Route path="/head/principal" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><PrincipalManagement /></ProtectedLayout>} />
+          <Route path="/head/classes" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ClassManagement /></ProtectedLayout>} />
           <Route path="/classes" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ClassManagement /></ProtectedLayout>} />
           <Route path="/classes/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
-          <Route path="/head/subjects" element={<ProtectedLayout allowedRoles={['HEAD']}><SubjectManagement /></ProtectedLayout>} />
+          <Route path="/head/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
           <Route path="/head/security" element={<ProtectedLayout allowedRoles={['HEAD']}><RolePermissions /></ProtectedLayout>} />
           <Route path="/head/activity" element={<ProtectedLayout allowedRoles={['HEAD']}><ActivityLogs /></ProtectedLayout>} />
           <Route path="/head/login-history" element={<ProtectedLayout allowedRoles={['HEAD']}><LoginHistory /></ProtectedLayout>} />
