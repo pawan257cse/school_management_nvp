@@ -4,13 +4,14 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
+    "url": "https://nvpschool.vercel.app",
     "cleartext": true,
     "androidScheme": "https",
     "allowNavigation": [
+      "nvpschool.vercel.app",
       "*.vercel.app",
       "*.onrender.com",
-      "localhost",
-      "10.0.2.2"
+      "localhost"
     ]
   },
   "plugins": {
