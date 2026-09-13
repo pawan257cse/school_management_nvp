@@ -3,11 +3,18 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
 const path = require('path');
 const connectDB = require('./config/db');
 const seedInitialData = require('./utils/seedData');
 
 const app = express();
+
+// Ensure uploads folder exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Security Middlewares
 app.use(helmet({
@@ -79,6 +86,11 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'NVP School Portal API is running.', timestamp: new Date(), env: process.env.NODE_ENV });
 });
 
+// ── API 404 Handler (Any /api/* route not handled above) ─────────────────────
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ success: false, message: `API route ${req.method} ${req.originalUrl} not found` });
+});
+
 // ── PRODUCTION: Serve React frontend build ──────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../frontend/dist');
@@ -88,6 +100,16 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
+
+// ── Global Error Handling Middleware ─────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Server Error]:', err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Internal Server Error'
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

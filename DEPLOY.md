@@ -1,78 +1,94 @@
-# NVP School Portal — Deployment Guide
+# 🚀 NVP English Medium School — Production Deployment Guide
 
-## Platform: Render.com (Free)
-## Database: MongoDB Atlas (Free)
-
----
-
-## Step 1: Setup MongoDB Atlas (Free Cloud Database)
-
-1. Go to https://www.mongodb.com/cloud/atlas/register
-2. Create a free account and click **"Build a Cluster"**
-3. Choose **FREE (M0)** tier → Select any region → Click **Create**
-4. Under **Security > Database Access** → Add a user (e.g. `nvp_admin` / `YourPassword123`)
-5. Under **Security > Network Access** → Click **"Add IP Address"** → Choose **"Allow Access from Anywhere"** (0.0.0.0/0)
-6. Go to **Database** → Click **Connect** → **Connect your application**
-7. Copy your connection string — it looks like:
-   ```
-   mongodb+srv://nvp_admin:YourPassword123@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority
-   ```
+This guide explains how to deploy the entire school management portal on **Render.com** (Free) using **MongoDB Atlas** (Free Cloud Database).
 
 ---
 
-## Step 2: Deploy Backend on Render
-
-1. Go to https://render.com and sign up
-2. Click **"New +"** → **"Web Service"**
-3. Connect your GitHub repo OR upload the code
-4. Configure:
-   - **Name**: `nvp-school-backend`
-   - **Root Directory**: `backend`
-   - **Runtime**: Node
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-5. Under **Environment Variables**, add:
-   ```
-   NODE_ENV=production
-   PORT=10000
-   MONGODB_URI=mongodb+srv://nvp_admin:YourPassword123@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority
-   JWT_SECRET=nvp_school_super_secret_jwt_2026
-   ```
-6. Click **Deploy** — note the URL, e.g. `https://nvp-school-backend.onrender.com`
+## 📋 Pre-requisites (Both are 100% Free):
+1. **GitHub Repository:** [pawan257cse/school_management_nvp](https://github.com/pawan257cse/school_management_nvp) (Already uploaded!)
+2. **MongoDB Atlas Account:** Free cloud database for permanent 24x7 data storage.
+3. **Render.com Account:** Free cloud hosting service.
 
 ---
 
-## Step 3: Deploy Frontend on Render (Static Site)
+## 🗄️ Step 1: Create Free MongoDB Atlas Cloud Database (2-3 Minutes)
 
-1. In Render, click **"New +"** → **"Static Site"**
-2. Configure:
-   - **Name**: `nvp-school-frontend`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm install && npm run build`
-   - **Publish Directory**: `dist`
-3. Under **Environment Variables**, add:
-   ```
-   VITE_API_URL=https://nvp-school-backend.onrender.com
-   ```
-4. Click **Deploy**
+1. Go to 👉 **[mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)**
+2. Sign up with Google or Email.
+3. When prompted to select a plan, choose **M0 (Free)**.
+4. Select Cloud Provider (**AWS** or **Google Cloud**) and Region (**Mumbai** or **Singapore**). Click **Create Deployment / Create Cluster**.
+5. **Set Username & Password:**
+   - Username: `nvp_admin`
+   - Password: `YourStrongPassword123` *(copy and save this!)*
+   - Click **Create User**.
+6. **Network Access (Allow All IPs):**
+   - Under **Where would you like to connect from?**, choose **My Local Environment**.
+   - Add IP Address: `0.0.0.0/0` (Description: `Allow from anywhere`).
+   - Click **Add Entry** / **Finish and Close**.
+7. **Get Connection String:**
+   - Go to **Database** tab → Click **Connect**.
+   - Select **Drivers** (Node.js).
+   - Copy the connection string:
+     ```text
+     mongodb+srv://nvp_admin:<password>@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority
+     ```
+   - Replace `<password>` with your actual password (e.g. `YourStrongPassword123`).
 
 ---
 
-## Alternative: Deploy BOTH on Same Render Service
+## 🌐 Step 2: Deploy on Render.com (Single Web Service — Frontend + Backend)
 
-The backend already serves the frontend `dist/` folder in production.
-- **Root Directory**: `.` (root of project)
-- **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && npm install`
-- **Start Command**: `node backend/server.js`
-- Environment: `NODE_ENV=production`
+1. Go to 👉 **[render.com](https://render.com)** and sign in with your **GitHub** account.
+2. Click **New +** (top right) → Choose **Web Service**.
+3. Under **Connect a repository**, find and select:  
+   👉 **`school_management_nvp`**
+4. Fill in the following settings:
+   - **Name:** `nvp-school-portal` *(or your preferred name)*
+   - **Region:** Singapore / Frankfurt
+   - **Branch:** `main`
+   - **Root Directory:** *(leave blank)*
+   - **Runtime:** `Node`
+   - **Build Command:**
+     ```bash
+     npm run build
+     ```
+   - **Start Command:**
+     ```bash
+     npm start
+     ```
+   - **Instance Type:** `Free`
+
+5. **Environment Variables (Click "Advanced" or "Environment Variables"):**
+   Add the following variables:
+
+   | Key | Value | Description |
+   |---|---|---|
+   | `NODE_ENV` | `production` | Enables production optimizations & frontend serving |
+   | `PORT` | `10000` | Port for Render web service |
+   | `MONGODB_URI` | `mongodb+srv://nvp_admin:Password@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
+   | `JWT_SECRET` | `nvp_school_super_secret_jwt_key_2026` | Any long random secret string |
+
+6. Click **Create Web Service**.
+7. Wait 3–4 minutes while Render:
+   - Installs backend packages
+   - Installs frontend packages & builds Vite production bundle
+   - Starts Express server
+8. **Done!** Your school portal will be live at:  
+   👉 `https://nvp-school-portal.onrender.com`
 
 ---
 
-## Login Credentials (after first deploy)
+## 🔑 Default Login Credentials (First-Time Login):
 
-| Role | Email | Password |
-|------|-------|----------|
-| HEAD | head@school.local | Head@12345 |
-| PRINCIPAL | principal@school.local | Principal@12345 |
-| TEACHER | teacher@school.local | Teacher@12345 |
-| STUDENT | student@school.local | Student@12345 |
+Once deployed, the database initializes with the following default accounts:
+
+| Role | Email | Initial Password | Permissions |
+|------|-------|------------------|-------------|
+| **HEAD (Director/Admin)** | `head@school.local` | `Head@12345` | Full access to all data, fees, timetable, staff, credentials & logs |
+| **PRINCIPAL** | `principal@school.local` | `Principal@12345` | Academic management, teachers, timetable, class diaries |
+| **TEACHER** | `teacher@school.local` | `Teacher@12345` | Attendance, marks, class assignments/diaries, questions |
+| **STUDENT** | `student@school.local` | `Student@12345` | Portal view: Homework diary, timetable, marks, notices |
+
+> 🔒 **Important Security Advice:**  
+> Immediately after your first login as **HEAD**, go to **Settings / Profile** and change your password to a private password known only to you!
+

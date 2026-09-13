@@ -4,8 +4,8 @@ services:
     name: nvp-school-portal
     runtime: node
     rootDir: .
-    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
-    startCommand: node backend/server.js
+    buildCommand: npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
