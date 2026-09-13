@@ -39,14 +39,19 @@ jobs:
         working-directory: ./app/android
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        working-directory: ./app/android
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Generate Release Keystore
+        working-directory: ./app/android/app
+        run: |
+          keytool -genkey -v -keystore nvp-release.jks -alias nvpkey -keyalg RSA -keysize 2048 -validity 10000 -storepass nvp2026pass -keypass nvp2026pass -dname "CN=NVP School, OU=School Management, O=NVP, L=Patna, S=Bihar, C=IN"
 
-      - name: Upload APK Artifact
+      - name: Build Signed Production Release APK
+        working-directory: ./app/android
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload Signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: NVP_School_Android_App
-          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+          name: NVP_School_Official_Release_APK
+          path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
