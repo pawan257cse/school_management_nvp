@@ -60,8 +60,9 @@ const seedInitialData = async () => {
       classes = await Class.insertMany(classDocs);
       classes.forEach(c => { classMap[c.name] = c._id; });
 
-      // Default Passwords
-      const headPasswordHash = await bcrypt.hash('Head@12345', 10);
+      // Initial Setup Passwords (can be customized via environment variable in production)
+      const initialHeadPass = process.env.HEAD_PASSWORD || process.env.HEAD_INITIAL_PASSWORD || 'Head@12345';
+      const headPasswordHash = await bcrypt.hash(initialHeadPass, 10);
       const principalPasswordHash = await bcrypt.hash('Principal@12345', 10);
       const teacherPasswordHash = await bcrypt.hash('Teacher@12345', 10);
 
