@@ -135,6 +135,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Assignments', path: '/teacher/assignments', icon: ClipboardList },
         { name: 'Attendance', path: '/teacher/attendance', icon: CheckSquare },
         { name: 'Student Results', path: '/teacher/results', icon: Award },
+        { name: 'Exams & Schedule', path: '/teacher/exams', icon: Calendar },
         { name: 'Study Materials', path: '/teacher/materials', icon: BookMarked }
       ]
     },

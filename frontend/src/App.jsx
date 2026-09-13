@@ -129,7 +129,7 @@ export default function App() {
           <Route path="/students/create" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />
           <Route path="/parents" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ParentManagement /></ProtectedLayout>} />
           <Route path="/staff" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StaffManagement /></ProtectedLayout>} />
-          <Route path="/exams" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
+          <Route path="/exams" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><ExamManagement /></ProtectedLayout>} />
           <Route path="/exams/create" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
           <Route path="/fees" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FeeManagement /></ProtectedLayout>} />
           <Route path="/fees/structure" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FeeManagement /></ProtectedLayout>} />
@@ -186,6 +186,7 @@ export default function App() {
           {/* TEACHER Routes */}
           <Route path="/teacher-dashboard" element={<ProtectedLayout allowedRoles={['TEACHER', 'HEAD', 'PRINCIPAL']}><TeacherDashboard /></ProtectedLayout>} />
           <Route path="/teacher/timetable" element={<ProtectedLayout allowedRoles={['TEACHER', 'HEAD', 'PRINCIPAL']}><TeacherTimetable /></ProtectedLayout>} />
+          <Route path="/teacher/exams" element={<ProtectedLayout allowedRoles={['TEACHER', 'HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
           <Route path="/teacher/profile" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherProfile /></ProtectedLayout>} />
           <Route path="/teacher/classes" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherDashboard /></ProtectedLayout>} />
           <Route path="/teacher/subjects" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherDashboard /></ProtectedLayout>} />

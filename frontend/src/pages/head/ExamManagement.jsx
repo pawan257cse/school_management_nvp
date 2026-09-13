@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getExamsApi, createExamApi, updateExamApi, deleteExamApi, getClassesApi } from '../../services/api';
-import { Calendar, PlusCircle, CheckCircle2, Clock, Trash2, Edit, Award } from 'lucide-react';
+import { Calendar, PlusCircle, CheckCircle2, Clock, Trash2, Edit, Award, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ExamManagement() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'HEAD' || user?.role === 'PRINCIPAL';
+
   const [exams, setExams] = useState([]);
   const [classes, setClasses] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
@@ -102,18 +106,24 @@ export default function ExamManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-amber-950 via-slate-900 to-orange-950 text-white shadow-xl">
         <div>
           <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wider">
-            Academic Assessment Schedule
+            {isAdmin ? 'Academic Assessment Console' : 'Faculty Exam Schedule'}
           </span>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black mt-2">Exams & Evaluations</h1>
-          <p className="text-xs text-slate-300 mt-1">Plan and coordinate periodic tests, term examinations, and datesheets.</p>
+          <h1 className="text-2xl sm:text-3xl font-heading font-black mt-2">Exam Schedule & Dates</h1>
+          <p className="text-xs text-slate-300 mt-1">
+            {isAdmin 
+              ? 'Plan and coordinate periodic tests, term examinations, and datesheets.'
+              : 'Official exam schedule dates, start times, and participating classes.'}
+          </p>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/30 transition-all cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4 text-slate-950" />
-          <span>Schedule New Exam</span>
-        </button>
+        {isAdmin && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/30 transition-all cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4 text-slate-950" />
+            <span>Schedule New Exam</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Tabs */}
@@ -159,24 +169,32 @@ export default function ExamManagement() {
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-slate-700">
-                  <Calendar className="w-4 h-4 text-amber-600" />
-                  <span>Start: <strong>{new Date(ex.startDate).toLocaleDateString('en-IN')}</strong></span>
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-amber-950 font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-amber-800 block font-black">Exam Starts On</span>
+                    <strong className="text-sm font-black text-slate-900">
+                      {new Date(ex.startDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                    </strong>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-slate-700">
-                  <Clock className="w-4 h-4 text-slate-500" />
-                  <span>End: <strong>{new Date(ex.endDate).toLocaleDateString('en-IN')}</strong></span>
+
+                <div className="flex items-center gap-2 text-slate-700 bg-white/80 px-3 py-1.5 rounded-lg border border-amber-100 self-start sm:self-auto">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Ends: <strong>{new Date(ex.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
                 </div>
               </div>
 
               <div>
                 <p className="text-[11px] font-bold text-slate-500 uppercase">Applicable Classes</p>
-                <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {ex.classes && ex.classes.length > 0 ? (
                     ex.classes.map((c) => (
-                      <span key={c._id || c} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-semibold">
-                        Class {c.name || 'N/A'}
+                      <span key={c._id || c} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                        Class {c.name || 'N/A'} {c.section ? `(${c.section})` : ''}
                       </span>
                     ))
                   ) : (
@@ -186,25 +204,34 @@ export default function ExamManagement() {
               </div>
 
               {ex.description && (
-                <p className="text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                   {ex.description}
                 </p>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                <button
-                  onClick={() => handleOpenEdit(ex)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-1"
-                >
-                  <Edit className="w-3.5 h-3.5" /> Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(ex._id)}
-                  className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
-              </div>
+              {isAdmin ? (
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    onClick={() => handleOpenEdit(ex)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-1"
+                  >
+                    <Edit className="w-3.5 h-3.5" /> Edit Schedule
+                  </button>
+                  <button
+                    onClick={() => handleDelete(ex._id)}
+                    className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+                  <span className="flex items-center gap-1 text-emerald-700">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Official Exam Schedule
+                  </span>
+                  <span>Session {ex.academicYear}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
