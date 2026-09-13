@@ -87,10 +87,15 @@ router.get('/my-timetable', protect, async (req, res) => {
         .populate('schedule.periods.subject', 'name code')
         .populate('schedule.periods.teacher', 'name email mobile');
 
+      const isSunday = new Date().getDay() === 0;
+
       return res.json({
         success: true,
         role: 'STUDENT',
         classId: targetClassId,
+        isSunday,
+        isHoliday: isSunday,
+        message: isSunday ? 'Today is Sunday (Weekly Holiday). School is closed today.' : undefined,
         timetable: timetable || { schedule: [] }
       });
     }
@@ -133,8 +138,28 @@ router.get('/my-timetable', protect, async (req, res) => {
       // Live Today's Classroom Tracker
       const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const now = new Date();
-      const currentDayName = daysMap[now.getDay()] === 'Sunday' ? 'Monday' : daysMap[now.getDay()];
+      const currentDayOfWeek = now.getDay();
+      const isSunday = currentDayOfWeek === 0;
 
+      if (isSunday) {
+        return res.json({
+          success: true,
+          role: 'TEACHER',
+          teacherSchedule,
+          liveToday: {
+            dayName: 'Sunday',
+            isSunday: true,
+            isHoliday: true,
+            message: 'Today is Sunday (Weekly Holiday). School is closed today.',
+            todayPeriods: [],
+            currentPeriod: null,
+            nextPeriod: null,
+            totalClassesToday: 0
+          }
+        });
+      }
+
+      const currentDayName = daysMap[currentDayOfWeek];
       const todayScheduleObj = teacherSchedule.find(s => s.day === currentDayName);
       const todayPeriods = todayScheduleObj?.periods || [];
 
@@ -169,19 +194,17 @@ router.get('/my-timetable', protect, async (req, res) => {
         return { ...p, status };
       });
 
-      if (!currentPeriod && formattedTodayPeriods.length > 0) {
-        if (!nextPeriod) nextPeriod = formattedTodayPeriods[0];
-      }
-
       return res.json({
         success: true,
         role: 'TEACHER',
         teacherSchedule,
         liveToday: {
           dayName: currentDayName,
+          isSunday: false,
+          isHoliday: false,
           todayPeriods: formattedTodayPeriods,
-          currentPeriod: currentPeriod || formattedTodayPeriods[0] || null,
-          nextPeriod: nextPeriod || (formattedTodayPeriods.length > 1 ? formattedTodayPeriods[1] : null),
+          currentPeriod,
+          nextPeriod,
           totalClassesToday: formattedTodayPeriods.length
         }
       });
@@ -231,6 +254,14 @@ router.post('/save', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) =
     }
 
     const mongoose = require('mongoose');
+    const Subject = require('../models/Subject');
+    const User = require('../models/User');
+
+    const allSubjects = await Subject.find({}, '_id name');
+    const allTeachers = await User.find({ role: { $in: ['TEACHER', 'HEAD', 'PRINCIPAL'] } }, '_id name');
+    const subjectMap = new Map(allSubjects.map(s => [s._id.toString(), s.name]));
+    const teacherMap = new Map(allTeachers.map(t => [t._id.toString(), t.name]));
+
     const cleanedSchedule = schedule.map(dayData => ({
       day: dayData.day,
       periods: (dayData.periods || []).map(p => {
@@ -246,6 +277,14 @@ router.post('/save', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) =
         const validSub = (!isBreak && subStr && mongoose.Types.ObjectId.isValid(subStr)) ? subStr : null;
         const validTeach = (!isBreak && teachStr && mongoose.Types.ObjectId.isValid(teachStr)) ? teachStr : null;
 
+        const resolvedSubName = isBreak
+          ? 'Lunch Break'
+          : (validSub && subjectMap.has(validSub.toString()) ? subjectMap.get(validSub.toString()) : (p.subjectName || ''));
+
+        const resolvedTeachName = isBreak
+          ? ''
+          : (validTeach && teacherMap.has(validTeach.toString()) ? teacherMap.get(validTeach.toString()) : (p.teacherName || ''));
+
         return {
           periodNumber: p.periodNumber,
           periodTitle: p.periodTitle || (isBreak ? 'Lunch Break' : `Period ${p.periodNumber}`),
@@ -253,9 +292,9 @@ router.post('/save', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) =
           startTime: p.startTime,
           endTime: p.endTime,
           subject: validSub,
-          subjectName: isBreak ? 'Lunch Break' : (p.subjectName || ''),
+          subjectName: resolvedSubName,
           teacher: validTeach,
-          teacherName: isBreak ? '' : (p.teacherName || ''),
+          teacherName: resolvedTeachName,
           roomNo: p.roomNo || `Class ${cls.name}`
         };
       })

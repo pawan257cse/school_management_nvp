@@ -143,16 +143,16 @@ async function seedAll() {
 
   // 6. 10 Teachers
   const teacherDefs = [
-    { name: 'Priti', email: 'priti@nvpschool.edu.in', phone: '+91 98290 11001', empId: 'EMP-T101', classTeacherOf: ['PG'], classesTaught: ['PG'] },
-    { name: 'Lalita', email: 'lalita@nvpschool.edu.in', phone: '+91 98290 11002', empId: 'EMP-T102', classTeacherOf: ['LKG'], classesTaught: ['LKG'] },
-    { name: 'Priya', email: 'priya@nvpschool.edu.in', phone: '+91 98290 11003', empId: 'EMP-T103', classTeacherOf: ['UKG'], classesTaught: ['UKG'] },
-    { name: 'Sarita', email: 'sarita@nvpschool.edu.in', phone: '+91 98290 11004', empId: 'EMP-T104', classTeacherOf: ['1'], classesTaught: ['1', '2', '3', '4', '5'] },
-    { name: 'Durga', email: 'durga@nvpschool.edu.in', phone: '+91 98290 11005', empId: 'EMP-T105', classTeacherOf: ['2'], classesTaught: ['1', '2', '3', '4', '6', '7'] },
-    { name: 'Pawan', email: 'pawan@nvpschool.edu.in', phone: '+91 98290 11006', empId: 'EMP-T106', classTeacherOf: ['3'], classesTaught: ['1', '2', '3', '4', '5', '6', '7'] },
-    { name: 'Vanshika', email: 'vanshika@nvpschool.edu.in', phone: '+91 98290 11007', empId: 'EMP-T107', classTeacherOf: ['4'], classesTaught: ['3', '4', '5', '6', '7'] },
-    { name: 'Megha', email: 'megha.teacher@nvpschool.edu.in', phone: '+91 98290 11008', empId: 'EMP-T108', classTeacherOf: ['5'], classesTaught: ['1', '2', '5', '6'] },
-    { name: 'Kavita', email: 'kavita@nvpschool.edu.in', phone: '+91 98290 11009', empId: 'EMP-T109', classTeacherOf: ['6'], classesTaught: ['4', '6', '7'] },
-    { name: 'Chanchal', email: 'chanchal@nvpschool.edu.in', phone: '+91 98290 11010', empId: 'EMP-T110', classTeacherOf: ['7'], classesTaught: ['3', '4', '5', '6', '7'] }
+    { name: 'Priti', email: 'priti@nvpschool.edu.in', phone: '+91 98290 11001', empId: 'EMP-T101', classTeacherOf: ['PG'], classesTaught: ['PG'], subjectsTaught: ['English', 'Hindi', 'Mathematics', 'Oral', 'Games & Activity', 'Diary & Rhymes'] },
+    { name: 'Lalita', email: 'lalita@nvpschool.edu.in', phone: '+91 98290 11002', empId: 'EMP-T102', classTeacherOf: ['LKG'], classesTaught: ['LKG'], subjectsTaught: ['Hindi', 'Mathematics', 'English', 'General Knowledge', 'Diary & Rhymes', 'Oral'] },
+    { name: 'Priya', email: 'priya@nvpschool.edu.in', phone: '+91 98290 11003', empId: 'EMP-T103', classTeacherOf: ['UKG'], classesTaught: ['UKG'], subjectsTaught: ['Mathematics', 'General Knowledge', 'Hindi', 'English', 'Oral', 'Diary & Rhymes'] },
+    { name: 'Sarita', email: 'sarita@nvpschool.edu.in', phone: '+91 98290 11004', empId: 'EMP-T104', classTeacherOf: ['1'], classesTaught: ['1', '2', '3', '4', '5'], subjectsTaught: ['EVS', 'Mathematics', 'Hindi', 'General Knowledge', 'Games & Activity'] },
+    { name: 'Durga', email: 'durga@nvpschool.edu.in', phone: '+91 98290 11005', empId: 'EMP-T105', classTeacherOf: ['2'], classesTaught: ['1', '2', '3', '4', '6', '7'], subjectsTaught: ['Hindi', 'General Knowledge'] },
+    { name: 'Pawan', email: 'pawan@nvpschool.edu.in', phone: '+91 98290 11006', empId: 'EMP-T106', classTeacherOf: ['3'], classesTaught: ['1', '2', '3', '4', '5', '6', '7'], subjectsTaught: ['Computer', 'Games & Activity', 'Science'] },
+    { name: 'Vanshika', email: 'vanshika@nvpschool.edu.in', phone: '+91 98290 11007', empId: 'EMP-T107', classTeacherOf: ['4'], classesTaught: ['3', '4', '5', '6', '7'], subjectsTaught: ['EVS', 'English', 'Social Science', 'General Knowledge'] },
+    { name: 'Megha', email: 'megha.teacher@nvpschool.edu.in', phone: '+91 98290 11008', empId: 'EMP-T108', classTeacherOf: ['5'], classesTaught: ['1', '2', '5', '6'], subjectsTaught: ['English', 'Hindi Grammar', 'Sanskrit'] },
+    { name: 'Kavita', email: 'kavita@nvpschool.edu.in', phone: '+91 98290 11009', empId: 'EMP-T109', classTeacherOf: ['6'], classesTaught: ['4', '6', '7'], subjectsTaught: ['English', 'Science'] },
+    { name: 'Chanchal', email: 'chanchal@nvpschool.edu.in', phone: '+91 98290 11010', empId: 'EMP-T110', classTeacherOf: ['7'], classesTaught: ['3', '4', '5', '6', '7'], subjectsTaught: ['Mathematics', 'General Knowledge'] }
   ];
 
   const teacherMap = {};
@@ -160,6 +160,10 @@ async function seedAll() {
     const defaultPassword = `${t.name}@12345`;
     const passwordHash = await bcrypt.hash(defaultPassword, salt);
     const assignedClassIds = t.classesTaught.map(cName => classMap[cName]?._id).filter(Boolean);
+    const assignedSubjectIds = t.subjectsTaught.map(sName => {
+      const found = Object.values(subjectMap).find(s => s.name.toUpperCase() === sName.toUpperCase());
+      return found?._id;
+    }).filter(Boolean);
 
     let user = await User.findOne({ email: t.email.toLowerCase() });
     if (!user) {
@@ -174,6 +178,7 @@ async function seedAll() {
         gender: t.name === 'Pawan' ? 'Male' : 'Female',
         qualification: 'B.Ed / Trained Faculty',
         assignedClasses: assignedClassIds,
+        assignedSubjects: assignedSubjectIds,
         mustChangePassword: false,
         status: 'active'
       });
@@ -182,6 +187,7 @@ async function seedAll() {
       user.name = t.name;
       user.role = 'TEACHER';
       user.assignedClasses = assignedClassIds;
+      user.assignedSubjects = assignedSubjectIds;
       user.generatedPassword = defaultPassword;
       user.passwordHash = passwordHash;
       user.status = 'active';
@@ -237,7 +243,7 @@ async function seedAll() {
       { pNum: 6, sub: 'Games & Activity', teacher: 'Priti' },
       { pNum: 7, sub: 'Mathematics', teacher: 'Priti' },
       { pNum: 8, sub: 'Mathematics', teacher: 'Priti' },
-      { pNum: 9, sub: 'Oral + Diary', teacher: 'Priti' }
+      { pNum: 9, sub: 'Diary & Rhymes', teacher: 'Priti' }
     ],
     LKG: [
       { pNum: 1, sub: 'Hindi', teacher: 'Lalita' },
@@ -245,21 +251,21 @@ async function seedAll() {
       { pNum: 3, sub: 'Mathematics', teacher: 'Lalita' },
       { pNum: 4, sub: 'Mathematics', teacher: 'Lalita' },
       { pNum: 5, isBreak: true },
-      { pNum: 6, sub: 'English + GK', teacher: 'Lalita' },
-      { pNum: 7, sub: 'English + GK', teacher: 'Lalita' },
-      { pNum: 8, sub: 'Diary', teacher: 'Lalita' },
+      { pNum: 6, sub: 'English', teacher: 'Lalita' },
+      { pNum: 7, sub: 'General Knowledge', teacher: 'Lalita' },
+      { pNum: 8, sub: 'Diary & Rhymes', teacher: 'Lalita' },
       { pNum: 9, sub: 'Oral', teacher: 'Lalita' }
     ],
     UKG: [
       { pNum: 1, sub: 'Mathematics', teacher: 'Priya' },
       { pNum: 2, sub: 'Mathematics', teacher: 'Priya' },
-      { pNum: 3, sub: 'GK + Hindi', teacher: 'Priya' },
-      { pNum: 4, sub: 'GK + Hindi', teacher: 'Priya' },
+      { pNum: 3, sub: 'General Knowledge', teacher: 'Priya' },
+      { pNum: 4, sub: 'Hindi', teacher: 'Priya' },
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'English', teacher: 'Priya' },
       { pNum: 7, sub: 'English', teacher: 'Priya' },
       { pNum: 8, sub: 'Oral', teacher: 'Priya' },
-      { pNum: 9, sub: 'Oral + Diary', teacher: 'Priya' }
+      { pNum: 9, sub: 'Diary & Rhymes', teacher: 'Priya' }
     ],
     '1': [
       { pNum: 1, sub: 'EVS', teacher: 'Sarita' },
@@ -268,9 +274,9 @@ async function seedAll() {
       { pNum: 4, sub: 'Mathematics', teacher: 'Sarita' },
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'Computer', teacher: 'Pawan' },
-      { pNum: 7, sub: 'Computer + Game (3/3)', teacher: 'Pawan' },
+      { pNum: 7, sub: 'Computer', teacher: 'Pawan' },
       { pNum: 8, sub: 'Activity / Self Study', teacher: null },
-      { pNum: 9, sub: 'GK + Hindi', teacher: 'Durga' }
+      { pNum: 9, sub: 'General Knowledge', teacher: 'Durga' }
     ],
     '2': [
       { pNum: 1, sub: 'Hindi', teacher: 'Durga' },
@@ -280,7 +286,7 @@ async function seedAll() {
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'Activity / Self Study', teacher: null },
       { pNum: 7, sub: 'Hindi', teacher: 'Durga' },
-      { pNum: 8, sub: 'Math + GK', teacher: 'Sarita' },
+      { pNum: 8, sub: 'Mathematics', teacher: 'Sarita' },
       { pNum: 9, sub: 'Games & Activity', teacher: 'Sarita' }
     ],
     '3': [
@@ -300,7 +306,7 @@ async function seedAll() {
       { pNum: 3, sub: 'English', teacher: 'Kavita' },
       { pNum: 4, sub: 'Computer', teacher: 'Pawan' },
       { pNum: 5, isBreak: true },
-      { pNum: 6, sub: 'GK + English', teacher: 'Sarita' },
+      { pNum: 6, sub: 'English', teacher: 'Sarita' },
       { pNum: 7, sub: 'Activity / Self Study', teacher: null },
       { pNum: 8, sub: 'Hindi', teacher: 'Durga' },
       { pNum: 9, sub: 'Activity / Self Study', teacher: null }
@@ -335,8 +341,8 @@ async function seedAll() {
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
       { pNum: 7, sub: 'Science', teacher: 'Kavita' },
-      { pNum: 8, sub: 'Mathematics + Sanskrit (3/3)', teacher: 'Chanchal' },
-      { pNum: 9, sub: 'Computer + Science + English (3/3)', teacher: 'Pawan' }
+      { pNum: 8, sub: 'Mathematics', teacher: 'Chanchal' },
+      { pNum: 9, sub: 'Computer', teacher: 'Pawan' }
     ]
   };
 
@@ -369,7 +375,7 @@ async function seedAll() {
         startTime: pTime.startTime,
         endTime: pTime.endTime,
         subject: subDoc?._id || null,
-        subjectName: item.sub,
+        subjectName: subDoc?.name || item.sub,
         teacher: teachDoc?._id || null,
         teacherName: teachDoc?.name || (item.teacher === null ? 'Self Study' : item.teacher),
         roomNo: `Class ${cName}`

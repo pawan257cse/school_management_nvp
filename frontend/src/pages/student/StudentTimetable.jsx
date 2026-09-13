@@ -18,9 +18,11 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 export default function StudentTimetable() {
   const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayIndex = new Date().getDay();
-  const currentDayName = todayIndex === 0 ? 'Monday' : daysMap[todayIndex];
+  const isSunday = todayIndex === 0;
+  const currentDayName = isSunday ? 'Sunday' : daysMap[todayIndex];
+  const defaultSelectedDay = isSunday ? 'Monday' : daysMap[todayIndex];
 
-  const [selectedDay, setSelectedDay] = useState(currentDayName);
+  const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
   const [timetable, setTimetable] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -91,11 +93,28 @@ export default function StudentTimetable() {
         </div>
       </div>
 
+      {/* Sunday Holiday Notice Banner */}
+      {isSunday && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 rounded-xl bg-amber-500 text-white font-black text-xs shadow-sm">
+              Sunday Holiday
+            </span>
+            <p className="text-xs sm:text-sm font-bold text-slate-800">
+              Today is Sunday — School is closed for weekly holiday. Next classes start <strong className="text-indigo-700">Monday at 08:00 AM</strong>.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-amber-800 bg-white/80 px-3 py-1 rounded-lg border border-amber-200 shrink-0">
+            Viewing Monday Schedule
+          </span>
+        </div>
+      )}
+
       {/* Day Selector Tabs */}
       <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
         {DAYS.map((day) => {
           const isSelected = selectedDay === day;
-          const isToday = currentDayName === day;
+          const isToday = !isSunday && currentDayName === day;
 
           return (
             <button

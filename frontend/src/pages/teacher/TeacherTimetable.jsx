@@ -23,9 +23,11 @@ export default function TeacherTimetable() {
   const { user } = useAuth();
   const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayIndex = new Date().getDay();
-  const currentDayName = todayIndex === 0 ? 'Monday' : daysMap[todayIndex];
+  const isSunday = todayIndex === 0;
+  const currentDayName = isSunday ? 'Sunday' : daysMap[todayIndex];
+  const defaultSelectedDay = isSunday ? 'Monday' : daysMap[todayIndex];
 
-  const [selectedDay, setSelectedDay] = useState(currentDayName);
+  const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,6 +60,8 @@ export default function TeacherTimetable() {
   const teacherSchedule = data?.teacherSchedule || [];
   const liveToday = data?.liveToday || {
     dayName: currentDayName,
+    isSunday,
+    isHoliday: isSunday,
     todayPeriods: [],
     currentPeriod: null,
     nextPeriod: null,
@@ -121,131 +125,163 @@ export default function TeacherTimetable() {
         </div>
       </div>
 
-      {/* 2. LIVE TODAY CLASSROOM TRACKER CARD (Where to go right now!) */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-950 text-white shadow-xl border border-blue-800/80 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* 2. SUNDAY HOLIDAY BANNER OR LIVE TODAY CLASSROOM TRACKER */}
+      {isSunday || liveToday.isSunday ? (
+        <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white shadow-xl border border-indigo-700/60 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-5 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-black uppercase text-blue-300 tracking-wider">
-                Live Teaching Duty Tracker
-              </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs font-bold text-slate-300">
-                Today is {currentDayName} ({liveToday.totalClassesToday} lectures scheduled)
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
+                  Weekly Holiday • Sunday
+                </span>
+                <span className="text-xs text-slate-400">•</span>
+                <span className="text-xs font-bold text-slate-300">School is Closed Today</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-white">
+                No Classes Scheduled Today (Sunday)
+              </h2>
+              <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
+                Campus is closed for weekly holiday. No teaching periods or active duties are scheduled for today. Regular weekday timetable resumes on <strong className="text-amber-200">Monday at 08:00 AM</strong>. You can review your weekly routine using the day tabs below.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center shrink-0 min-w-[180px]">
+              <span className="text-[11px] font-extrabold uppercase text-indigo-300 block mb-1">Upcoming Duty</span>
+              <strong className="text-lg text-white font-black block">Monday 08:00 AM</strong>
+              <span className="text-[11px] text-emerald-300 font-semibold mt-1 inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Normal Routine
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight">
-              Where is My Class Right Now?
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15">
-            <Clock className="w-4 h-4 text-blue-300" />
-            <span className="font-semibold">School Hours: 08:00 AM - 01:50 PM</span>
           </div>
         </div>
+      ) : (
+        <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-950 text-white shadow-xl border border-blue-800/80 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        {/* Current Active Class Card & Next Upcoming Class Card */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
-          {/* Active Period Card */}
-          <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md shadow-emerald-500/30 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Active Class Right Now
-              </span>
-              {currentPeriod && (
-                <span className="text-xs font-mono font-bold text-blue-200">
-                  {currentPeriod.startTime} - {currentPeriod.endTime}
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-5 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-              )}
+                <span className="text-xs font-black uppercase text-blue-300 tracking-wider">
+                  Live Teaching Duty Tracker
+                </span>
+                <span className="text-xs text-slate-400">•</span>
+                <span className="text-xs font-bold text-slate-300">
+                  Today is {currentDayName} ({liveToday.totalClassesToday} lectures scheduled)
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight">
+                Where is My Class Right Now?
+              </h2>
             </div>
 
-            {currentPeriod ? (
-              <div className="space-y-2 pt-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-2xl font-black text-white tracking-tight">
-                    {currentPeriod.subjectName}
-                  </h3>
-                  <span className="px-2.5 py-1 rounded-xl bg-blue-500/30 border border-blue-400/40 text-blue-200 font-bold text-xs">
-                    {currentPeriod.className} ({currentPeriod.section})
-                  </span>
-                </div>
+            <div className="flex items-center gap-3 text-xs bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15">
+              <Clock className="w-4 h-4 text-blue-300" />
+              <span className="font-semibold">School Hours: 08:00 AM - 01:50 PM</span>
+            </div>
+          </div>
 
-                {/* Big Room Pill */}
-                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center gap-2.5 text-emerald-200">
-                  <MapPin className="w-5 h-5 text-emerald-400 shrink-0 animate-bounce" />
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                      Target Classroom / Location:
+          {/* Current Active Class Card & Next Upcoming Class Card */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+            {/* Active Period Card */}
+            <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md shadow-emerald-500/30 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Active Class Right Now
+                </span>
+                {currentPeriod && (
+                  <span className="text-xs font-mono font-bold text-blue-200">
+                    {currentPeriod.startTime} - {currentPeriod.endTime}
+                  </span>
+                )}
+              </div>
+
+              {currentPeriod ? (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h3 className="text-2xl font-black text-white tracking-tight">
+                      {currentPeriod.subjectName}
+                    </h3>
+                    <span className="px-2.5 py-1 rounded-xl bg-blue-500/30 border border-blue-400/40 text-blue-200 font-bold text-xs">
+                      {currentPeriod.className} ({currentPeriod.section})
                     </span>
-                    <strong className="text-sm font-black text-white">
-                      {currentPeriod.roomNo || `Room ${currentPeriod.className}`}
-                    </strong>
+                  </div>
+
+                  {/* Big Room Pill */}
+                  <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center gap-2.5 text-emerald-200">
+                    <MapPin className="w-5 h-5 text-emerald-400 shrink-0 animate-bounce" />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                        Target Classroom / Location:
+                      </span>
+                      <strong className="text-sm font-black text-white">
+                        {currentPeriod.roomNo || `Room ${currentPeriod.className}`}
+                      </strong>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="py-6 text-center text-slate-300 text-xs">
-                No lecture assigned in this time slot. Free preparation period.
-              </div>
-            )}
-          </div>
-
-          {/* Next Upcoming Period Card */}
-          <div className="p-5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-500/30 text-blue-200 border border-blue-400/30 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-blue-300" />
-                Next Class Today
-              </span>
-              {nextPeriod && (
-                <span className="text-xs font-mono font-bold text-slate-300">
-                  Starts at {nextPeriod.startTime}
-                </span>
+              ) : (
+                <div className="py-6 text-center text-slate-300 text-xs">
+                  No active lecture at this moment. Free preparation period.
+                </div>
               )}
             </div>
 
-            {nextPeriod ? (
-              <div className="space-y-2 pt-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-xl font-bold text-slate-100">
-                    {nextPeriod.subjectName}
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-slate-200 font-bold text-xs">
-                    {nextPeriod.className} ({nextPeriod.section})
+            {/* Next Upcoming Period Card */}
+            <div className="p-5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-500/30 text-blue-200 border border-blue-400/30 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-300" />
+                  Next Class Today
+                </span>
+                {nextPeriod && (
+                  <span className="text-xs font-mono font-bold text-slate-300">
+                    Starts at {nextPeriod.startTime}
                   </span>
-                </div>
+                )}
+              </div>
 
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-slate-300 text-xs">
-                  <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>
-                    Location: <strong className="text-white">{nextPeriod.roomNo || `Room ${nextPeriod.className}`}</strong>
-                  </span>
-                  <span className="mx-1">•</span>
-                  <span className="font-mono text-blue-300">{nextPeriod.periodTitle}</span>
+              {nextPeriod ? (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h3 className="text-xl font-bold text-slate-100">
+                      {nextPeriod.subjectName}
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-slate-200 font-bold text-xs">
+                      {nextPeriod.className} ({nextPeriod.section})
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-slate-300 text-xs">
+                    <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span>
+                      Location: <strong className="text-white">{nextPeriod.roomNo || `Room ${nextPeriod.className}`}</strong>
+                    </span>
+                    <span className="mx-1">•</span>
+                    <span className="font-mono text-blue-300">{nextPeriod.periodTitle}</span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="py-6 text-center text-slate-400 text-xs">
-                No further classes scheduled for today. Great job!
-              </div>
-            )}
+              ) : (
+                <div className="py-6 text-center text-slate-400 text-xs">
+                  No further classes scheduled for today.
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 3. Weekday Selector Tabs */}
       <div className="flex items-center gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto print:hidden">
         {DAYS.map((day) => {
           const isSelected = selectedDay === day;
-          const isToday = currentDayName === day;
+          const isToday = !isSunday && currentDayName === day;
           const dayData = teacherSchedule.find(s => s.day === day);
           const count = dayData?.periods?.length || 0;
 
