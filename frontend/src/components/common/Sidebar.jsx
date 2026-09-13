@@ -207,12 +207,14 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           {/* Header Branding */}
           <div className="h-16 sm:h-20 px-4 sm:px-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/40">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center font-extrabold text-white shadow-lg shadow-indigo-500/30 text-sm sm:text-base">
-                NVP
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="NVP English Medium School" 
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-contain p-0.5 bg-white/10 border border-indigo-400/40 shadow-md shrink-0" 
+              />
               <div>
-                <h1 className="font-heading font-extrabold text-sm sm:text-base tracking-wide text-white leading-tight">NVP ACADEMIC</h1>
-                <p className="text-[10px] sm:text-[11px] text-indigo-400 font-bold tracking-wider">NIMBI JODHAN</p>
+                <h1 className="font-heading font-extrabold text-xs sm:text-sm tracking-wide text-white leading-tight">NVP ENGLISH MEDIUM</h1>
+                <p className="text-[9px] sm:text-[10px] text-indigo-400 font-bold tracking-wider uppercase">NIMBI JODHAN</p>
               </div>
             </div>
             <button
