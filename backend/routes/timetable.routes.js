@@ -3,6 +3,7 @@ const router = express.Router();
 const Timetable = require('../models/Timetable');
 const Class = require('../models/Class');
 const Student = require('../models/Student');
+const Holiday = require('../models/Holiday');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 
@@ -49,6 +50,26 @@ router.get('/my-timetable', protect, async (req, res) => {
   try {
     const user = req.user;
 
+    // Fetch School Holidays & determine today's status
+    const holidays = await Holiday.find().sort({ date: 1 });
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(now.getTime() + istOffset);
+    const todayStr = istDate.toISOString().split('T')[0];
+    const currentDayOfWeek = istDate.getDay();
+    const isSunday = currentDayOfWeek === 0;
+
+    const todayHoliday = holidays.find(h => {
+      if (h.date === todayStr) return true;
+      if (h.endDate && todayStr >= h.date && todayStr <= h.endDate) return true;
+      return false;
+    }) || null;
+
+    const isTodayOff = isSunday || !!todayHoliday;
+    const holidayMessage = isSunday
+      ? 'Today is Sunday (Weekly Holiday). School is closed today.'
+      : (todayHoliday ? `Today is School Holiday: ${todayHoliday.title}${todayHoliday.description ? ` (${todayHoliday.description})` : ''}` : undefined);
+
     // 1. If Student: return their class timetable ONLY
     if (user.role === 'STUDENT') {
       let targetClassId = user.studentClass;
@@ -77,6 +98,11 @@ router.get('/my-timetable', protect, async (req, res) => {
           success: true,
           role: 'STUDENT',
           classId: null,
+          todayStr,
+          isSunday,
+          isHoliday: isTodayOff,
+          todayHoliday,
+          holidays,
           timetable: { schedule: [] },
           message: 'Student class not linked. Please contact the school administration.'
         });
@@ -87,15 +113,23 @@ router.get('/my-timetable', protect, async (req, res) => {
         .populate('schedule.periods.subject', 'name code')
         .populate('schedule.periods.teacher', 'name email mobile');
 
-      const isSunday = new Date().getDay() === 0;
-
       return res.json({
         success: true,
         role: 'STUDENT',
         classId: targetClassId,
+        todayStr,
         isSunday,
-        isHoliday: isSunday,
-        message: isSunday ? 'Today is Sunday (Weekly Holiday). School is closed today.' : undefined,
+        isHoliday: isTodayOff,
+        todayHoliday: todayHoliday ? {
+          _id: todayHoliday._id,
+          title: todayHoliday.title,
+          date: todayHoliday.date,
+          endDate: todayHoliday.endDate,
+          description: todayHoliday.description,
+          type: todayHoliday.type
+        } : null,
+        holidays,
+        message: holidayMessage,
         timetable: timetable || { schedule: [] }
       });
     }
@@ -143,22 +177,31 @@ router.get('/my-timetable', protect, async (req, res) => {
         return { day: dayName, periods: dayPeriods };
       });
 
-      // Live Today's Classroom Tracker
       const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const now = new Date();
-      const currentDayOfWeek = now.getDay();
-      const isSunday = currentDayOfWeek === 0;
 
-      if (isSunday) {
+      if (isTodayOff) {
         return res.json({
           success: true,
           role: 'TEACHER',
+          todayStr,
+          isSunday,
+          isHoliday: true,
+          todayHoliday: todayHoliday ? {
+            _id: todayHoliday._id,
+            title: todayHoliday.title,
+            date: todayHoliday.date,
+            endDate: todayHoliday.endDate,
+            description: todayHoliday.description,
+            type: todayHoliday.type
+          } : null,
+          holidays,
           teacherSchedule,
           liveToday: {
-            dayName: 'Sunday',
-            isSunday: true,
+            dayName: daysMap[currentDayOfWeek],
+            isSunday,
             isHoliday: true,
-            message: 'Today is Sunday (Weekly Holiday). School is closed today.',
+            todayHoliday,
+            message: holidayMessage,
             todayPeriods: [],
             currentPeriod: null,
             nextPeriod: null,
@@ -205,6 +248,11 @@ router.get('/my-timetable', protect, async (req, res) => {
       return res.json({
         success: true,
         role: 'TEACHER',
+        todayStr,
+        isSunday: false,
+        isHoliday: false,
+        todayHoliday: null,
+        holidays,
         teacherSchedule,
         liveToday: {
           dayName: currentDayName,

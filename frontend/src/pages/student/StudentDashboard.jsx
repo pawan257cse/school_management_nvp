@@ -78,7 +78,7 @@ export default function StudentDashboard() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black font-heading tracking-tight">
-            Namaste, {student.name}!
+            Hello, {student.name}!
           </h1>
           <p className="text-indigo-200 text-xs sm:text-sm mt-1.5 flex items-center gap-3 flex-wrap font-medium">
             <span>Standard: <strong className="text-white">{student.className} - Section {student.section}</strong></span>
@@ -133,8 +133,27 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Big Highlight Period Card */}
-        {currentPeriod ? (
+        {/* Big Highlight Period Card or Holiday Banner */}
+        {liveSchedule.isHoliday ? (
+          <div className="mt-5 p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="px-3 py-1.5 rounded-xl bg-amber-600 text-white font-black text-xs shadow-sm shrink-0">
+                🎉 School Holiday
+              </span>
+              <div>
+                <h4 className="font-heading font-black text-base text-slate-900">
+                  {liveSchedule.todayHoliday?.title || (liveSchedule.isSunday ? 'Sunday Holiday' : 'School Closed')}
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {liveSchedule.todayHoliday?.description || (liveSchedule.isSunday ? 'Today is Sunday (Weekly Holiday). Regular classes resume on Monday at 08:00 AM.' : 'School is closed on account of declared holiday.')}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-amber-900 bg-white px-3.5 py-1.5 rounded-xl border border-amber-200 shrink-0 shadow-2xs">
+              Campus Closed
+            </span>
+          </div>
+        ) : currentPeriod ? (
           <div className="mt-5 p-5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-blue-50/60 to-purple-50/60 border border-indigo-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">

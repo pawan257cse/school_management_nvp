@@ -8,6 +8,7 @@ const { FeeStructure, FeePayment } = require('../models/Fee');
 const Assignment = require('../models/Assignment');
 const Exam = require('../models/Exam');
 const Announcement = require('../models/Announcement');
+const Holiday = require('../models/Holiday');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 
@@ -183,10 +184,22 @@ router.get('/dashboard', protect, async (req, res) => {
       .populate('schedule.periods.teacher', 'name mobile');
 
 
+    // Fetch School Holidays
+    const holidays = await Holiday.find().sort({ date: 1 });
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(now.getTime() + istOffset);
+    const todayStr = istDate.toISOString().split('T')[0];
+    const isSunday = now.getDay() === 0;
+
+    const todayHoliday = holidays.find(h => {
+      if (h.date === todayStr) return true;
+      if (h.endDate && todayStr >= h.date && todayStr <= h.endDate) return true;
+      return false;
+    }) || null;
+
     // Get Today's day name (e.g. "Monday", "Tuesday", etc.)
     const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const now = new Date();
-    const currentDayName = daysMap[now.getDay()] === 'Sunday' ? 'Monday' : daysMap[now.getDay()]; // default Monday on Sunday
+    const currentDayName = daysMap[now.getDay()] === 'Sunday' ? 'Monday' : daysMap[now.getDay()];
 
     const todaySchedule = timetable?.schedule?.find(s => s.day === currentDayName);
     const todayPeriods = todaySchedule?.periods || [];
@@ -244,6 +257,22 @@ router.get('/dashboard', protect, async (req, res) => {
         nextPeriod = formattedPeriods[0];
       }
     }
+
+    const liveSchedule = {
+      todayName: isSunday ? 'Sunday' : daysMap[now.getDay()],
+      isSunday,
+      isHoliday: isSunday || !!todayHoliday,
+      todayHoliday: todayHoliday ? {
+        title: todayHoliday.title,
+        description: todayHoliday.description,
+        type: todayHoliday.type,
+        date: todayHoliday.date,
+        endDate: todayHoliday.endDate
+      } : null,
+      currentPeriod: (isSunday || todayHoliday) ? null : currentPeriod,
+      nextPeriod: (isSunday || todayHoliday) ? null : nextPeriod,
+      todayPeriods: (isSunday || todayHoliday) ? [] : formattedPeriods
+    };
 
     // 2. Student Personal Attendance Calculation (with Live Today Status)
     const attendanceRecords = await Attendance.find({ class: classId }).sort({ date: -1 }).populate('teacher', 'name');

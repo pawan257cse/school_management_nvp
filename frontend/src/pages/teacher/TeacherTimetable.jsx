@@ -150,8 +150,27 @@ export default function TeacherTimetable() {
         </div>
       </div>
 
-      {/* Sunday Note Banner */}
-      {isSunday && (
+      {/* School Holiday / Sunday Note Banner */}
+      {data?.todayHoliday ? (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start sm:items-center gap-3">
+            <span className="px-3 py-1.5 rounded-xl bg-amber-600 text-white font-black text-xs shadow-sm shrink-0">
+              🎉 School Holiday
+            </span>
+            <div>
+              <h4 className="font-heading font-black text-sm sm:text-base text-slate-900">
+                Today is School Holiday: {data.todayHoliday.title}
+              </h4>
+              <p className="text-xs text-slate-600 mt-0.5">
+                {data.todayHoliday.description || 'School is closed on account of declared holiday. Regular classes will resume on the next working day.'}
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-extrabold text-amber-900 bg-white px-3.5 py-1.5 rounded-xl border border-amber-200 shrink-0 shadow-2xs">
+            Campus Closed
+          </span>
+        </div>
+      ) : isSunday ? (
         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-white font-black text-xs">
@@ -165,7 +184,7 @@ export default function TeacherTimetable() {
             Sunday Off
           </span>
         </div>
-      )}
+      ) : null}
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* VIEW MODE 1: WEEKLY TABLE (COMPACT CLEAN TABLE FORMAT)                     */}
@@ -385,6 +404,69 @@ export default function TeacherTimetable() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming School Holidays Section */}
+      {data?.holidays && data.holidays.length > 0 && (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-amber-600" />
+              <h3 className="font-heading font-black text-slate-900 text-sm">
+                Upcoming School Holidays & Breaks ({data.holidays.length})
+              </h3>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+              Official School Calendar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {data.holidays.map((h) => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const isToday = h.date === todayStr || (h.endDate && todayStr >= h.date && todayStr <= h.endDate);
+
+              return (
+                <div
+                  key={h._id}
+                  className={`p-3.5 rounded-2xl border transition-all ${
+                    isToday
+                      ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/30'
+                      : 'bg-slate-50/70 border-slate-200 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="px-2 py-0.2 rounded-md bg-amber-100 text-amber-900 font-extrabold text-[9px] uppercase tracking-wider">
+                      {h.type || 'FESTIVAL'}
+                    </span>
+                    {isToday && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white font-black text-[9px] uppercase">
+                        Today
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-heading font-black text-slate-900 text-xs sm:text-sm">
+                    {h.title}
+                  </h4>
+                  <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    <span>
+                      {new Date(h.date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      {h.endDate && h.endDate !== h.date && (
+                        <> &rarr; {new Date(h.endDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</>
+                      )}
+                    </span>
+                  </div>
+                  {h.description && (
+                    <p className="mt-1 text-[10px] text-slate-500 line-clamp-1">
+                      {h.description}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

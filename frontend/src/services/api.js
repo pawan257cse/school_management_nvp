@@ -194,6 +194,12 @@ export const getMyTimetableApi = () => API.get('/timetable/my-timetable');
 export const saveClassTimetableApi = (data) => API.post('/timetable/save', data);
 export const deleteClassTimetableApi = (classId) => API.delete(`/timetable/class/${classId}`);
 
+// Holiday Services
+export const getHolidaysApi = () => API.get('/holidays');
+export const createHolidayApi = (data) => API.post('/holidays', data);
+export const updateHolidayApi = (id, data) => API.put(`/holidays/${id}`, data);
+export const deleteHolidayApi = (id) => API.delete(`/holidays/${id}`);
+
 // Student Portal Services (mTOP Style Dedicated Endpoints)
 export const getStudentDashboardApi = () => API.get('/student-portal/dashboard');
 export const getStudentResultsApi = () => API.get('/student-portal/results');
