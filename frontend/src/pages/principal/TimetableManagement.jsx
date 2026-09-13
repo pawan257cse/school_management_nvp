@@ -62,7 +62,7 @@ export default function TimetableManagement() {
 
         if (clsRes.data?.classes) {
           const sorted = [...clsRes.data.classes].sort((a, b) => {
-            const order = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+            const order = ['PG', 'Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
             const idxA = order.indexOf(a.name);
             const idxB = order.indexOf(b.name);
             return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
