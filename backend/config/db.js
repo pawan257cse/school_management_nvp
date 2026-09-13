@@ -4,27 +4,24 @@ const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI;
 
-    // 1. If MONGODB_URI is provided (Cloud Atlas or Custom URI), connect to it
+    // 1. If MONGODB_URI is provided, attempt connection
     if (mongoUri) {
-      console.log('[MongoDB] Connecting to cloud database (MONGODB_URI)...');
-      const conn = await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 10000,
-      });
-      console.log(`[MongoDB] Connected successfully to cloud database: ${conn.connection.host}`);
-      return;
+      try {
+        console.log('[MongoDB] Connecting to database (MONGODB_URI)...');
+        const conn = await mongoose.connect(mongoUri, {
+          serverSelectionTimeoutMS: 4000,
+        });
+        console.log(`[MongoDB] Connected successfully to database: ${conn.connection.host}`);
+        return;
+      } catch (cloudErr) {
+        if (process.env.NODE_ENV === 'production') {
+          throw cloudErr;
+        }
+        console.log('[MongoDB] Configured URI not reachable locally. Falling back to embedded MongoMemoryServer...');
+      }
     }
 
-    // 2. In local development, try local MongoDB service first
-    const localUri = 'mongodb://127.0.0.1:27017/nvp_school';
-    try {
-      const conn = await mongoose.connect(localUri, { serverSelectionTimeoutMS: 2500 });
-      console.log(`[MongoDB] Connected successfully to local database: ${conn.connection.host}`);
-      return;
-    } catch (err) {
-      console.log('[MongoDB] Local MongoDB service not active. Starting embedded MongoMemoryServer...');
-    }
-
-    // 3. Fallback to MongoMemoryServer for development zero-setup
+    // 2. In local development zero-setup, start MongoMemoryServer
     const { MongoMemoryServer } = require('mongodb-memory-server');
     const mongod = await MongoMemoryServer.create();
     const uri = mongod.getUri();

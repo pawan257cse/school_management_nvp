@@ -38,43 +38,37 @@ const getClassWiseOverview = async () => {
 
   const matrix = await Promise.all(classes.map(async (cls) => {
     const studentsInClass = await Student.find({ class: cls._id, status: 'active' });
-    let enrolledCount = studentsInClass.length;
-    let boysCount = studentsInClass.filter(s => s.gender === 'Male').length;
-    let girlsCount = studentsInClass.filter(s => s.gender === 'Female').length;
-
-    // If demo students are not yet seeded for this class, supply realistic enrollment
-    if (enrolledCount === 0) {
-      if (['Nursery', 'LKG', 'UKG'].includes(cls.name)) {
-        enrolledCount = 22;
-        boysCount = 12;
-        girlsCount = 10;
-      } else if (['1', '2', '3', '4', '5'].includes(cls.name)) {
-        enrolledCount = 28;
-        boysCount = 15;
-        girlsCount = 13;
-      } else {
-        enrolledCount = 32;
-        boysCount = 18;
-        girlsCount = 14;
-      }
-    }
+    const enrolledCount = studentsInClass.length;
+    const boysCount = studentsInClass.filter(s => s.gender === 'Male').length;
+    const girlsCount = studentsInClass.filter(s => s.gender === 'Female').length;
 
     // Fee structure for this class
     const struct = feeStructures.find(f => f.class?.toString() === cls._id.toString());
-    let feePerStudent = struct ? struct.amount : (['9', '10'].includes(cls.name) ? 5500 : (['6', '7', '8'].includes(cls.name) ? 4500 : 3500));
+    const feePerStudent = struct ? struct.amount : 0;
     const totalExpectedFee = enrolledCount * feePerStudent;
 
     // Collected Fee
     const classPayments = feePayments.filter(p => p.className && p.className.includes(cls.name));
-    let totalCollectedFee = classPayments.reduce((sum, p) => sum + p.amount, 0);
-
-    // If demo collected fee is 0, give realistic simulated collection for visual fullness
-    if (totalCollectedFee === 0) {
-      totalCollectedFee = Math.round(totalExpectedFee * 0.72); // ~72% collection rate
-    }
-
+    const totalCollectedFee = classPayments.reduce((sum, p) => sum + p.amount, 0);
     const totalPendingFee = Math.max(0, totalExpectedFee - totalCollectedFee);
     const collectionPercent = totalExpectedFee > 0 ? Math.round((totalCollectedFee / totalExpectedFee) * 100) : 0;
+
+    // Attendance today percent
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayAtt = await Attendance.findOne({
+      class: cls._id,
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    let attendanceTodayPercent = 0;
+    if (todayAtt && todayAtt.records && todayAtt.records.length > 0) {
+      const pCount = todayAtt.records.filter(r => r.status === 'present').length;
+      attendanceTodayPercent = Math.round((pCount / todayAtt.records.length) * 100);
+    }
 
     return {
       classId: cls._id,
@@ -92,7 +86,7 @@ const getClassWiseOverview = async () => {
       totalCollectedFee,
       totalPendingFee,
       collectionPercent,
-      attendanceTodayPercent: 94
+      attendanceTodayPercent
     };
   }));
 
@@ -144,16 +138,9 @@ router.get('/dashboard-stats', protect, async (req, res) => {
       date: { $gte: today, $lt: tomorrow }
     });
 
-    let teachersPresentToday = teacherAttsToday.filter(a => a.status === 'present').length;
-    let teachersAbsentToday = teacherAttsToday.filter(a => a.status === 'absent').length;
-    let teachersOnLeaveToday = teacherAttsToday.filter(a => ['leave', 'half-day'].includes(a.status)).length;
-
-    // Default fallback if not marked today in demo
-    if (teachersPresentToday === 0 && teachersAbsentToday === 0 && activeTeachers > 0) {
-      teachersPresentToday = Math.max(1, activeTeachers);
-      teachersAbsentToday = 0;
-      teachersOnLeaveToday = 0;
-    }
+    const teachersPresentToday = teacherAttsToday.filter(a => a.status === 'present').length;
+    const teachersAbsentToday = teacherAttsToday.filter(a => a.status === 'absent').length;
+    const teachersOnLeaveToday = teacherAttsToday.filter(a => ['leave', 'half-day'].includes(a.status)).length;
 
     // Transport Stats
     const transports = await Transport.find();
@@ -170,7 +157,7 @@ router.get('/dashboard-stats', protect, async (req, res) => {
 
     // Students count
     const studentDocCount = await Student.countDocuments();
-    const activeStudents = studentDocCount > 0 ? studentDocCount : totalEnrolledStudents;
+    const activeStudents = studentDocCount;
     const totalStudents = activeStudents;
 
     // Exams
@@ -190,7 +177,7 @@ router.get('/dashboard-stats', protect, async (req, res) => {
 
     let presentToday = 0;
     let absentToday = 0;
-    let markedToday = todayAttendances.length;
+    const markedToday = todayAttendances.length;
 
     todayAttendances.forEach(att => {
       att.records.forEach(r => {
@@ -198,12 +185,6 @@ router.get('/dashboard-stats', protect, async (req, res) => {
         else if (r.status === 'absent') absentToday++;
       });
     });
-
-    if (presentToday === 0 && absentToday === 0) {
-      presentToday = Math.round(totalStudents * 0.94);
-      absentToday = totalStudents - presentToday;
-      markedToday = totalClasses;
-    }
 
     // 30-day Payments
     const thirtyDaysAgo = new Date();
@@ -215,14 +196,25 @@ router.get('/dashboard-stats', protect, async (req, res) => {
     const payments30d = paymentAgg.length > 0 ? paymentAgg[0].total : totalCollectedSchoolFees;
 
     // Results & Avg Score
-    const avgScore = 84;
-    const totalResults = await Result.countDocuments() || 3;
+    const totalResults = await Result.countDocuments();
+    const allResults = await Result.find();
+    let totalScore = 0;
+    let scoreCount = 0;
+    allResults.forEach(r => {
+      (r.records || []).forEach(rec => {
+        if (rec.percentage !== undefined) {
+          totalScore += rec.percentage;
+          scoreCount++;
+        }
+      });
+    });
+    const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
 
     // Promotions
     const promotionsAgg = await Promotion.aggregate([
       { $group: { _id: null, total: { $sum: '$promotedCount' } } }
     ]);
-    const totalPromotions = promotionsAgg.length > 0 ? promotionsAgg[0].total : 28;
+    const totalPromotions = promotionsAgg.length > 0 ? promotionsAgg[0].total : 0;
 
     // Recent Activity Feeds
     const recentPayments = await FeePayment.find()
