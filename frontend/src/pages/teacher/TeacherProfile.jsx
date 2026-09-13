@@ -99,7 +99,33 @@ export default function TeacherProfile() {
     }
   };
 
-  const assignedClasses = user?.assignedClasses || [];
+  const classTeacherOf = user?.classTeacherOf || [];
+  const isClassTeacher = Boolean(
+    user?.role === 'HEAD' ||
+    user?.role === 'PRINCIPAL' ||
+    user?.isClassTeacher ||
+    classTeacherOf.length > 0 ||
+    (user?.attendanceClasses && user.attendanceClasses.length > 0)
+  );
+
+  // Combine and deduplicate assignedClasses and classTeacherOf
+  const rawAssigned = user?.assignedClasses || [];
+  const classMap = new Map();
+  rawAssigned.forEach(c => {
+    if (c) {
+      const id = (c._id || c).toString();
+      classMap.set(id, typeof c === 'object' ? c : { _id: id, name: id, section: 'A' });
+    }
+  });
+  classTeacherOf.forEach(c => {
+    if (c) {
+      const id = (c._id || c).toString();
+      if (!classMap.has(id)) {
+        classMap.set(id, { _id: id, name: c.name, section: c.section || 'A' });
+      }
+    }
+  });
+  const assignedClasses = Array.from(classMap.values());
   const assignedSubjects = user?.assignedSubjects || [];
 
   return (
@@ -107,12 +133,17 @@ export default function TeacherProfile() {
       {/* Top Header */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-3 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black uppercase tracking-wider">
               Faculty Profile
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            {isClassTeacher && (
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Class Teacher ({classTeacherOf.map(c => `Class ${c.name}`).join(', ') || 'In-Charge'})
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold">
               Active Faculty
             </span>
           </div>
@@ -151,7 +182,12 @@ export default function TeacherProfile() {
                 <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                   {user?.role || 'TEACHER'}
                 </span>
-                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                {isClassTeacher && (
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    Class Teacher
+                  </span>
+                )}
+                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
                   Verified
                 </span>
               </div>
@@ -184,6 +220,28 @@ export default function TeacherProfile() {
             </div>
           </div>
 
+          {/* Class Teacher In-Charge Special Banner */}
+          {isClassTeacher && (
+            <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-900 to-teal-950 text-white shadow-md space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle2 className="w-5 h-5" />
+                </span>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300 block">Class Teacher Duty</span>
+                  <h3 className="font-heading font-black text-sm text-white">
+                    {classTeacherOf.length > 0 
+                      ? classTeacherOf.map(c => `Class ${c.name} (${c.section || 'A'})`).join(', ')
+                      : 'Attendance In-Charge'}
+                  </h3>
+                </div>
+              </div>
+              <p className="text-xs text-emerald-200/90 leading-relaxed">
+                You have active student attendance marking and class roster authority for your assigned class.
+              </p>
+            </div>
+          )}
+
           {/* Academic Allocations Card */}
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
@@ -193,17 +251,31 @@ export default function TeacherProfile() {
 
             {/* Assigned Classes */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Assigned Classes</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Assigned Classes ({assignedClasses.length})
+              </span>
               {assignedClasses.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {assignedClasses.map((c, idx) => (
-                    <span
-                      key={c._id || idx}
-                      className="px-2.5 py-1 text-xs font-black rounded-xl bg-blue-50 text-blue-800 border border-blue-200 shadow-xs"
-                    >
-                      Class {c.name || c} ({c.section || 'A'})
-                    </span>
-                  ))}
+                  {assignedClasses.map((c, idx) => {
+                    const isCT = classTeacherOf.some(ct => (ct._id || ct).toString() === (c._id || c).toString());
+                    return (
+                      <span
+                        key={c._id || idx}
+                        className={`px-2.5 py-1 text-xs font-black rounded-xl border shadow-xs flex items-center gap-1.5 ${
+                          isCT 
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                            : 'bg-blue-50 text-blue-800 border-blue-200'
+                        }`}
+                      >
+                        <span>Class {c.name || c} ({c.section || 'A'})</span>
+                        {isCT && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-600 text-white font-extrabold">
+                            Class Teacher
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-slate-400 italic">No classes currently assigned.</p>
@@ -212,7 +284,9 @@ export default function TeacherProfile() {
 
             {/* Assigned Subjects */}
             <div className="space-y-1.5 pt-2 border-t border-slate-100">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Assigned Subjects</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Assigned Subjects ({assignedSubjects.length})
+              </span>
               {assignedSubjects.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {assignedSubjects.map((s, idx) => (

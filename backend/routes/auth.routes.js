@@ -119,6 +119,8 @@ router.post('/login', async (req, res) => {
 
     const Class = require('../models/Class');
     let classTeacherOf = [];
+    let allAssignedClasses = user.assignedClasses || [];
+
     if (user.role === 'TEACHER') {
       const classesWhereCT = await Class.find({
         status: 'active',
@@ -128,7 +130,26 @@ router.post('/login', async (req, res) => {
           { _id: { $in: user.attendanceClasses || [] } }
         ]
       }).select('name section');
+      
       classTeacherOf = classesWhereCT.map(c => ({ _id: c._id, name: c.name, section: c.section || 'A' }));
+
+      // Merge and deduplicate assignedClasses
+      const classMap = new Map();
+      (user.assignedClasses || []).forEach(c => {
+        if (c && c._id) classMap.set(c._id.toString(), { _id: c._id, name: c.name, section: c.section || 'A' });
+      });
+      classesWhereCT.forEach(c => {
+        if (c && c._id) classMap.set(c._id.toString(), { _id: c._id, name: c.name, section: c.section || 'A' });
+      });
+      allAssignedClasses = Array.from(classMap.values());
+
+      // Auto-sync in background to User document
+      if (classesWhereCT.length > 0) {
+        User.updateOne(
+          { _id: user._id },
+          { $addToSet: { assignedClasses: { $each: classesWhereCT.map(c => c._id) } } }
+        ).catch(() => {});
+      }
     }
 
     res.json({
@@ -151,7 +172,7 @@ router.post('/login', async (req, res) => {
         profilePhoto: user.profilePhoto,
         mustChangePassword: user.mustChangePassword,
         permissions: user.permissions,
-        assignedClasses: user.assignedClasses,
+        assignedClasses: allAssignedClasses,
         assignedSubjects: user.assignedSubjects,
         isClassTeacher: user.role === 'HEAD' || user.role === 'PRINCIPAL' || classTeacherOf.length > 0,
         classTeacherOf,
@@ -172,6 +193,8 @@ router.get('/me', protect, async (req, res) => {
     const user = req.user;
     const Class = require('../models/Class');
     let classTeacherOf = [];
+    let allAssignedClasses = user.assignedClasses || [];
+
     if (user.role === 'TEACHER') {
       const classesWhereCT = await Class.find({
         status: 'active',
@@ -181,12 +204,32 @@ router.get('/me', protect, async (req, res) => {
           { _id: { $in: user.attendanceClasses || [] } }
         ]
       }).select('name section');
+      
       classTeacherOf = classesWhereCT.map(c => ({ _id: c._id, name: c.name, section: c.section || 'A' }));
+
+      // Merge and deduplicate assignedClasses
+      const classMap = new Map();
+      (user.assignedClasses || []).forEach(c => {
+        if (c && c._id) classMap.set(c._id.toString(), { _id: c._id, name: c.name, section: c.section || 'A' });
+      });
+      classesWhereCT.forEach(c => {
+        if (c && c._id) classMap.set(c._id.toString(), { _id: c._id, name: c.name, section: c.section || 'A' });
+      });
+      allAssignedClasses = Array.from(classMap.values());
+
+      // Auto-sync in background to User document
+      if (classesWhereCT.length > 0) {
+        User.updateOne(
+          { _id: user._id },
+          { $addToSet: { assignedClasses: { $each: classesWhereCT.map(c => c._id) } } }
+        ).catch(() => {});
+      }
     }
 
     const userObj = user.toObject ? user.toObject() : { ...user };
     userObj.isClassTeacher = user.role === 'HEAD' || user.role === 'PRINCIPAL' || classTeacherOf.length > 0;
     userObj.classTeacherOf = classTeacherOf;
+    userObj.assignedClasses = allAssignedClasses;
 
     res.json({
       success: true,

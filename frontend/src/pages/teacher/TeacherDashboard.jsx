@@ -32,31 +32,50 @@ export default function TeacherDashboard() {
     fetchData();
   }, []);
 
-  const assignedClasses = user?.assignedClasses || [];
-  const assignedSubjects = user?.assignedSubjects || [];
-  const liveToday = timetableData?.liveToday;
-
+  const classTeacherOf = user?.classTeacherOf || [];
   const isClassTeacher = Boolean(
     user?.role === 'HEAD' ||
     user?.role === 'PRINCIPAL' ||
     user?.isClassTeacher ||
-    (user?.classTeacherOf && user.classTeacherOf.length > 0) ||
+    classTeacherOf.length > 0 ||
     (user?.attendanceClasses && user.attendanceClasses.length > 0)
   );
+
+  // Combine and deduplicate assignedClasses and classTeacherOf
+  const rawAssigned = user?.assignedClasses || [];
+  const classMap = new Map();
+  rawAssigned.forEach(c => {
+    if (c) {
+      const id = (c._id || c).toString();
+      classMap.set(id, typeof c === 'object' ? c : { _id: id, name: id, section: 'A' });
+    }
+  });
+  classTeacherOf.forEach(c => {
+    if (c) {
+      const id = (c._id || c).toString();
+      if (!classMap.has(id)) {
+        classMap.set(id, { _id: id, name: c.name, section: c.section || 'A' });
+      }
+    }
+  });
+  const assignedClasses = Array.from(classMap.values());
+  const assignedSubjects = user?.assignedSubjects || [];
+  const liveToday = timetableData?.liveToday;
 
   return (
     <div className="space-y-6">
       {/* Teacher Personal Greeting Banner */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
               Faculty Portal
             </span>
             <span className="text-xs text-slate-400 font-medium">EMP ID: {user?.employeeId}</span>
             {isClassTeacher && (
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
-                Class Teacher
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                Class Teacher ({classTeacherOf.map(c => `Class ${c.name}`).join(', ') || 'In-Charge'})
               </span>
             )}
           </div>
@@ -179,11 +198,26 @@ export default function TeacherDashboard() {
               {assignedClasses.length === 0 ? (
                 <span className="text-xs text-slate-400">No classes assigned yet.</span>
               ) : (
-                assignedClasses.map(c => (
-                  <span key={c._id || c} className="px-3 py-1 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm">
-                    Class {c.name || c} ({c.section || 'A'})
-                  </span>
-                ))
+                assignedClasses.map(c => {
+                  const isCT = classTeacherOf.some(ct => (ct._id || ct).toString() === (c._id || c).toString());
+                  return (
+                    <span 
+                      key={c._id || c} 
+                      className={`px-3 py-1 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 ${
+                        isCT 
+                          ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' 
+                          : 'bg-blue-600 text-white'
+                      }`}
+                    >
+                      <span>Class {c.name || c} ({c.section || 'A'})</span>
+                      {isCT && (
+                        <span className="px-1.5 py-0.2 rounded text-[9px] bg-white text-emerald-800 font-black">
+                          Class Teacher
+                        </span>
+                      )}
+                    </span>
+                  );
+                })
               )}
             </div>
           </div>
