@@ -4,6 +4,7 @@ const Attendance = require('../models/Attendance');
 const Class = require('../models/Class');
 const { protect } = require('../middleware/auth');
 const { logActivity } = require('../middleware/auditLogger');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/attendance
 // @desc    Get attendance record for class and date
@@ -14,6 +15,16 @@ router.get('/', protect, async (req, res) => {
 
     if (!classId) {
       return res.status(400).json({ success: false, message: 'Class ID is required.' });
+    }
+
+    if (req.user.role === 'TEACHER') {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (!allowedClassIds.includes(classId.toString())) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You are only authorized to view attendance for your assigned classes.'
+        });
+      }
     }
 
     const searchDate = date ? new Date(date) : new Date();
@@ -73,9 +84,12 @@ router.post('/', protect, async (req, res) => {
     }
 
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      if (!assignedClassIds.includes(classId.toString())) {
-        return res.status(403).json({ success: false, message: 'You are not assigned to mark attendance for this class.' });
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (!allowedClassIds.includes(classId.toString())) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You can only record or update attendance for your assigned classes.'
+        });
       }
     }
 

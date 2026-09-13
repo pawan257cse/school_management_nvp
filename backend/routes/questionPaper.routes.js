@@ -7,6 +7,7 @@ const checkRole = require('../middleware/checkRole');
 const { logActivity } = require('../middleware/auditLogger');
 const upload = require('../middleware/upload');
 const { generateWordDocument } = require('../utils/docxGenerator');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/question-papers/:id/download-word
 // @desc    Download question paper as MS Word (.docx) formatted exactly for NVP School
@@ -66,13 +67,9 @@ router.get('/', protect, async (req, res) => {
     if (classId) query.class = classId;
     if (subjectId) query.subject = subjectId;
 
-    // Security Isolation for Teachers
+    // Security Isolation for Teachers: only see papers created by this teacher
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      query.$or = [
-        { teacher: req.user._id },
-        { class: { $in: assignedClassIds } }
-      ];
+      query.teacher = req.user._id;
     }
 
     const papers = await QuestionPaper.find(query)
@@ -103,14 +100,11 @@ router.get('/:id', protect, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Question paper not found.' });
     }
 
-    // Security Check: Teacher can only view papers if assigned to the class or is owner
+    // Security Check: Teacher can only view their own authored question papers
     if (req.user.role === 'TEACHER') {
       const isOwner = paper.teacher._id.toString() === req.user._id.toString();
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      const isAssigned = assignedClassIds.includes(paper.class._id.toString());
-      
-      if (!isOwner && !isAssigned) {
-        return res.status(403).json({ success: false, message: 'Access denied. You are not assigned to this class.' });
+      if (!isOwner) {
+        return res.status(403).json({ success: false, message: 'Access denied. You can only view your own question papers.' });
       }
     }
 
@@ -137,10 +131,10 @@ router.post('/', protect, async (req, res) => {
 
     // Backend Access Control Check for Teachers
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
+      const allowedClassIds = await getTeacherClassIds(req.user);
       const assignedSubjectIds = (req.user.assignedSubjects || []).map(s => (s._id || s).toString());
 
-      if (!assignedClassIds.includes(classId.toString())) {
+      if (!allowedClassIds.includes(classId.toString())) {
         return res.status(403).json({ success: false, message: 'This class is not assigned to you.' });
       }
       if (!assignedSubjectIds.includes(subjectId.toString())) {

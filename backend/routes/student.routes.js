@@ -8,6 +8,7 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { generateAutoPassword } = require('../utils/passwordGenerator');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // Get all students with filter & search
 router.get('/', protect, async (req, res) => {
@@ -15,9 +16,24 @@ router.get('/', protect, async (req, res) => {
     const { classId, search, status } = req.query;
     const query = {};
 
-    if (classId) {
+    // Teachers can ONLY see students belonging to their assigned classes
+    if (req.user.role === 'TEACHER') {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (classId) {
+        if (!allowedClassIds.includes(classId.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access Denied: You are only authorized to view students from your assigned classes.'
+          });
+        }
+        query.class = classId;
+      } else {
+        query.class = { $in: allowedClassIds };
+      }
+    } else if (classId) {
       query.class = classId;
     }
+
     if (status) {
       query.status = status;
     }
@@ -52,6 +68,18 @@ router.get('/:id', protect, async (req, res) => {
 
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    // Teacher isolation check
+    if (req.user.role === 'TEACHER') {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      const studentClassId = (student.class?._id || student.class)?.toString();
+      if (!allowedClassIds.includes(studentClassId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You are only authorized to view students in your assigned classes.'
+        });
+      }
     }
 
     // Lookup user portal account

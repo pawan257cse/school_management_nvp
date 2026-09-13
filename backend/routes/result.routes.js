@@ -4,6 +4,7 @@ const Result = require('../models/Result');
 const Class = require('../models/Class');
 const { protect } = require('../middleware/auth');
 const { logActivity } = require('../middleware/auditLogger');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // Helper function to compute grade & status
 const calculateGradeAndStatus = (obtained, total) => {
@@ -33,8 +34,12 @@ router.get('/', protect, async (req, res) => {
     if (exam) query.exam = exam;
 
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      query.class = { $in: assignedClassIds };
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (classId && !allowedClassIds.includes(classId.toString())) {
+        return res.status(403).json({ success: false, message: 'Class not assigned to you.' });
+      }
+      query.class = { $in: allowedClassIds };
+      query.teacher = req.user._id;
     }
 
     const results = await Result.find(query)
@@ -61,8 +66,8 @@ router.post('/', protect, async (req, res) => {
     }
 
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      if (!assignedClassIds.includes(classId.toString())) {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (!allowedClassIds.includes(classId.toString())) {
         return res.status(403).json({ success: false, message: 'Class not assigned to you.' });
       }
     }

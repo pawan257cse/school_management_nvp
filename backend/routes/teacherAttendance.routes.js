@@ -61,6 +61,31 @@ router.get('/', protect, async (req, res) => {
       };
     });
 
+    // If teacher role, return ONLY their own attendance record
+    if (req.user.role === 'TEACHER') {
+      const myRecord = teacherRoster.filter(t => t.teacherId.toString() === req.user._id.toString());
+      const mySummary = {
+        totalTeachers: 1,
+        present: myRecord.filter(r => r.status === 'present').length,
+        absent: myRecord.filter(r => r.status === 'absent').length,
+        late: myRecord.filter(r => r.status === 'late').length,
+        leave: myRecord.filter(r => ['leave', 'half-day'].includes(r.status)).length
+      };
+      return res.json({
+        success: true,
+        date: targetDate,
+        summary: mySummary,
+        roster: myRecord,
+        teachers: myRecord,
+        data: {
+          date: targetDate,
+          summary: mySummary,
+          roster: myRecord,
+          teachers: myRecord
+        }
+      });
+    }
+
     const summaryData = {
       totalTeachers: teachers.length,
       present: presentCount,

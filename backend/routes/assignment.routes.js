@@ -3,13 +3,15 @@ const router = express.Router();
 const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
 const { protect } = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const { logActivity } = require('../middleware/auditLogger');
 const upload = require('../middleware/upload');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/assignments/by-class
 // @desc    Get all assignments grouped by class (for HEAD/PRINCIPAL class-wise diary view)
 // @access  Private (HEAD, PRINCIPAL)
-router.get('/by-class', protect, async (req, res) => {
+router.get('/by-class', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
     const classOrder = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
     const classes = await Class.find();
@@ -49,10 +51,18 @@ router.get('/', protect, async (req, res) => {
     if (classId) query.class = classId;
     if (subjectId) query.subject = subjectId;
 
-    // TEACHER: only see their assigned classes
+    // TEACHER: only see their own assignments for their assigned classes
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      if (!classId) query.class = { $in: assignedClassIds };
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      query.teacher = req.user._id;
+      if (classId) {
+        if (!allowedClassIds.includes(classId.toString())) {
+          return res.status(403).json({ success: false, message: 'Class not assigned to you.' });
+        }
+        query.class = classId;
+      } else {
+        query.class = { $in: allowedClassIds };
+      }
     }
     // HEAD/PRINCIPAL: see all (no extra filter)
 
@@ -80,8 +90,8 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
     }
 
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      if (!assignedClassIds.includes(classId.toString())) {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (!allowedClassIds.includes(classId.toString())) {
         return res.status(403).json({ success: false, message: 'This class is not assigned to you.' });
       }
     }

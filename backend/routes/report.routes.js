@@ -19,6 +19,7 @@ const TeacherAttendance = require('../models/TeacherAttendance');
 const Transport = require('../models/Transport');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // Helper to generate class-wise matrix
 const getClassWiseOverview = async () => {
@@ -103,7 +104,13 @@ const getClassWiseOverview = async () => {
 // @access  Private
 router.get('/class-wise-overview', protect, async (req, res) => {
   try {
-    const classOverview = await getClassWiseOverview();
+    let classOverview = await getClassWiseOverview();
+
+    if (req.user.role === 'TEACHER') {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      classOverview = classOverview.filter(c => allowedClassIds.includes(c.classId.toString()));
+    }
+
     res.json({ success: true, count: classOverview.length, classes: classOverview });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -4,9 +4,10 @@ const StudyMaterial = require('../models/StudyMaterial');
 const { protect } = require('../middleware/auth');
 const { logActivity } = require('../middleware/auditLogger');
 const upload = require('../middleware/upload');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/materials
-// @desc    Get study materials
+// @desc    Get study materials (TEACHER sees only their own materials for assigned classes)
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
@@ -17,8 +18,16 @@ router.get('/', protect, async (req, res) => {
     if (subjectId) query.subject = subjectId;
 
     if (req.user.role === 'TEACHER') {
-      const assignedClassIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      query.class = { $in: assignedClassIds };
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      query.teacher = req.user._id;
+      if (classId) {
+        if (!allowedClassIds.includes(classId.toString())) {
+          return res.status(403).json({ success: false, message: 'Class not assigned to you.' });
+        }
+        query.class = classId;
+      } else {
+        query.class = { $in: allowedClassIds };
+      }
     }
 
     const materials = await StudyMaterial.find(query)
@@ -42,6 +51,13 @@ router.post('/', protect, upload.single('file'), async (req, res) => {
 
     if (!classId || !subjectId || !chapter || !topic || !title) {
       return res.status(400).json({ success: false, message: 'Class, Subject, Chapter, Topic, and Title are required.' });
+    }
+
+    if (req.user.role === 'TEACHER') {
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      if (!allowedClassIds.includes(classId.toString())) {
+        return res.status(403).json({ success: false, message: 'This class is not assigned to you.' });
+      }
     }
 
     let fileUrl = externalUrl || '';

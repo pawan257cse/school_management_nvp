@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Class = require('../models/Class');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { logActivity } = require('../middleware/auditLogger');
+const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/classes
-// @desc    Get all classes
+// @desc    Get all classes (Filtered strictly to assigned classes for TEACHER)
 // @access  Private (All roles)
 router.get('/', protect, async (req, res) => {
   try {
@@ -15,10 +17,10 @@ router.get('/', protect, async (req, res) => {
       .populate('subjects', 'name code')
       .sort({ name: 1 });
 
-    // If teacher, optionally highlight assigned classes
+    // Restrict teachers strictly to their assigned classes
     if (req.user.role === 'TEACHER') {
-      const assignedIds = (req.user.assignedClasses || []).map(c => (c._id || c).toString());
-      classes = classes.filter(c => assignedIds.includes(c._id.toString()));
+      const allowedClassIds = await getTeacherClassIds(req.user);
+      classes = classes.filter(c => allowedClassIds.includes(c._id.toString()));
     }
 
     res.json({ success: true, count: classes.length, classes });
@@ -46,6 +48,11 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
       studentCount: studentCount || 30
     });
 
+    // Auto-sync class teacher's assignedClasses
+    if (classTeacher) {
+      await User.findByIdAndUpdate(classTeacher, { $addToSet: { assignedClasses: newClass._id } });
+    }
+
     await logActivity(req, 'CREATE_CLASS', 'Class', newClass._id, { name: newClass.name });
 
     res.status(201).json({ success: true, message: 'Class created successfully.', class: newClass });
@@ -67,6 +74,11 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: 'Class not found.' });
+    }
+
+    // Auto-sync class teacher's assignedClasses
+    if (req.body.classTeacher) {
+      await User.findByIdAndUpdate(req.body.classTeacher, { $addToSet: { assignedClasses: updatedClass._id } });
     }
 
     await logActivity(req, 'EDIT_CLASS', 'Class', updatedClass._id, { name: updatedClass.name });
