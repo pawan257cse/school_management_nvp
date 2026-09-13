@@ -43,14 +43,23 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid Login ID / Email or password.' });
     }
 
-    // Check if account is temporarily locked due to consecutive failed attempts
-    if (user.lockUntil && user.lockUntil > Date.now()) {
-      const remainingMinutes = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
-      await logActivity(req, 'LOGIN_LOCKED_ATTEMPT', 'User', user._id, { email: user.email, remainingMinutes });
-      return res.status(423).json({
-        success: false,
-        message: `Account temporarily locked due to 5 consecutive failed attempts. Please try again in ${remainingMinutes} minute(s) or contact the Head Administrator.`
-      });
+    // For HEAD and PRINCIPAL, never lock out and automatically clear any previous lockouts
+    if (user.role === 'HEAD' || user.role === 'PRINCIPAL') {
+      if (user.lockUntil || (user.loginAttempts && user.loginAttempts > 0)) {
+        user.lockUntil = undefined;
+        user.loginAttempts = 0;
+        await user.save();
+      }
+    } else {
+      // Check if non-admin account is temporarily locked due to consecutive failed attempts
+      if (user.lockUntil && user.lockUntil > Date.now()) {
+        const remainingMinutes = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+        await logActivity(req, 'LOGIN_LOCKED_ATTEMPT', 'User', user._id, { email: user.email, remainingMinutes });
+        return res.status(423).json({
+          success: false,
+          message: `Account temporarily locked due to 5 consecutive failed attempts. Please try again in ${remainingMinutes} minute(s) or contact the Head Administrator.`
+        });
+      }
     }
 
     if (user.status !== 'active') {
@@ -60,7 +69,16 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      // Increment failed login attempts
+      // HEAD and PRINCIPAL accounts are never locked out due to failed attempts
+      if (user.role === 'HEAD' || user.role === 'PRINCIPAL') {
+        await logActivity(req, 'LOGIN_FAILED', 'User', user._id, { email: user.email, role: user.role });
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid Administrator Login ID or Password. Please check your credentials.'
+        });
+      }
+
+      // Increment failed login attempts for regular accounts
       user.loginAttempts = (user.loginAttempts || 0) + 1;
 
       if (user.loginAttempts >= 5) {

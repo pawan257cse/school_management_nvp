@@ -27,26 +27,7 @@ const Promotion = require('../models/Promotion');
  */
 const seedInitialData = async () => {
   try {
-    console.log('[System Init] Checking database state...');
-
-    // 1. Purge all dummy data across all operational collections
-    await User.deleteMany({ role: { $ne: 'HEAD' } });
-    await Student.deleteMany({});
-    await Parent.deleteMany({});
-    await Staff.deleteMany({});
-    await QuestionPaper.deleteMany({});
-    await Assignment.deleteMany({});
-    await StudyMaterial.deleteMany({});
-    await Attendance.deleteMany({});
-    await Result.deleteMany({});
-    await Notification.deleteMany({});
-    await Announcement.deleteMany({});
-    await TeacherAttendance.deleteMany({});
-    await Transport.deleteMany({});
-    await Timetable.deleteMany({});
-    await FeePayment.deleteMany({});
-    await FeeStructure.deleteMany({});
-    await Promotion.deleteMany({});
+    console.log('[System Init] Verifying core system configuration...');
 
     // 2. Ensure Standard Subjects are available for syllabus assignment
     const defaultSubjects = [
@@ -72,22 +53,26 @@ const seedInitialData = async () => {
     const allSubjects = await Subject.find();
     const subjectIds = allSubjects.map(s => s._id);
 
-    // 3. Ensure Standard Classes exist (Nursery to 10) with 0 initial enrollment and unassigned class teachers
-    const standardClassNames = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+    // 3. Ensure Standard Classes exist (PG to 7) without overwriting class teacher or enrollment
+    const standardClassNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
     for (const name of standardClassNames) {
       await Class.findOneAndUpdate(
         { name, section: 'A' },
         {
-          name,
-          section: 'A',
-          subjects: subjectIds,
-          classTeacher: null,
-          studentCount: 0,
-          status: 'active'
+          $setOnInsert: {
+            name,
+            section: 'A',
+            subjects: subjectIds,
+            classTeacher: null,
+            studentCount: 28,
+            status: 'active'
+          }
         },
         { upsert: true, new: true }
       );
     }
+    // Remove unused classes
+    await Class.deleteMany({ name: { $in: ['Nursery', '8', '9', '10'] } });
 
     // 4. Ensure Default School Information
     const existingSetting = await Setting.findOne();
@@ -107,7 +92,7 @@ const seedInitialData = async () => {
       });
     }
 
-    // 5. Ensure Head Administrator account exists (ONLY account)
+    // 5. Ensure Head Administrator account exists
     const existingHead = await User.findOne({ role: 'HEAD' });
     if (!existingHead) {
       const initialHeadPass = process.env.HEAD_PASSWORD || 'Head@12345';
@@ -118,6 +103,7 @@ const seedInitialData = async () => {
         name: 'Head Administrator',
         email: (process.env.HEAD_EMAIL || 'head@school.local').toLowerCase().trim(),
         passwordHash: headPasswordHash,
+        generatedPassword: initialHeadPass,
         role: 'HEAD',
         mobile: '+91 98290 00000',
         employeeId: 'EMP-HEAD',
@@ -126,9 +112,28 @@ const seedInitialData = async () => {
         joiningDate: new Date(),
         status: 'active'
       });
-      console.log('[System Init] Single Head Administrator created: head@school.local');
-    } else {
-      console.log('[System Init] Head Administrator verified. All dummy data cleaned.');
+      console.log('[System Init] Head Administrator verified: head@school.local');
+    }
+
+    // 6. Ensure Principal account exists
+    const existingPrincipal = await User.findOne({ role: 'PRINCIPAL' });
+    if (!existingPrincipal) {
+      const princPass = 'Megha@123';
+      const salt = await bcrypt.genSalt(10);
+      const princHash = await bcrypt.hash(princPass, salt);
+      await User.create({
+        name: 'Megha',
+        email: 'pk621913@gmail.com',
+        passwordHash: princHash,
+        generatedPassword: princPass,
+        role: 'PRINCIPAL',
+        mobile: '+91 82270 31017',
+        employeeId: 'EMP-P001',
+        gender: 'Female',
+        qualification: 'M.A., B.Ed., M.Ed.',
+        status: 'active'
+      });
+      console.log('[System Init] Principal verified: pk621913@gmail.com');
     }
   } catch (error) {
     console.error('[System Init Error]:', error.message);

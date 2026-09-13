@@ -57,12 +57,47 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
-// Strict Brute-Force Rate Limiter for Login & Password Recovery (Max 15 requests per 15 min per IP)
+// Rate Limiter for Login & Password Recovery
+// Head & Principal are strictly exempted from network-level rate limits
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: async (req) => {
+    try {
+      const id = (req.body?.email || req.body?.identifier || '').trim().toLowerCase();
+      if (!id) return false;
+
+      // Skip immediately for known Head / Principal accounts or keywords
+      if (
+        id === 'head@school.local' ||
+        id === 'pk621913@gmail.com' ||
+        id.includes('head') ||
+        id.includes('admin') ||
+        id.includes('principal')
+      ) {
+        return true;
+      }
+
+      // Check role in database
+      const User = require('./models/User');
+      const user = await User.findOne({
+        $or: [
+          { email: id },
+          { employeeId: id.toUpperCase() },
+          { mobile: id }
+        ]
+      }).select('role');
+
+      if (user && (user.role === 'HEAD' || user.role === 'PRINCIPAL')) {
+        return true;
+      }
+    } catch (err) {
+      // ignore
+    }
+    return false;
+  },
   message: { success: false, message: 'Too many login attempts from this network. For security reasons, please wait 15 minutes before trying again.' }
 });
 app.use('/api/auth/login', authLimiter);
