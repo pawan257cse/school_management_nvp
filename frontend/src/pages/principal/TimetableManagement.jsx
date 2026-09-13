@@ -210,10 +210,37 @@ export default function TimetableManagement() {
     setSaving(true);
     setFeedback(null);
     try {
+      const sanitizedSchedule = schedule.map(dayData => ({
+        day: dayData.day,
+        periods: (dayData.periods || []).map(p => {
+          const isBreak = !!p.isBreak;
+          let rawSub = isBreak ? null : (p.subject?._id || p.subject);
+          let rawTeach = isBreak ? null : (p.teacher?._id || p.teacher);
+          if (rawSub && typeof rawSub === 'object' && rawSub._id) rawSub = rawSub._id;
+          if (rawTeach && typeof rawTeach === 'object' && rawTeach._id) rawTeach = rawTeach._id;
+
+          const subStr = rawSub ? rawSub.toString().trim() : '';
+          const teachStr = rawTeach ? rawTeach.toString().trim() : '';
+
+          return {
+            periodNumber: p.periodNumber,
+            periodTitle: p.periodTitle || (isBreak ? 'Lunch Break' : `Period ${p.periodNumber}`),
+            isBreak,
+            startTime: p.startTime,
+            endTime: p.endTime,
+            subject: (!isBreak && subStr !== '') ? subStr : null,
+            subjectName: isBreak ? 'Lunch Break' : (p.subjectName || ''),
+            teacher: (!isBreak && teachStr !== '') ? teachStr : null,
+            teacherName: isBreak ? '' : (p.teacherName || ''),
+            roomNo: p.roomNo || (selectedClassObj ? `Class ${selectedClassObj.name}` : 'Classroom')
+          };
+        })
+      }));
+
       const res = await saveClassTimetableApi({
         classId: selectedClassId,
         academicYear: '2026-2027',
-        schedule
+        schedule: sanitizedSchedule
       });
 
       if (res.data?.success) {

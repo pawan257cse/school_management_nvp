@@ -234,18 +234,28 @@ router.post('/save', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) =
     const cleanedSchedule = schedule.map(dayData => ({
       day: dayData.day,
       periods: (dayData.periods || []).map(p => {
-        const subId = p.subject?._id || p.subject;
-        const teachId = p.teacher?._id || p.teacher;
+        const isBreak = !!p.isBreak;
+        let rawSub = isBreak ? null : (p.subject?._id || p.subject);
+        let rawTeach = isBreak ? null : (p.teacher?._id || p.teacher);
+        if (rawSub && typeof rawSub === 'object' && rawSub._id) rawSub = rawSub._id;
+        if (rawTeach && typeof rawTeach === 'object' && rawTeach._id) rawTeach = rawTeach._id;
+
+        const subStr = rawSub ? rawSub.toString().trim() : '';
+        const teachStr = rawTeach ? rawTeach.toString().trim() : '';
+
+        const validSub = (!isBreak && subStr && mongoose.Types.ObjectId.isValid(subStr)) ? subStr : null;
+        const validTeach = (!isBreak && teachStr && mongoose.Types.ObjectId.isValid(teachStr)) ? teachStr : null;
+
         return {
           periodNumber: p.periodNumber,
-          periodTitle: p.periodTitle || `Period ${p.periodNumber}`,
-          isBreak: !!p.isBreak,
+          periodTitle: p.periodTitle || (isBreak ? 'Lunch Break' : `Period ${p.periodNumber}`),
+          isBreak,
           startTime: p.startTime,
           endTime: p.endTime,
-          subject: (subId && mongoose.Types.ObjectId.isValid(subId)) ? subId : null,
-          subjectName: p.subjectName || '',
-          teacher: (teachId && mongoose.Types.ObjectId.isValid(teachId)) ? teachId : null,
-          teacherName: p.teacherName || '',
+          subject: validSub,
+          subjectName: isBreak ? 'Lunch Break' : (p.subjectName || ''),
+          teacher: validTeach,
+          teacherName: isBreak ? '' : (p.teacherName || ''),
           roomNo: p.roomNo || `Class ${cls.name}`
         };
       })

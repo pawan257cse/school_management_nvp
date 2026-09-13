@@ -25,19 +25,25 @@ const periodSchema = new mongoose.Schema({
   },
   subject: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subject'
+    ref: 'Subject',
+    default: null,
+    set: v => (v === '' || !v ? null : v)
   },
   subjectName: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    default: null,
+    set: v => (v === '' || !v ? null : v)
   },
   teacherName: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   roomNo: {
     type: String,
