@@ -103,30 +103,19 @@ export default function ClassManagement() {
       )
     },
     {
-      header: 'Class Teacher',
+      header: 'Class Teacher (Attendance In-Charge)',
       render: (row) => row.classTeacher?.name ? (
-        <span className="font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl text-xs border border-indigo-200">
-          {row.classTeacher.name}
+        <span className="font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl text-xs border border-indigo-200 flex items-center gap-1.5 w-max">
+          <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+          <span>{row.classTeacher.name}</span>
         </span>
       ) : <span className="text-slate-400 font-semibold text-xs italic">Unassigned</span>
     },
     {
-      header: 'Attendance Duty In-Charge',
-      render: (row) => {
-        const attTeacher = row.attendanceTeacher || row.classTeacher;
-        return attTeacher?.name ? (
-          <span className="font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl text-xs border border-emerald-200 flex items-center gap-1.5 w-max">
-            <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{attTeacher.name}</span>
-          </span>
-        ) : <span className="text-slate-400 font-semibold text-xs italic">Unassigned</span>;
-      }
-    },
-    {
-      header: 'Capacity',
+      header: 'Enrolled Students',
       render: (row) => (
         <span className="font-bold text-slate-700 text-xs">
-          {row.studentCount || 30} Students
+          {row.studentCount || 15} Students
         </span>
       )
     },
@@ -171,10 +160,10 @@ export default function ClassManagement() {
         <div>
           <h2 className="font-heading font-black text-xl sm:text-2xl text-slate-900 flex items-center gap-2">
             <School className="w-6 h-6 text-indigo-600" />
-            Class Directory & Teacher In-Charge Allocations
+            Class Directory & Teacher Allocations
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Assign Class Teachers and Attendance In-Charges for each class standard (PG to 7th).
+            Assign Class Teachers for each class standard (PG to 7th). Class teachers automatically receive daily attendance portal rights.
           </p>
         </div>
         <button
@@ -222,10 +211,10 @@ export default function ClassManagement() {
             </div>
           </div>
 
-          {/* Class Teacher Dropdown */}
+          {/* Unified Class Teacher Dropdown */}
           <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1.5">
             <label className="block text-xs font-black text-indigo-950">
-              Assigned Class Teacher (Main In-Charge)
+              Assigned Class Teacher & Attendance In-Charge
             </label>
             <select
               value={formData.classTeacher}
@@ -234,7 +223,7 @@ export default function ClassManagement() {
                 setFormData(prev => ({
                   ...prev,
                   classTeacher: val,
-                  attendanceTeacher: val // auto-sync attendance duty
+                  attendanceTeacher: val // auto-sync
                 }));
               }}
               className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-indigo-300 bg-white text-indigo-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
@@ -245,25 +234,8 @@ export default function ClassManagement() {
               ))}
             </select>
             <p className="text-[11px] text-indigo-800">
-              This teacher will be the official class teacher and granted rights to mark daily attendance.
+              Selected teacher is designated as the official Class Teacher and will immediately see all students of this class in their Attendance portal.
             </p>
-          </div>
-
-          {/* Attendance In-Charge Dropdown */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Attendance Duty In-Charge (Default: Same as Class Teacher)
-            </label>
-            <select
-              value={formData.attendanceTeacher || formData.classTeacher || ''}
-              onChange={(e) => setFormData({ ...formData, attendanceTeacher: e.target.value })}
-              className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="">-- Same as Class Teacher --</option>
-              {teachers.map(t => (
-                <option key={t._id} value={t._id}>{t.name} ({t.employeeId || 'Faculty'})</option>
-              ))}
-            </select>
           </div>
 
           <div>
