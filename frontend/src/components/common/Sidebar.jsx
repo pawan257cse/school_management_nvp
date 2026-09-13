@@ -37,8 +37,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Teachers', path: '/head/teachers', icon: UserCheck },
         { name: 'Classes', path: '/head/classes', icon: School },
         { name: 'Transport & Fleet', path: '/transport', icon: Bus },
-        { name: 'Users', path: '/head/users', icon: Users },
-        { name: 'Parents', path: '/parents', icon: Users },
         { name: 'Staff', path: '/staff', icon: UserCheck }
       ]
     },
@@ -88,7 +86,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Teachers', path: '/principal/teachers', icon: Users },
         { name: 'Classes', path: '/principal/classes', icon: School },
         { name: 'Transport & Fleet', path: '/transport', icon: Bus },
-        { name: 'Parents', path: '/parents', icon: Users },
         { name: 'Staff', path: '/staff', icon: UserCheck }
       ]
     },
