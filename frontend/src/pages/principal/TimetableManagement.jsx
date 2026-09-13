@@ -398,11 +398,45 @@ export default function TimetableManagement() {
           </div>
         </div>
 
+        {/* Quick Class Selection Tabs */}
+        <div className="pt-2 border-t border-slate-100 space-y-2">
+          <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+            Select Class Standard to View / Edit:
+          </label>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {classes.map((c) => {
+              const isSelected = c._id === selectedClassId;
+              return (
+                <button
+                  key={c._id}
+                  type="button"
+                  onClick={() => setSelectedClassId(c._id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-600 ring-offset-1'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <School className="w-3.5 h-3.5" />
+                  <span>Class {c.name}</span>
+                  {c.classTeacher?.name && (
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {c.classTeacher.name}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {selectedClassObj && (
           <div className="flex items-center gap-4 text-xs font-bold text-slate-600 flex-wrap pt-3 border-t border-slate-100">
-            <span>Standard: <strong className="text-indigo-600 font-extrabold">{selectedClassObj.name} ({selectedClassObj.section || 'A'})</strong></span>
+            <span>Currently Viewing: <strong className="text-indigo-600 font-extrabold text-sm">Class {selectedClassObj.name} ({selectedClassObj.section || 'A'})</strong></span>
             <span>
-              Designated Attendance In-Charge: <strong className="text-emerald-700 font-black">{selectedClassObj.classTeacher?.name || 'Not Assigned'}</strong>
+              Class Teacher & Attendance In-Charge: <strong className="text-emerald-700 font-black">{selectedClassObj.classTeacher?.name || 'Not Assigned'}</strong>
             </span>
             <span>Academic Session: <strong className="text-slate-900 font-extrabold">2026-2027</strong></span>
           </div>
