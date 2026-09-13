@@ -32,6 +32,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       title: 'Admin Management',
       items: [
         { name: 'School Info', path: '/config/school-info', icon: Building },
+        { name: 'Principal Admin', path: '/head/principal', icon: Award, badge: 'Executive' },
         { name: 'Students', path: '/students', icon: Users },
         { name: 'Teachers', path: '/head/teachers', icon: UserCheck },
         { name: 'Classes', path: '/head/classes', icon: School },

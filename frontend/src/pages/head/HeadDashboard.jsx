@@ -120,6 +120,13 @@ export default function HeadDashboard() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
+            onClick={() => navigate('/head/principal')}
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/40 transition flex items-center gap-1.5"
+          >
+            <Award className="w-4 h-4" />
+            <span>Principal Governance</span>
+          </button>
+          <button
             onClick={() => navigate('/head/teacher-attendance')}
             className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/40 transition flex items-center gap-1.5"
           >
