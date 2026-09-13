@@ -102,11 +102,11 @@ export default function Login({ isAdminMode = false }) {
       <div className="w-full max-w-md z-10 my-auto">
         {/* Official School Header Branding */}
         <div className="text-center mb-6 sm:mb-8 space-y-2">
-          <div className="flex justify-center mb-2.5">
+          <div className="flex justify-center mb-3">
             <img 
               src="/logo.png" 
               alt="NVP English Medium School" 
-              className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-full shadow-2xl shadow-amber-500/20 ring-4 ring-amber-400/50 p-1 bg-white hover:scale-105 transition-transform" 
+              className="w-36 h-auto max-h-36 sm:w-44 sm:max-h-44 object-contain drop-shadow-2xl hover:scale-105 transition-transform" 
             />
           </div>
           <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-white tracking-tight">
