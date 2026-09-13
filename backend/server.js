@@ -108,14 +108,25 @@ app.all('/api/*', (req, res) => {
   res.status(404).json({ success: false, message: `API route ${req.method} ${req.originalUrl} not found` });
 });
 
-// ── PRODUCTION: Serve React frontend build ──────────────────────────────────
+// ── PRODUCTION: Serve React frontend build if present, otherwise API status ──
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../frontend/dist');
-  app.use(express.static(distPath));
-  // Any route not starting with /api → serve React app
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.json({
+        success: true,
+        message: 'NVP School Portal Backend API is running live!',
+        status: 'Online',
+        version: '1.0.0',
+        healthCheck: '/api/health'
+      });
+    });
+  }
 }
 
 // ── Global Error Handling Middleware ─────────────────────────────────────────
