@@ -474,34 +474,34 @@ export default function TimetableManagement() {
                 <table className="w-full text-left text-xs border-collapse min-w-[760px]">
                   <thead className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
                     <tr>
-                      <th className="py-3 px-3 w-16 text-center">#</th>
-                      <th className="py-3 px-3 w-36">Timing (Start - End)</th>
-                      <th className="py-3 px-3">Title / Type</th>
-                      <th className="py-3 px-3">Subject</th>
-                      <th className="py-3 px-3">Assigned Teacher</th>
-                      <th className="py-3 px-3">Classroom / Venue</th>
-                      <th className="py-3 px-3 w-12 text-center">Action</th>
+                      <th className="py-2 px-2 w-14 text-center">#</th>
+                      <th className="py-2 px-2 w-36">Timing (Start - End)</th>
+                      <th className="py-2 px-2">Title / Type</th>
+                      <th className="py-2 px-2">Subject</th>
+                      <th className="py-2 px-2">Assigned Teacher</th>
+                      <th className="py-2 px-2">Classroom</th>
+                      <th className="py-2 px-2 w-10 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                     {currentDayData.periods.map((period, idx) => (
                       <tr key={idx} className={`hover:bg-slate-50/70 transition-colors ${period.isBreak ? 'bg-amber-50/40' : ''}`}>
                         {/* Period # */}
-                        <td className="py-3 px-3 text-center">
-                          <span className="font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                        <td className="py-1.5 px-2 text-center">
+                          <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
                             P{period.periodNumber}
                           </span>
                         </td>
 
                         {/* Start & End Times */}
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-1.5">
+                        <td className="py-1.5 px-2">
+                          <div className="flex items-center gap-1">
                             <input
                               type="text"
                               value={period.startTime}
                               onChange={(e) => handlePeriodChange(idx, 'startTime', e.target.value)}
                               placeholder="08:00 AM"
-                              className="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-18 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             />
                             <span className="text-slate-400 font-bold">-</span>
                             <input
@@ -509,40 +509,40 @@ export default function TimetableManagement() {
                               value={period.endTime}
                               onChange={(e) => handlePeriodChange(idx, 'endTime', e.target.value)}
                               placeholder="08:40 AM"
-                              className="w-20 px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-18 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             />
                           </div>
                         </td>
 
                         {/* Title & Break Toggle */}
-                        <td className="py-3 px-3">
+                        <td className="py-1.5 px-2">
                           <input
                             type="text"
                             value={period.periodTitle || ''}
                             onChange={(e) => handlePeriodChange(idx, 'periodTitle', e.target.value)}
                             placeholder="e.g. Period 1"
-                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="w-28 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           />
-                          <label className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 cursor-pointer">
+                          <label className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-500 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={!!period.isBreak}
                               onChange={(e) => handlePeriodChange(idx, 'isBreak', e.target.checked)}
-                              className="rounded text-amber-600 focus:ring-amber-500"
+                              className="rounded text-amber-600 focus:ring-amber-500 w-3 h-3"
                             />
-                            <span>Break / Recess</span>
+                            <span>Break</span>
                           </label>
                         </td>
 
                         {/* Subject Select */}
-                        <td className="py-3 px-3">
+                        <td className="py-1.5 px-2">
                           {period.isBreak ? (
-                            <span className="text-amber-800 font-semibold italic">Break / No Subject</span>
+                            <span className="text-amber-800 font-semibold italic text-[11px]">Break / No Subject</span>
                           ) : (
                             <select
                               value={period.subject || ''}
                               onChange={(e) => handlePeriodChange(idx, 'subject', e.target.value)}
-                              className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-full px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
                               <option value="">-- Select Subject --</option>
                               {subjects.map(s => (
@@ -553,16 +553,16 @@ export default function TimetableManagement() {
                         </td>
 
                         {/* Teacher Select */}
-                        <td className="py-3 px-3">
+                        <td className="py-1.5 px-2">
                           {period.isBreak ? (
-                            <span className="text-amber-800 font-semibold italic">Duty Proctor</span>
+                            <span className="text-amber-800 font-semibold italic text-[11px]">Duty Proctor</span>
                           ) : (
                             <select
                               value={period.teacher || ''}
                               onChange={(e) => handlePeriodChange(idx, 'teacher', e.target.value)}
-                              className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-full px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                              <option value="">-- Assign Faculty --</option>
+                              <option value="">-- Faculty --</option>
                               {teachers.map(t => (
                                 <option key={t._id} value={t._id}>
                                   {t.name} ({t.employeeId || 'Teacher'})
@@ -573,24 +573,24 @@ export default function TimetableManagement() {
                         </td>
 
                         {/* Room */}
-                        <td className="py-3 px-3">
+                        <td className="py-1.5 px-2">
                           <input
                             type="text"
                             value={period.roomNo || ''}
                             onChange={(e) => handlePeriodChange(idx, 'roomNo', e.target.value)}
-                            placeholder="e.g. Room 102"
-                            className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            placeholder="Room 102"
+                            className="w-full px-1.5 py-0.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           />
                         </td>
 
                         {/* Delete Action */}
-                        <td className="py-3 px-3 text-center">
+                        <td className="py-1.5 px-2 text-center">
                           <button
                             onClick={() => handleDeletePeriod(idx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition"
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition"
                             title="Delete period"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
                       </tr>
@@ -607,44 +607,44 @@ export default function TimetableManagement() {
       {/* VIEW MODE 2: FULL WEEKLY MATRIX VIEW                                     */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {viewMode === 'weekly' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-            <div className="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
+            <div className="border-b border-slate-100 pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 className="font-heading font-black text-slate-900 text-lg flex items-center gap-2">
-                  <LayoutGrid className="w-5 h-5 text-indigo-600" />
-                  Full Weekly Timetable Matrix for {selectedClassObj ? `Class ${selectedClassObj.name} (${selectedClassObj.section || 'A'})` : 'Selected Class'}
+                <h2 className="font-heading font-black text-slate-900 text-sm flex items-center gap-1.5">
+                  <LayoutGrid className="w-4 h-4 text-indigo-600" />
+                  Weekly Schedule: {selectedClassObj ? `Class ${selectedClassObj.name} (${selectedClassObj.section || 'A'})` : 'Selected Class'}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Complete 6-day timetable overview (Monday to Saturday) with period slots and assigned teachers.
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  6-day timetable (Monday – Saturday) with period slots and assigned teachers.
                 </p>
               </div>
-              <span className="text-xs font-bold px-3 py-1.5 bg-indigo-50 text-indigo-800 rounded-xl border border-indigo-200 self-start sm:self-auto">
+              <span className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-200 self-start sm:self-auto">
                 9 Periods / Day
               </span>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full text-left border-collapse min-w-[900px]">
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-left border-collapse min-w-[860px]">
                 <thead>
-                  <tr className="bg-slate-900 text-white text-xs font-black">
-                    <th className="py-3 px-3 w-28 uppercase tracking-wider sticky left-0 z-10 bg-slate-900 border-r border-slate-800">
+                  <tr className="bg-slate-900 text-white text-[11px] font-black">
+                    <th className="py-2 px-2.5 w-24 uppercase tracking-wider sticky left-0 z-10 bg-slate-900 border-r border-slate-800">
                       Day
                     </th>
                     {DEFAULT_TIME_SLOTS.map((slot) => (
                       <th
                         key={slot.periodNumber}
-                        className={`py-3 px-2.5 text-center border-l border-slate-800 font-extrabold ${
-                          slot.isBreak ? 'bg-amber-600 text-amber-50 w-24' : 'w-32'
+                        className={`py-2 px-1.5 text-center border-l border-slate-800 font-extrabold ${
+                          slot.isBreak ? 'bg-amber-600 text-amber-50 w-20' : 'w-28'
                         }`}
                       >
-                        <div className="font-black leading-tight">{slot.periodTitle}</div>
-                        <div className="text-[10px] font-normal opacity-75 font-mono mt-0.5">
+                        <div className="font-black text-[11px] leading-tight">{slot.periodTitle}</div>
+                        <div className="text-[9px] font-normal text-slate-300 font-mono mt-0.5">
                           {slot.startTime} - {slot.endTime}
                         </div>
                       </th>
                     ))}
-                    <th className="py-3 px-3 text-center border-l border-slate-800 w-24">Action</th>
+                    <th className="py-2 px-2 text-center border-l border-slate-800 w-16 text-[10px]">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-xs">
@@ -655,7 +655,7 @@ export default function TimetableManagement() {
                     return (
                       <tr key={day} className="hover:bg-indigo-50/30 transition-colors">
                         {/* Day Column */}
-                        <td className="py-3 px-3 font-heading font-black text-slate-900 bg-slate-50/80 border-r border-slate-200 sticky left-0 z-10">
+                        <td className="py-1.5 px-2.5 font-heading font-black text-slate-900 text-[11px] bg-slate-50/90 border-r border-slate-200 sticky left-0 z-10">
                           {day}
                         </td>
 
@@ -665,9 +665,9 @@ export default function TimetableManagement() {
                             return (
                               <td
                                 key={slot.periodNumber}
-                                className="py-2.5 px-2 text-center border-l border-slate-200 bg-amber-50/50 text-amber-800 font-bold text-[11px]"
+                                className="py-1 px-1 text-center border-l border-slate-200 bg-amber-50 text-amber-900 font-bold text-[10px]"
                               >
-                                Lunch Break
+                                Lunch
                               </td>
                             );
                           }
@@ -678,14 +678,14 @@ export default function TimetableManagement() {
                             return (
                               <td
                                 key={slot.periodNumber}
-                                className="py-2.5 px-2 text-center border-l border-slate-200 bg-indigo-50/30"
+                                className="py-1.5 px-1.5 text-center border-l border-slate-200 bg-indigo-50/20"
                               >
-                                <div className="font-black text-slate-900 text-xs leading-snug">
+                                <div className="font-black text-slate-900 text-[11px] leading-tight truncate max-w-[105px] mx-auto">
                                   {match.subjectName}
                                 </div>
                                 {match.teacherName && (
-                                  <div className="mt-1">
-                                    <span className="inline-block px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-semibold text-[10px] truncate max-w-[110px]">
+                                  <div className="mt-0.5">
+                                    <span className="inline-block px-1 py-0.2 rounded bg-indigo-100 text-indigo-800 font-bold text-[9px] truncate max-w-[100px]">
                                       {match.teacherName}
                                     </span>
                                   </div>
@@ -697,7 +697,7 @@ export default function TimetableManagement() {
                           return (
                             <td
                               key={slot.periodNumber}
-                              className="py-2.5 px-2 text-center border-l border-slate-200 text-slate-300 font-bold text-xs"
+                              className="py-1 px-1 text-center border-l border-slate-200 text-slate-300 font-bold text-xs"
                             >
                               —
                             </td>
@@ -705,15 +705,15 @@ export default function TimetableManagement() {
                         })}
 
                         {/* Action Column */}
-                        <td className="py-2.5 px-2 text-center border-l border-slate-200">
+                        <td className="py-1 px-1.5 text-center border-l border-slate-200">
                           <button
                             onClick={() => {
                               setSelectedDay(day);
                               setViewMode('day');
                             }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold text-[11px] transition-colors shadow-xs"
+                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold text-[10px] transition-colors"
                           >
-                            <Edit3 className="w-3 h-3" />
+                            <Edit3 className="w-2.5 h-2.5" />
                             <span>Edit</span>
                           </button>
                         </td>

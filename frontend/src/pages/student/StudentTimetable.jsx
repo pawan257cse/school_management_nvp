@@ -147,39 +147,39 @@ export default function StudentTimetable() {
       )}
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* VIEW MODE 1: WEEKLY TABLE (SIMPLE CLEAN TABLE FORMAT)                     */}
+      {/* VIEW MODE 1: WEEKLY TABLE (COMPACT CLEAN TABLE FORMAT)                     */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {viewMode === 'weekly' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50">
             <div>
-              <h2 className="font-heading font-black text-slate-900 text-base flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-indigo-600" />
+              <h2 className="font-heading font-black text-slate-900 text-sm flex items-center gap-1.5">
+                <LayoutGrid className="w-4 h-4 text-indigo-600" />
                 Weekly Class Timetable (Monday – Saturday)
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-[11px] text-slate-500 mt-0.5">
                 Complete 6-day timetable for {timetable?.className || 'Class'} ({timetable?.section || 'A'}).
               </p>
             </div>
-            <span className="text-xs font-bold px-3 py-1.5 bg-indigo-50 text-indigo-800 rounded-xl border border-indigo-200 self-start sm:self-auto">
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-200 self-start sm:self-auto">
               9 Periods / Day (08:00 AM – 01:00 PM)
             </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse min-w-[1000px]">
-              <thead className="bg-slate-100 text-slate-700 font-extrabold uppercase text-[11px] border-b border-slate-200">
+            <table className="w-full text-left text-xs border-collapse min-w-[860px]">
+              <thead className="bg-slate-900 text-white font-extrabold uppercase text-[11px] border-b border-slate-800">
                 <tr>
-                  <th className="py-3.5 px-4 w-28 bg-slate-200/80 text-slate-900 font-black sticky left-0 z-10">Day</th>
+                  <th className="py-2 px-2.5 w-24 bg-slate-900 text-white font-black sticky left-0 z-10 border-r border-slate-800">Day</th>
                   {TIME_SLOTS.map((slot) => (
                     <th 
                       key={slot.periodNumber} 
-                      className={`py-3 px-3 text-center border-l border-slate-200 ${
-                        slot.isBreak ? 'bg-amber-100/60 text-amber-950 min-w-[90px]' : 'min-w-[110px]'
+                      className={`py-2 px-1.5 text-center border-l border-slate-800 ${
+                        slot.isBreak ? 'bg-amber-600 text-amber-50 w-20' : 'w-28'
                       }`}
                     >
-                      <div className="font-black text-xs">{slot.title}</div>
-                      <div className="text-[10px] font-mono text-slate-500 font-semibold mt-0.5">{slot.time}</div>
+                      <div className="font-black text-[11px] leading-tight">{slot.title}</div>
+                      <div className="text-[9px] font-mono text-slate-300 font-semibold mt-0.5">{slot.time}</div>
                     </th>
                   ))}
                 </tr>
@@ -198,11 +198,11 @@ export default function StudentTimetable() {
                       }`}
                     >
                       {/* Day Column */}
-                      <td className="py-4 px-4 font-heading font-black text-slate-900 bg-slate-50/80 border-r border-slate-200 sticky left-0 z-10">
-                        <div className="flex items-center gap-1.5">
+                      <td className="py-1.5 px-2.5 font-heading font-black text-slate-900 text-[11px] bg-slate-50/90 border-r border-slate-200 sticky left-0 z-10">
+                        <div className="flex items-center gap-1">
                           <span>{day}</span>
                           {isToday && (
-                            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
                           )}
                         </div>
                       </td>
@@ -213,9 +213,9 @@ export default function StudentTimetable() {
                           return (
                             <td 
                               key={slot.periodNumber} 
-                              className="py-3 px-2 text-center border-l border-slate-200 bg-amber-50/40 text-amber-800 font-bold text-[11px]"
+                              className="py-1 px-1 text-center border-l border-slate-200 bg-amber-50 text-amber-900 font-bold text-[10px]"
                             >
-                              Lunch Break
+                              Lunch
                             </td>
                           );
                         }
@@ -224,19 +224,21 @@ export default function StudentTimetable() {
 
                         if (match) {
                           return (
-                            <td key={slot.periodNumber} className="py-3 px-2.5 text-center border-l border-slate-200 bg-white">
-                              <div className="font-black text-slate-900 text-xs leading-snug">
+                            <td key={slot.periodNumber} className="py-1.5 px-1.5 text-center border-l border-slate-200 bg-white">
+                              <div className="font-black text-slate-900 text-[11px] leading-tight truncate max-w-[105px] mx-auto">
                                 {match.subjectName || match.subject?.name || 'Subject'}
                               </div>
-                              <div className="text-[11px] font-semibold text-indigo-700 mt-1 truncate">
-                                {match.teacherName || match.teacher?.name || '—'}
+                              <div className="mt-0.5">
+                                <span className="inline-block px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 font-semibold text-[9px] border border-indigo-100 truncate max-w-[95px]">
+                                  {match.teacherName || match.teacher?.name || '—'}
+                                </span>
                               </div>
                             </td>
                           );
                         }
 
                         return (
-                          <td key={slot.periodNumber} className="py-3 px-2 text-center border-l border-slate-200 text-slate-300 font-bold text-xs">
+                          <td key={slot.periodNumber} className="py-1 px-1 text-center border-l border-slate-200 text-slate-300 font-bold text-xs">
                             —
                           </td>
                         );
@@ -254,9 +256,9 @@ export default function StudentTimetable() {
       {/* VIEW MODE 2: DAY VIEW                                                    */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {viewMode === 'day' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Day Selector Tabs */}
-          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+          <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-xs overflow-x-auto">
             {DAYS.map((day) => {
               const isSelected = selectedDay === day;
               const isToday = !isSunday && currentDayName === day;
@@ -265,15 +267,15 @@ export default function StudentTimetable() {
                 <button
                   key={day}
                   onClick={() => setSelectedDay(day)}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      ? 'bg-indigo-600 text-white shadow-xs'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <span>{day}</span>
                   {isToday && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold uppercase ${
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
                       isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
                     }`}>
                       Today
@@ -285,67 +287,67 @@ export default function StudentTimetable() {
           </div>
 
           {/* Routine Cards Grid for the selected day */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-indigo-600" />
-                <h2 className="font-heading font-black text-slate-900 text-base">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-indigo-600" />
+                <h2 className="font-heading font-black text-slate-900 text-sm">
                   {selectedDay}'s Class Schedule ({currentDaySchedule.periods?.length || 0} Periods)
                 </h2>
               </div>
-              <span className="text-xs font-bold text-slate-500">
-                {timetable?.className || 'Class Standard'} - Section {timetable?.section || 'A'}
+              <span className="text-[11px] font-bold text-slate-500">
+                {timetable?.className || 'Class'} - Section {timetable?.section || 'A'}
               </span>
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-slate-500 font-medium">
-                <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin text-indigo-600" />
+              <div className="p-8 text-center text-slate-500 font-medium text-xs">
+                <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin text-indigo-600" />
                 Loading timetable...
               </div>
             ) : !currentDaySchedule.periods || currentDaySchedule.periods.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 font-medium">
+              <div className="p-8 text-center text-slate-500 font-medium text-xs">
                 No periods scheduled for {selectedDay}.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {currentDaySchedule.periods.map((period) => {
                   const isBreak = period.isBreak;
                   return (
                     <div
                       key={period._id || period.periodNumber}
-                      className={`p-5 rounded-2xl border transition-all hover:shadow-md ${
+                      className={`p-3 rounded-xl border transition-all hover:shadow-2xs ${
                         isBreak
-                          ? 'bg-amber-50/60 border-amber-200'
+                          ? 'bg-amber-50/70 border-amber-200'
                           : 'bg-white border-slate-200 hover:border-indigo-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`text-xs font-mono font-black px-2 py-0.5 rounded ${
+                        <span className={`text-[10px] font-mono font-black px-1.5 py-0.2 rounded ${
                           isBreak ? 'bg-amber-200 text-amber-900' : 'bg-indigo-50 text-indigo-700'
                         }`}>
                           {period.periodTitle || `Period ${period.periodNumber}`}
                         </span>
-                        <span className="text-xs font-mono font-bold text-slate-500 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-[10px] font-mono font-bold text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
                           {period.startTime} - {period.endTime}
                         </span>
                       </div>
 
-                      <h3 className="font-heading font-black text-slate-900 text-lg mt-3">
+                      <h3 className="font-heading font-black text-slate-900 text-sm mt-1.5 leading-snug">
                         {period.subjectName || (period.subject?.name) || (isBreak ? 'Lunch Break' : 'Academic Class')}
                       </h3>
 
-                      <div className="mt-3 pt-3 border-t border-slate-100 text-xs space-y-2">
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <User className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1 text-slate-700 truncate max-w-[65%]">
+                          <User className="w-3 h-3 text-indigo-500 shrink-0" />
                           <span className="font-semibold truncate">
-                            {period.teacherName || period.teacher?.name || (isBreak ? 'Duty Proctor' : 'Subject Teacher')}
+                            {period.teacherName || period.teacher?.name || (isBreak ? 'Duty Proctor' : 'Teacher')}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-indigo-700 font-bold">
-                          <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <div className="flex items-center gap-1 text-indigo-700 font-bold truncate">
+                          <MapPin className="w-3 h-3 text-indigo-600 shrink-0" />
                           <span className="truncate">
                             {period.roomNo || 'Room 102'}
                           </span>
