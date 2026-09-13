@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getClassesApi, getSubjectsApi, getResultsApi, saveResultsApi } from '../../services/api';
+import { getClassesApi, getSubjectsApi, getResultsApi, saveResultsApi, getStudentsApi } from '../../services/api';
 import ResultEntryTable from '../../components/results/ResultEntryTable';
 import { useAuth } from '../../context/AuthContext';
 import { Award, BookOpen, School } from 'lucide-react';
@@ -52,17 +52,22 @@ export default function TeacherResults() {
         setTotalMarks(existing.totalMarks || 100);
         setRecords(existing.records || []);
       } else {
-        const cls = classes.find(c => c._id === selectedClassId);
-        const count = cls ? cls.studentCount : 35;
-        const defaultRecords = Array.from({ length: count }, (_, i) => ({
-          rollNo: `R-${101 + i}`,
-          studentName: `Student ${i + 1}`,
-          obtainedMarks: 0,
-          percentage: 0,
-          grade: 'F',
-          passStatus: 'fail'
-        }));
-        setRecords(defaultRecords);
+        // Fetch real students enrolled in this class
+        const stRes = await getStudentsApi({ classId: selectedClassId, status: 'active' });
+        if (stRes.data?.success && stRes.data.students && stRes.data.students.length > 0) {
+          const defaultRecords = stRes.data.students.map(s => ({
+            rollNo: s.rollNo ? String(s.rollNo) : '1',
+            studentName: s.name,
+            obtainedMarks: 0,
+            percentage: 0,
+            grade: 'F',
+            passStatus: 'fail'
+          }));
+          setRecords(defaultRecords);
+        } else {
+          // No students enrolled yet in this class
+          setRecords([]);
+        }
       }
     } catch (err) {
       console.error(err);

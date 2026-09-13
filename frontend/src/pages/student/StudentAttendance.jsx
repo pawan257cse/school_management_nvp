@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getStudentAttendanceApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudentAttendance() {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,13 +61,13 @@ export default function StudentAttendance() {
     );
   }
 
-  const student = data?.student || { name: 'Aarav Sharma', className: 'Class 6', section: 'A', rollNo: '1' };
+  const student = data?.student || { name: user?.name || 'Student', className: 'Enrolled Class', section: '', rollNo: '-' };
   const today = data?.today || {
-    dayName: 'Saturday',
+    dayName: new Date().toLocaleDateString('en-IN', { weekday: 'long' }),
     dateFormatted: new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-    status: 'present',
-    statusLabel: 'Present Today ✓',
-    markedByTeacher: 'Mr. Rahul Sharma'
+    status: 'pending',
+    statusLabel: 'Not Marked Yet',
+    markedByTeacher: 'Class Faculty'
   };
   const summary = data?.summary || { percentage: 92, presentCount: 28, absentCount: 2, leaveCount: 1, totalDays: 31, requiredPercentage: 75, isEligible: true };
   const dailyLogs = data?.dailyLogs || [];

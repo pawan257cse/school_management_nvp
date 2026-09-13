@@ -61,62 +61,74 @@ export default function AttendanceTable({ records = [], onSave, loading }) {
       </div>
 
       {/* Roster Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-700">
-          <thead className="bg-slate-100/70 text-slate-600 font-bold uppercase text-[11px] border-b border-slate-200">
-            <tr>
-              <th className="px-5 py-3">Roll No</th>
-              <th className="px-5 py-3">Student Name</th>
-              <th className="px-5 py-3 text-center">Status Selection</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {attendanceList.map((row, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-3 font-mono font-bold text-slate-900">{row.rollNo}</td>
-                <td className="px-5 py-3 font-semibold text-slate-900">{row.studentName}</td>
-                <td className="px-5 py-3 text-center">
-                  <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setStatus(idx, 'present')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        row.status === 'present'
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Present
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatus(idx, 'absent')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        row.status === 'absent'
-                          ? 'bg-rose-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Absent
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStatus(idx, 'leave')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        row.status === 'leave'
-                          ? 'bg-amber-500 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      Leave
-                    </button>
-                  </div>
-                </td>
+      {attendanceList.length === 0 ? (
+        <div className="p-12 text-center bg-slate-50/50 space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+            <CheckSquare className="w-6 h-6" />
+          </div>
+          <h4 className="font-heading font-bold text-slate-800 text-sm">No Students Enrolled in This Class</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Currently, no students have been admitted or enrolled in this class standard. When school administration adds students, they will automatically appear here for daily attendance tracking.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-100/70 text-slate-600 font-bold uppercase text-[11px] border-b border-slate-200">
+              <tr>
+                <th className="px-5 py-3">Roll No</th>
+                <th className="px-5 py-3">Student Name</th>
+                <th className="px-5 py-3 text-center">Status Selection</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {attendanceList.map((row, idx) => (
+                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-3 font-mono font-bold text-slate-900">{row.rollNo}</td>
+                  <td className="px-5 py-3 font-semibold text-slate-900">{row.studentName}</td>
+                  <td className="px-5 py-3 text-center">
+                    <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setStatus(idx, 'present')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          row.status === 'present'
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Present
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatus(idx, 'absent')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          row.status === 'absent'
+                            ? 'bg-rose-600 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Absent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatus(idx, 'leave')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          row.status === 'leave'
+                            ? 'bg-amber-500 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Leave
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

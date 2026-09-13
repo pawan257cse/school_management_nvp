@@ -20,9 +20,11 @@ import {
   Info
 } from 'lucide-react';
 import { getStudentDashboardApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function StudentDashboard() {
     );
   }
 
-  const student = data?.student || { name: 'Aarav Sharma', className: 'Class 6', section: 'A', rollNo: '1', admissionNo: 'NVP-2026-001' };
+  const student = data?.student || { name: user?.name || 'Student', className: 'Enrolled Class', section: '', rollNo: '-', admissionNo: user?.admissionNo || '-' };
   const liveSchedule = data?.liveSchedule || { todayName: 'Monday', todayPeriods: [] };
   const currentPeriod = liveSchedule.currentPeriod || liveSchedule.todayPeriods[0] || null;
   const attendance = data?.attendance || { percentage: 94, presentCount: 42, absentCount: 3 };

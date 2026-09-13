@@ -52,55 +52,67 @@ export default function ResultEntryTable({ totalMarks = 100, records = [], onSav
       </div>
 
       {/* Entry Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-700">
-          <thead className="bg-slate-100/70 text-slate-600 font-bold uppercase text-[11px] border-b border-slate-200">
-            <tr>
-              <th className="px-5 py-3">Roll No</th>
-              <th className="px-5 py-3">Student Name</th>
-              <th className="px-5 py-3">Obtained Marks</th>
-              <th className="px-5 py-3">Percentage</th>
-              <th className="px-5 py-3">Grade</th>
-              <th className="px-5 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {marksList.map((row, idx) => (
-              <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-3 font-mono font-bold text-slate-900">{row.rollNo}</td>
-                <td className="px-5 py-3 font-semibold text-slate-900">{row.studentName}</td>
-                <td className="px-5 py-3">
-                  <input
-                    type="number"
-                    min="0"
-                    max={totalMarks}
-                    value={row.obtainedMarks ?? ''}
-                    onChange={(e) => handleMarkChange(idx, e.target.value)}
-                    className="w-24 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 bg-white"
-                  />
-                </td>
-                <td className="px-5 py-3 font-bold text-slate-900">{row.percentage || 0}%</td>
-                <td className="px-5 py-3">
-                  <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold ${
-                    row.grade === 'A+' || row.grade === 'A' ? 'bg-emerald-100 text-emerald-800' :
-                    row.grade === 'B' || row.grade === 'C' ? 'bg-blue-100 text-blue-800' :
-                    row.grade === 'D' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
-                  }`}>
-                    {row.grade || 'F'}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                    row.passStatus === 'pass' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-                  }`}>
-                    {row.passStatus || 'fail'}
-                  </span>
-                </td>
+      {marksList.length === 0 ? (
+        <div className="p-12 text-center bg-slate-50/50 space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center">
+            <Award className="w-6 h-6" />
+          </div>
+          <h4 className="font-heading font-bold text-slate-800 text-sm">No Students Enrolled in This Class</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Currently, no students have been added to this class standard. When school administration admits students, they will automatically appear here for exam mark entry.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-100/70 text-slate-600 font-bold uppercase text-[11px] border-b border-slate-200">
+              <tr>
+                <th className="px-5 py-3">Roll No</th>
+                <th className="px-5 py-3">Student Name</th>
+                <th className="px-5 py-3">Obtained Marks</th>
+                <th className="px-5 py-3">Percentage</th>
+                <th className="px-5 py-3">Grade</th>
+                <th className="px-5 py-3">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {marksList.map((row, idx) => (
+                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-3 font-mono font-bold text-slate-900">{row.rollNo}</td>
+                  <td className="px-5 py-3 font-semibold text-slate-900">{row.studentName}</td>
+                  <td className="px-5 py-3">
+                    <input
+                      type="number"
+                      min="0"
+                      max={totalMarks}
+                      value={row.obtainedMarks ?? ''}
+                      onChange={(e) => handleMarkChange(idx, e.target.value)}
+                      className="w-24 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </td>
+                  <td className="px-5 py-3 font-bold text-slate-900">{row.percentage || 0}%</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold ${
+                      row.grade === 'A+' || row.grade === 'A' ? 'bg-emerald-100 text-emerald-800' :
+                      row.grade === 'B' || row.grade === 'C' ? 'bg-blue-100 text-blue-800' :
+                      row.grade === 'D' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {row.grade || 'F'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                      row.passStatus === 'pass' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}>
+                      {row.passStatus || 'fail'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

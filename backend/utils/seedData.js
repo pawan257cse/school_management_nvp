@@ -64,7 +64,7 @@ const seedInitialData = async () => {
             section: 'A',
             subjects: subjectIds,
             classTeacher: null,
-            studentCount: 28,
+            studentCount: 0,
             status: 'active'
           }
         },

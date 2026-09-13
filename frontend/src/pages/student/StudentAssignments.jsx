@@ -22,8 +22,10 @@ import {
   Info
 } from 'lucide-react';
 import { getStudentAssignmentsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudentAssignments() {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,7 +95,7 @@ export default function StudentAssignments() {
     }
   };
 
-  const student = data?.student || { name: 'Aarav Sharma', className: 'Class 6', section: 'A' };
+  const student = data?.student || { name: user?.name || 'Student', className: 'Enrolled Class', section: '' };
   const assignments = data?.assignments || [];
 
   // Distinct subjects

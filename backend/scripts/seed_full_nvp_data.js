@@ -401,142 +401,14 @@ async function seedAll() {
     console.log(`Timetable synchronized for Class ${cName}`);
   }
 
-  // 8. Seed Sample Students for all 10 Classes
-  console.log('Seeding Sample Students for all 10 classes...');
-
-  const studentNamesByClass = {
-    PG: [
-      { name: 'Aarav Sharma', gender: 'Male', father: 'Ramesh Sharma', mother: 'Sunita Sharma' },
-      { name: 'Ananya Gupta', gender: 'Female', father: 'Vikas Gupta', mother: 'Pooja Gupta' },
-      { name: 'Vihaan Verma', gender: 'Male', father: 'Sanjay Verma', mother: 'Rekha Verma' },
-      { name: 'Myra Choudhary', gender: 'Female', father: 'Mukesh Choudhary', mother: 'Manju Choudhary' }
-    ],
-    LKG: [
-      { name: 'Reyansh Singh', gender: 'Male', father: 'Mahendra Singh', mother: 'Kavita Singh' },
-      { name: 'Aadhya Joshi', gender: 'Female', father: 'Dinesh Joshi', mother: 'Mamta Joshi' },
-      { name: 'Kabir Rathore', gender: 'Male', father: 'Surendra Rathore', mother: 'Sharda Rathore' },
-      { name: 'Prisha Meena', gender: 'Female', father: 'Rajesh Meena', mother: 'Anita Meena' }
-    ],
-    UKG: [
-      { name: 'Atharv Soni', gender: 'Male', father: 'Prakash Soni', mother: 'Lata Soni' },
-      { name: 'Saanvi Pareek', gender: 'Female', father: 'Gopal Pareek', mother: 'Suman Pareek' },
-      { name: 'Rudra Jangid', gender: 'Male', father: 'Kailash Jangid', mother: 'Geeta Jangid' },
-      { name: 'Kiara Sen', gender: 'Female', father: 'Naresh Sen', mother: 'Santosh Sen' }
-    ],
-    '1': [
-      { name: 'Daksh Agarwal', gender: 'Male', father: 'Suresh Agarwal', mother: 'Kiran Agarwal' },
-      { name: 'Navya Khandelwal', gender: 'Female', father: 'Hemant Khandelwal', mother: 'Asha Khandelwal' },
-      { name: 'Advik Sharma', gender: 'Male', father: 'Ashok Sharma', mother: 'Pushpa Sharma' },
-      { name: 'Diya Kumawat', gender: 'Female', father: 'Bhanwar Kumawat', mother: 'Chanda Kumawat' }
-    ],
-    '2': [
-      { name: 'Ishaan Prajapat', gender: 'Male', father: 'Gordhan Prajapat', mother: 'Sita Prajapat' },
-      { name: 'Avni Tiwari', gender: 'Female', father: 'Brijmohan Tiwari', mother: 'Radha Tiwari' },
-      { name: 'Shaurya Shekhawat', gender: 'Male', father: 'Gajendra Shekhawat', mother: 'Kiran Shekhawat' },
-      { name: 'Anika Solanki', gender: 'Female', father: 'Mohan Solanki', mother: 'Urmila Solanki' }
-    ],
-    '3': [
-      { name: 'Devansh Bhati', gender: 'Male', father: 'Bhagwan Bhati', mother: 'Prem Bhati' },
-      { name: 'Ira Mathur', gender: 'Female', father: 'Alok Mathur', mother: 'Ritu Mathur' },
-      { name: 'Kushagra Saini', gender: 'Male', father: 'Madan Saini', mother: 'Kamla Saini' },
-      { name: 'Tanvi Chauhan', gender: 'Female', father: 'Devendra Chauhan', mother: 'Saroj Chauhan' }
-    ],
-    '4': [
-      { name: 'Ayush Bishnoi', gender: 'Male', father: 'Ramchandra Bishnoi', mother: 'Vidya Bishnoi' },
-      { name: 'Pari Dadhich', gender: 'Female', father: 'Shyam Dadhich', mother: 'Gayatri Dadhich' },
-      { name: 'Manan Tailor', gender: 'Male', father: 'Govind Tailor', mother: 'Koshlya Tailor' },
-      { name: 'Mishti Purohit', gender: 'Female', father: 'Narendra Purohit', mother: 'Bhagwati Purohit' }
-    ],
-    '5': [
-      { name: 'Harshvardhan Rao', gender: 'Male', father: 'Prabhu Rao', mother: 'Sushila Rao' },
-      { name: 'Bhavya Gaur', gender: 'Female', father: 'Kishore Gaur', mother: 'Usha Gaur' },
-      { name: 'Tejas Sankhla', gender: 'Male', father: 'Om Prakash Sankhla', mother: 'Laxmi Sankhla' },
-      { name: 'Vanshika Kaswan', gender: 'Female', father: 'Rakesh Kaswan', mother: 'Sudha Kaswan' }
-    ],
-    '6': [
-      { name: 'Yuvraj Godara', gender: 'Male', father: 'Hanuman Godara', mother: 'Tulsi Godara' },
-      { name: 'Khushi Jakhar', gender: 'Female', father: 'Subhash Jakhar', mother: 'Sarita Jakhar' },
-      { name: 'Dhruv Saran', gender: 'Male', father: 'Moolchand Saran', mother: 'Maina Saran' },
-      { name: 'Sneha Dhaka', gender: 'Female', father: 'Brijlal Dhaka', mother: 'Bimla Dhaka' }
-    ],
-    '7': [
-      { name: 'Abhimanyu Choudhary', gender: 'Male', father: 'Pabu Ram Choudhary', mother: 'Mohini Choudhary' },
-      { name: 'Kavya Punia', gender: 'Female', father: 'Bhanwar Lal Punia', mother: 'Sayar Punia' },
-      { name: 'Lakshya Beniwal', gender: 'Male', father: 'Kishan Beniwal', mother: 'Draupadi Beniwal' },
-      { name: 'Riya Mehriya', gender: 'Female', father: 'Ramu Ram Mehriya', mother: 'Jethi Mehriya' }
-    ]
-  };
-
-  let studentSeq = 100;
-
-  for (const [cName, list] of Object.entries(studentNamesByClass)) {
+  // 8. Sample Students Seeding (DISABLED - Students should only be added manually by School Admin)
+  console.log('Skipping Sample Students (Waiting for real student admission by School Admin)...');
+  for (const cName of classNames) {
     const cls = classMap[cName];
-    if (!cls) continue;
-
-    let roll = 1;
-    for (const item of list) {
-      studentSeq++;
-      const admNo = `NVP-2026-${studentSeq}`;
-
-      let student = await Student.findOne({ admissionNo: admNo });
-      if (!student) {
-        student = await Student.create({
-          admissionNo: admNo,
-          rollNo: String(roll),
-          class: cls._id,
-          section: 'A',
-          academicYear: '2026-2027',
-          name: item.name,
-          gender: item.gender,
-          dob: new Date('2015-05-15'),
-          fatherName: item.father,
-          fatherPhone: `+91 98290 ${studentSeq}1`,
-          motherName: item.mother,
-          motherPhone: `+91 98290 ${studentSeq}2`,
-          contactNumber: `+91 98290 ${studentSeq}1`,
-          address: 'Main Bazaar, Nimbi Jodhan',
-          city: 'Nimbi Jodhan',
-          state: 'Rajasthan',
-          pincode: '341316',
-          status: 'active'
-        });
-      }
-
-      // Create matching student portal User account
-      const studentEmail = `${admNo.toLowerCase().replace(/[^a-z0-9]/g, '')}@school.local`;
-      const studentPass = `${item.name.split(' ')[0]}@123`;
-      const studentHash = await bcrypt.hash(studentPass, salt);
-
-      let studentUser = await User.findOne({ email: studentEmail });
-      if (!studentUser) {
-        studentUser = await User.create({
-          name: item.name,
-          email: studentEmail,
-          passwordHash: studentHash,
-          generatedPassword: studentPass,
-          role: 'STUDENT',
-          admissionNo: admNo,
-          studentRef: student._id,
-          studentClass: cls._id,
-          gender: item.gender,
-          status: 'active',
-          mustChangePassword: false
-        });
-      } else {
-        studentUser.generatedPassword = studentPass;
-        studentUser.studentRef = student._id;
-        studentUser.studentClass = cls._id;
-        studentUser.passwordHash = studentHash;
-        await studentUser.save();
-      }
-
-      roll++;
+    if (cls) {
+      cls.studentCount = 0;
+      await cls.save();
     }
-
-    // Update studentCount on Class
-    cls.studentCount = list.length * 7; // approximate batch count (e.g. 28)
-    await cls.save();
-    console.log(`Seeded ${list.length} students + portal accounts for Class ${cName}`);
   }
 
   const totalUsers = await User.countDocuments();

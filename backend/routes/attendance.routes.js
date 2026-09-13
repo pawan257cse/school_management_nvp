@@ -46,13 +46,8 @@ router.get('/', protect, async (req, res) => {
           status: 'present'
         }));
       } else {
-        const cls = await Class.findById(classId);
-        const studentCount = cls ? cls.studentCount : 30;
-        defaultRecords = Array.from({ length: studentCount }, (_, i) => ({
-          rollNo: `${i + 1}`,
-          studentName: `Student ${i + 1}`,
-          status: 'present'
-        }));
+        // No students enrolled yet in this class - do not invent fake students
+        defaultRecords = [];
       }
 
       return res.json({
