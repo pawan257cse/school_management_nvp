@@ -125,21 +125,51 @@ async function syncOfficialTimetable() {
       user.role = 'TEACHER';
       user.assignedClasses = assignedClassIds;
       user.assignedSubjects = assignedSubjectIds;
-      user.generatedPassword = defaultPassword;
-      user.status = 'active';
       await user.save();
       console.log(`Updated Teacher: ${t.name}`);
     }
-
     teacherMap[t.name.toUpperCase()] = user;
+  }
 
-    // Set Class Teacher (1st Period Teacher)
+  // 2.5 Ensure Principal Account Exists
+  let principalUser = await User.findOne({ email: 'pk621913@gmail.com' });
+  const princPass = 'Megha@123';
+  const princHash = await bcrypt.hash(princPass, salt);
+  if (!principalUser) {
+    principalUser = await User.create({
+      name: 'Megha',
+      email: 'pk621913@gmail.com',
+      passwordHash: princHash,
+      generatedPassword: princPass,
+      role: 'PRINCIPAL',
+      mobile: '+91 82270 31017',
+      employeeId: 'EMP-P001',
+      gender: 'Female',
+      qualification: 'M.A., B.Ed., M.Ed.',
+      status: 'active',
+      mustChangePassword: false
+    });
+    console.log('Created Principal: Megha (pk621913@gmail.com)');
+  } else {
+    principalUser.role = 'PRINCIPAL';
+    principalUser.status = 'active';
+    await principalUser.save();
+    console.log('Verified Principal: Megha (pk621913@gmail.com)');
+  }
+
+  // Set Class Teacher (1st Period Teacher)
+  for (const t of teacherDefs) {
     for (const cName of t.classTeacherOf) {
       const cls = classMap[cName];
-      if (cls) {
+      const user = teacherMap[t.name.toUpperCase()];
+      if (cls && user) {
         cls.classTeacher = user._id;
+        cls.attendanceTeacher = user._id;
         await cls.save();
-        console.log(`Assigned Class Teacher of Class ${cName}: ${t.name}`);
+        await User.findByIdAndUpdate(user._id, {
+          $addToSet: { attendanceClasses: cls._id }
+        });
+        console.log(`Assigned Class Teacher & Attendance In-Charge of Class ${cName}: ${t.name}`);
       }
     }
   }
