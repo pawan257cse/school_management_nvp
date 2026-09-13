@@ -107,13 +107,6 @@ export default function HeadDashboard() {
             <span>Edit Timetable</span>
           </button>
           <button
-            onClick={() => navigate('/head/credentials')}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/30 transition flex items-center gap-1.5"
-          >
-            <KeyRound className="w-4 h-4" />
-            <span>Live Passwords</span>
-          </button>
-          <button
             onClick={fetchDashboardData}
             disabled={loading}
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition backdrop-blur-sm flex items-center gap-1.5"
@@ -124,8 +117,8 @@ export default function HeadDashboard() {
         </div>
       </div>
 
-      {/* ─── 2. KEY VITAL METRICS (5 SIMPLE CARDS) ─────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      {/* ─── 2. KEY VITAL METRICS (4 CLEAN CARDS) ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* 1. Students */}
         <div
           onClick={() => navigate('/students')}
@@ -201,28 +194,9 @@ export default function HeadDashboard() {
             <span>Full Schedule Active</span> &rarr;
           </span>
         </div>
-
-        {/* 5. Live Passwords */}
-        <div
-          onClick={() => navigate('/head/credentials')}
-          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Passwords</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <KeyRound className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-rose-700 mt-2">
-            Live View
-          </div>
-          <span className="text-[11px] text-rose-700 font-bold mt-1 block flex items-center gap-1">
-            <span>View / Change Passwords</span> &rarr;
-          </span>
-        </div>
       </div>
 
-      {/* ─── 3. QUICK MANAGEMENT HUB (8 CLEAN ACTION CARDS) ───────────────────── */}
+      {/* ─── 3. QUICK MANAGEMENT HUB (7 CLEAN ACTION CARDS) ───────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
@@ -233,7 +207,7 @@ export default function HeadDashboard() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {/* Card 1: Timetable */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between">
             <div>
@@ -251,26 +225,6 @@ export default function HeadDashboard() {
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Update Timetable</span>
-            </button>
-          </div>
-
-          {/* Card 2: Passwords */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-purple-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Live Credentials & Passwords</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                View live passwords for all students & teachers, or change password anytime.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/head/credentials')}
-              className="mt-4 w-full py-2 bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>Manage Passwords</span>
             </button>
           </div>
 

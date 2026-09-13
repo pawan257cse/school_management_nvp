@@ -66,7 +66,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
     {
       title: 'System & Security',
       items: [
-        { name: 'Credentials Manager', path: '/head/credentials', icon: KeyRound, badge: 'Admin Only' },
         { name: 'Role & Permissions', path: '/head/security', icon: ShieldCheck },
         { name: 'Activity Logs', path: '/head/activity', icon: Activity },
         { name: 'System Settings', path: '/head/settings', icon: Settings }
@@ -114,12 +113,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     },
-    {
-      title: 'System',
-      items: [
-        { name: 'Credentials Manager', path: '/head/credentials', icon: KeyRound, badge: 'Admin Only' }
-      ]
-    }
+
   ];
 
   const teacherSections = [

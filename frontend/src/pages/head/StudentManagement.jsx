@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  getStudentsApi, getStudentByIdApi, createStudentApi, updateStudentApi, deleteStudentApi, getClassesApi
+  getStudentsApi, getStudentByIdApi, createStudentApi, updateStudentApi, deleteStudentApi, getClassesApi,
+  resetUserPasswordApi, createUserApi
 } from '../../services/api';
 import {
   Users, UserPlus, Search, Filter, Edit, Trash2, CheckCircle2,
-  Phone, MapPin, Eye, Printer, Shield, Calendar, Award, Bus, Heart,
+  Phone, MapPin, Eye, EyeOff, Printer, Shield, Calendar, Award, Bus, Heart,
   Copy, Check, X, AlertCircle, Sparkles, KeyRound, School
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
@@ -26,6 +27,10 @@ export default function StudentManagement() {
   const [portalAccount, setPortalAccount] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
+  const [studentNewPassInput, setStudentNewPassInput] = useState('');
+  const [passUpdateMsg, setPassUpdateMsg] = useState(null);
+  const [savingStudentPass, setSavingStudentPass] = useState(false);
 
   // New Admission Success Dialog
   const [newAdmissionSuccess, setNewAdmissionSuccess] = useState(null);
@@ -138,6 +143,9 @@ export default function StudentManagement() {
     setProfileLoading(true);
     setPortalAccount(null);
     setCopiedPass(false);
+    setShowStudentPassword(false);
+    setStudentNewPassInput('');
+    setPassUpdateMsg(null);
 
     try {
       const res = await getStudentByIdApi(st._id);
@@ -149,6 +157,37 @@ export default function StudentManagement() {
       console.error('Failed to fetch full student profile:', err);
     } finally {
       setProfileLoading(false);
+    }
+  };
+
+  const handleSaveStudentPassword = async (e) => {
+    e.preventDefault();
+    if (!studentNewPassInput || studentNewPassInput.length < 6) {
+      setPassUpdateMsg({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
+    setSavingStudentPass(true);
+    setPassUpdateMsg(null);
+    try {
+      if (portalAccount?._id) {
+        await resetUserPasswordApi(portalAccount._id, studentNewPassInput);
+      } else {
+        const email = `${(viewingStudent.admissionNo || viewingStudent.name.replace(/\s+/g, '').toLowerCase()).replace(/[^a-z0-9]/g, '')}@school.local`;
+        await createUserApi({
+          name: viewingStudent.name,
+          email,
+          role: 'STUDENT',
+          admissionNo: viewingStudent.admissionNo,
+          temporaryPassword: studentNewPassInput
+        });
+      }
+      setPortalAccount(prev => ({ ...prev, generatedPassword: studentNewPassInput }));
+      setPassUpdateMsg({ type: 'success', text: 'Password updated successfully!' });
+      setStudentNewPassInput('');
+    } catch (err) {
+      setPassUpdateMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update password.' });
+    } finally {
+      setSavingStudentPass(false);
     }
   };
 
@@ -531,18 +570,61 @@ export default function StudentManagement() {
                   <div className="p-2.5 rounded-xl bg-white border border-indigo-200/80 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-slate-600 block">Current / Assigned Password</span>
-                      <p className="font-mono font-bold text-indigo-700 text-xs">
-                        {portalAccount?.generatedPassword || `${viewingStudent.name.slice(0, 3)}@${viewingStudent.admissionNo}`}
+                      <p className="font-mono font-bold text-indigo-700 text-sm tracking-wider">
+                        {showStudentPassword 
+                          ? (portalAccount?.generatedPassword || `${viewingStudent.name.slice(0, 3)}@${viewingStudent.admissionNo}`) 
+                          : '••••••••••••'}
                       </p>
                     </div>
-                    <button
-                      onClick={() => copyToClipboard(portalAccount?.generatedPassword || `${viewingStudent.name.slice(0, 3)}@${viewingStudent.admissionNo}`)}
-                      className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg border border-indigo-200 transition"
-                      title="Copy Password"
-                    >
-                      {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowStudentPassword(!showStudentPassword)}
+                        className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
+                        title={showStudentPassword ? 'Hide Password' : 'Show Password'}
+                      >
+                        {showStudentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(portalAccount?.generatedPassword || `${viewingStudent.name.slice(0, 3)}@${viewingStudent.admissionNo}`)}
+                        className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg border border-indigo-200 transition"
+                        title="Copy Password"
+                      >
+                        {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Inline Change Password Form */}
+                  <form onSubmit={handleSaveStudentPassword} className="pt-2 border-t border-indigo-200/80">
+                    <label className="block text-[10px] font-bold text-indigo-950 mb-1">
+                      Change Student Password:
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        required
+                        minLength={6}
+                        value={studentNewPassInput}
+                        onChange={(e) => setStudentNewPassInput(e.target.value)}
+                        placeholder="New password (min 6 chars)"
+                        className="flex-1 px-3 py-1.5 text-xs font-mono font-bold bg-white border border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={savingStudentPass}
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap"
+                      >
+                        {savingStudentPass ? 'Saving...' : 'Save Password'}
+                      </button>
+                    </div>
+                    {passUpdateMsg && (
+                      <p className={`text-[10px] font-bold mt-1 ${passUpdateMsg.type === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>
+                        {passUpdateMsg.text}
+                      </p>
+                    )}
+                  </form>
 
                   <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600">
                     <div>

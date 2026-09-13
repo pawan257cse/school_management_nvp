@@ -141,25 +141,7 @@ export default function PrincipalDashboard() {
             </button>
           </div>
 
-          {/* 2. Credentials & Passwords */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-purple-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Credentials & Passwords</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                View live passwords for all students and teachers, with custom password reset.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/head/credentials')}
-              className="mt-4 w-full py-2 bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>Manage Passwords</span>
-            </button>
-          </div>
+
 
           {/* 3. Teachers */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all flex flex-col justify-between">
