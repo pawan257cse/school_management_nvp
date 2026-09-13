@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminRecoveryResetApi } from '../services/api';
@@ -22,6 +22,15 @@ export default function Login({ isAdminMode = false }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Check if redirected due to password reset by Head or Principal
+  useEffect(() => {
+    const alertMsg = sessionStorage.getItem('password_reset_alert');
+    if (alertMsg) {
+      setErrorMsg(alertMsg);
+      sessionStorage.removeItem('password_reset_alert');
+    }
+  }, []);
 
   // Forgot password modal state
   const [showForgotModal, setShowForgotModal] = useState(false);

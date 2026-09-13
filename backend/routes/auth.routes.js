@@ -106,9 +106,9 @@ router.post('/login', async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // Create JWT Token (90-day persistent session for mobile & web)
+    // Create JWT Token (90-day persistent session for mobile & web with versioning)
     const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
+      { id: user._id, role: user.role, email: user.email, tokenVersion: user.tokenVersion || 0 },
       JWT_SECRET,
       { expiresIn: '90d' }
     );
@@ -314,11 +314,24 @@ router.post('/change-password', protect, async (req, res) => {
     user.passwordHash = await bcrypt.hash(newPassword, salt);
     user.mustChangePassword = false;
     user.generatedPassword = newPassword; // Retain current password for Head & Principal live administrative oversight
+    user.passwordChangedAt = new Date();
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     await user.save();
 
     await logActivity(req, 'CHANGE_PASSWORD', 'User', user._id);
 
-    res.json({ success: true, message: 'Password changed successfully. You can now use your new password to log in.' });
+    // Also issue a fresh token for the current user so their new session immediately continues
+    const newToken = jwt.sign(
+      { id: user._id, role: user.role, email: user.email, tokenVersion: user.tokenVersion },
+      JWT_SECRET,
+      { expiresIn: '90d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully.',
+      token: newToken
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -368,6 +381,8 @@ router.post('/admin-recovery-reset', async (req, res) => {
     headUser.passwordHash = await bcrypt.hash(newPassword, salt);
     headUser.mustChangePassword = false;
     headUser.generatedPassword = '';
+    headUser.passwordChangedAt = new Date();
+    headUser.tokenVersion = (headUser.tokenVersion || 0) + 1;
     await headUser.save();
 
     await logActivity(req, 'ADMIN_RECOVERY_SUCCESS', 'User', headUser._id, { email, note: 'Admin password reset via Master Recovery Key' });

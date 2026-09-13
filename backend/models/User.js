@@ -49,6 +49,9 @@ const userSchema = new mongoose.Schema({
     default: defaultPermissions
   },
   lastLogin: { type: Date },
+  // Password invalidation & Token versioning
+  passwordChangedAt: { type: Date },
+  tokenVersion: { type: Number, default: 0 },
   // Security & Account Lockout
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date }

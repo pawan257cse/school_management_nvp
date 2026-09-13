@@ -424,6 +424,8 @@ router.put('/:id/reset-password', protect, checkRole('HEAD', 'PRINCIPAL'), async
     targetUser.passwordHash = await bcrypt.hash(newPassword, salt);
     targetUser.generatedPassword = newPassword; // Update admin view
     targetUser.mustChangePassword = true;
+    targetUser.passwordChangedAt = new Date();
+    targetUser.tokenVersion = (targetUser.tokenVersion || 0) + 1;
     await targetUser.save();
 
     await logActivity(req, 'RESET_PASSWORD', 'User', targetUser._id, { targetEmail: targetUser.email });

@@ -32,6 +32,9 @@ export const AuthProvider = ({ children }) => {
           console.warn('Session verification note:', err.message);
           // Only clear session if server explicitly rejected the token with 401
           if (err.response && err.response.status === 401) {
+            if (err.response.data?.isPasswordChanged) {
+              sessionStorage.setItem('password_reset_alert', err.response.data.message || 'Aapka password badal diya gaya hai. Kripya naye password se login karein.');
+            }
             logout();
           }
           // If it was a network glitch or Render cold-start, keep saved user active!

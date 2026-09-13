@@ -30,6 +30,26 @@ const protect = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Your account has been deactivated. Contact Super Admin.' });
     }
 
+    // Invalidate session if password was changed/reset after token creation
+    if (decoded.tokenVersion !== undefined && user.tokenVersion !== undefined && decoded.tokenVersion < user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        isPasswordChanged: true,
+        message: 'Aapka password badal diya gaya hai. Kripya naye password se login karein.'
+      });
+    }
+
+    if (user.passwordChangedAt && decoded.iat) {
+      const changedTimestamp = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      if (decoded.iat < changedTimestamp - 1) {
+        return res.status(401).json({
+          success: false,
+          isPasswordChanged: true,
+          message: 'Aapka password badal diya gaya hai. Kripya naye password se login karein.'
+        });
+      }
+    }
+
     req.user = user;
     next();
   } catch (error) {

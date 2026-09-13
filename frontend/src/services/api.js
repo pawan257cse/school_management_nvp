@@ -35,7 +35,11 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid -> Clear local session
+      // Token expired, invalid or password reset -> Clear local session
+      const alertMsg = error.response.data?.message || 'Aapka session expire ho gaya hai ya password badal diya gaya hai. Kripya login karein.';
+      if (error.response.data?.isPasswordChanged) {
+        sessionStorage.setItem('password_reset_alert', alertMsg);
+      }
       localStorage.removeItem('nvp_token');
       localStorage.removeItem('nvp_user');
       if (window.location.pathname !== '/login') {
