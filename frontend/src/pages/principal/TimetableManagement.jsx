@@ -909,8 +909,14 @@ export default function TimetableManagement() {
                       <tr key={idx} className={`hover:bg-slate-50/70 transition-colors ${period.isBreak ? 'bg-amber-50/40' : ''}`}>
                         {/* Period # */}
                         <td className="py-1.5 px-2 text-center">
-                          <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
-                            P{period.periodNumber}
+                          <span className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${
+                            period.isBreak 
+                              ? 'bg-amber-100 text-amber-800' 
+                              : 'bg-slate-100 text-slate-700'
+                          }`}>
+                            {period.isBreak 
+                              ? 'Lunch' 
+                              : `P${Number(period.periodNumber) > 5 ? Number(period.periodNumber) - 1 : period.periodNumber}`}
                           </span>
                         </td>
 

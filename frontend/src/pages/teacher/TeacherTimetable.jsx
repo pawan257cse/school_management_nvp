@@ -362,46 +362,52 @@ export default function TeacherTimetable() {
               </div>
             ) : (
               <div className="space-y-2">
-                {selectedPeriods.map((p, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white shadow-2xs"
-                  >
-                    {/* Left: Period Badge & Time */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-2xs">
-                        P{p.periodNumber}
-                      </span>
-                      <div>
-                        <span className="font-mono font-extrabold text-xs text-slate-900 block">
-                          {p.startTime} - {p.endTime}
+                {selectedPeriods.map((p, idx) => {
+                  const pNum = Number(p.rawPeriodNumber || p.periodNumber) || 1;
+                  const displayNum = pNum > 5 ? pNum - 1 : pNum;
+                  const clampedNum = displayNum > 8 ? 8 : displayNum;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white shadow-2xs"
+                    >
+                      {/* Left: Period Badge & Time */}
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-2xs">
+                          P{clampedNum}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          {p.periodTitle || `Period ${p.periodNumber}`}
+                        <div>
+                          <span className="font-mono font-extrabold text-xs text-slate-900 block">
+                            {p.startTime} - {p.endTime}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Period {clampedNum}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Middle: Subject Name */}
+                      <div className="flex-1 sm:px-3">
+                        <strong className="text-xs sm:text-sm font-black text-slate-900 block">
+                          {p.subjectName || 'Academic Subject'}
+                        </strong>
+                      </div>
+
+                      {/* Right: Class, Section & Room */}
+                      <div className="flex items-center gap-1.5 flex-wrap sm:justify-end shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-black text-[10px]">
+                          {p.className} ({p.section || 'A'})
+                        </span>
+
+                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-slate-400" />
+                          <span>{p.roomNo || `Class ${p.className}`}</span>
                         </span>
                       </div>
                     </div>
-
-                    {/* Middle: Subject Name */}
-                    <div className="flex-1 sm:px-3">
-                      <strong className="text-xs sm:text-sm font-black text-slate-900 block">
-                        {p.subjectName || 'Academic Subject'}
-                      </strong>
-                    </div>
-
-                    {/* Right: Class, Section & Room */}
-                    <div className="flex items-center gap-1.5 flex-wrap sm:justify-end shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                      <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-black text-[10px]">
-                        {p.className} ({p.section || 'A'})
-                      </span>
-
-                      <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-slate-400" />
-                        <span>{p.roomNo || `Class ${p.className}`}</span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
