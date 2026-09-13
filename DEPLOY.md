@@ -96,14 +96,24 @@ Once deployed, the database initializes with the following default accounts:
 
 Agar Head Administrator apna password bhool jaye, toh reset karne ke **2 aasan tarike** hain:
 
-### Method 1: Website Ke Login Page Se (Direct UI Reset)
-1. Login page par **"Forgot Password?"** par click karein.
-2. **"🔑 Head Admin Emergency"** tab select karein.
+## 🔐 Head Admin Password Recovery (Emergency Guide)
+
+| Situation | Solution |
+| :--- | :--- |
+| **1. Sirf password bhool gaye** | Secret `/admin` URL (jaise `https://your-frontend.vercel.app/admin`) par jaakar **"Emergency Recovery"** button dabayein, Master Recovery Key daalein aur naya password set karein. |
+| **2. Password + Master Key dono bhool gaye** | Render.com par backend service ke **Shell** tab (terminal) me jakar command run karein: `npm run reset-admin NayaPassword` |
+| **3. Apne computer (Local) par reset karna ho** | Project terminal me run karein: `npm run reset-admin NayaPassword` |
+
+### Step-by-Step Details:
+
+#### Method 1: Secret `/admin` Web Portal Se
+1. Browser me open karein: `https://your-frontend.vercel.app/admin` *(Normal login page par yeh kisi ko nahi dikhega)*.
+2. **"Emergency Recovery"** par click karein.
 3. Apna Admin Email (`head@school.local`), **Master Recovery Key** (`NVP-HEAD-RECOVERY-KEY-2026`), aur naya password dalein.
 4. **"Reset Admin Password"** dabayein — password turant update ho jayega aur aap login kar payenge!
 
-### Method 2: Render Ke Web Shell Se (1 Command)
-1. Render dashboard me apni service open karein → **Shell** tab par click karein.
+#### Method 2: Render Ke Web Shell Se (Bina Kisi Key Ke Direct Reset)
+1. Render dashboard me apni backend service open karein → **Shell** tab par click karein.
 2. Yeh command run karein:
    ```bash
    npm run reset-admin MyNewPassword2026
@@ -113,8 +123,6 @@ Agar Head Administrator apna password bhool jaye, toh reset karne ke **2 aasan t
 ---
 
 ## 🔗 Direct URL Shortcuts:
-* **Admin / Head Portal:** `https://your-site.onrender.com/admin`
-* **Login Page:** `https://your-site.onrender.com/login`
-* **Responsive Mobile Access:** Mobile phones par bhi sidebar swipe drawer, touch buttons, aur responsive cards auto-fit ho jayenge.
-
-
+* **Head Administrator Secret Portal:** `https://your-frontend.vercel.app/admin` (ya `/head`)
+* **Standard Student & Staff Login:** `https://your-frontend.vercel.app/login`
+* **Mobile Responsive:** Sabhi screens par sidebar swipe drawer, cards, aur forms auto-fit hain.
