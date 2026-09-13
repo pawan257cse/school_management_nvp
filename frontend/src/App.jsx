@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Common Components
 import Sidebar from './components/common/Sidebar';
 import Topbar from './components/common/Topbar';
+import SplashScreen from './components/common/SplashScreen';
 
 // Pages
 import Login from './pages/Login';
@@ -130,8 +131,11 @@ const AdminGate = () => {
 };
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <AuthProvider>
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       <BrowserRouter>
         <Routes>
           {/* Root App Entry - Instant Dashboard Redirection for logged in users */}
