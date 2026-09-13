@@ -132,21 +132,24 @@ export default function TeacherAttendance() {
         )}
       </div>
 
-      {/* No Classes Warning Banner */}
+      {/* No Classes / No Attendance Duty Warning Banner */}
       {!loadingClasses && classes.length === 0 && (
         <div className="p-8 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900 shadow-sm flex flex-col items-center text-center max-w-2xl mx-auto space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700">
             <ShieldAlert className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-heading font-bold text-lg text-amber-950">No Classes Allocated to Your Faculty Account</h3>
+            <h3 className="font-heading font-bold text-lg text-amber-950">
+              {permissionDenied ? 'Attendance Access Restricted' : 'No Class Attendance Duty Assigned'}
+            </h3>
             <p className="text-xs text-amber-800 leading-relaxed max-w-md">
-              Security Policy: Teachers can only view and submit student attendance for classes officially assigned to them.
-              Currently, no classes have been linked to your account.
+              {permissionDenied
+                ? 'Security Policy: You do not have permission to mark or submit student attendance. Please contact the Head Administrator or Principal.'
+                : 'Security Policy: Teachers can strictly view and submit attendance ONLY for classes where they are designated as the official Attendance In-Charge. Currently, no class attendance duty has been assigned to your account.'}
             </p>
           </div>
           <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-medium text-amber-900">
-            Please contact the <strong>Head Administrator</strong> or <strong>Principal</strong> to allocate your teaching standard in Class Management.
+            Please contact the <strong>Head Administrator</strong> or <strong>Principal</strong> to assign you as the Attendance In-Charge for a class standard.
           </div>
         </div>
       )}

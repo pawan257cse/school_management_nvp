@@ -112,8 +112,28 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
       return res.status(400).json({ success: false, message: 'A user with this email already exists.' });
     }
 
-    // Generate a unique employee ID for teachers/principals
-    const newEmployeeId = employeeId || `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Generate or validate unique employee ID for teachers/principals/head
+    let newEmployeeId = '';
+    if (role === 'TEACHER' || role === 'PRINCIPAL' || role === 'HEAD') {
+      if (employeeId && employeeId.trim()) {
+        const existingEmp = await User.findOne({ employeeId: employeeId.trim() });
+        if (existingEmp) {
+          return res.status(400).json({ success: false, message: `A user with Employee ID "${employeeId.trim()}" already exists. Employee ID must be unique.` });
+        }
+        newEmployeeId = employeeId.trim();
+      } else {
+        const teacherUsers = await User.find({ role: 'TEACHER', employeeId: { $regex: /^EMP-T\d+$/i } }).select('employeeId');
+        let maxNum = 110;
+        teacherUsers.forEach(t => {
+          const match = (t.employeeId || '').match(/^EMP-T(\d+)$/i);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        });
+        newEmployeeId = `EMP-T${maxNum + 1}`;
+      }
+    }
 
     // AUTO-GENERATE password if not provided
     const autoPassword = temporaryPassword || generatePassword(name, role, role === 'STUDENT' ? admissionNo : newEmployeeId);
@@ -351,7 +371,7 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
 
     const allowedFields = ['name', 'mobile', 'qualification', 'gender', 'status', 'assignedClasses', 'assignedSubjects'];
     if (req.user.role === 'HEAD') {
-      allowedFields.push('role', 'employeeId', 'admissionNo', 'studentRef', 'studentClass');
+      allowedFields.push('role', 'admissionNo', 'studentRef', 'studentClass');
     }
 
     allowedFields.forEach(field => {

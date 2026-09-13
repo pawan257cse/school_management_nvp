@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
 
   role: { type: String, enum: ['HEAD', 'PRINCIPAL', 'TEACHER', 'STUDENT'], required: true },
   mobile: { type: String, trim: true },
-  employeeId: { type: String, trim: true },
+  employeeId: { type: String, trim: true, unique: true, sparse: true },
   admissionNo: { type: String, trim: true },
   studentRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },
   studentClass: { type: mongoose.Schema.Types.ObjectId, ref: 'Class' },

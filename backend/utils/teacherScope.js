@@ -19,6 +19,10 @@ async function getTeacherClassIds(user) {
   const classTeacherDocs = await Class.find({ classTeacher: user._id }).select('_id');
   const classTeacherIds = classTeacherDocs.map(c => c._id.toString());
 
+  // Combine and deduplicate
+  return Array.from(new Set([...directAssigned, ...classTeacherIds]));
+}
+
 /**
  * Returns an array of class ID strings that this teacher is specifically authorized
  * to record attendance for (as designated Attendance In-Charge).
@@ -61,4 +65,3 @@ async function getTeacherAttendanceClassIds(user) {
 }
 
 module.exports = { getTeacherClassIds, getTeacherAttendanceClassIds };
-
