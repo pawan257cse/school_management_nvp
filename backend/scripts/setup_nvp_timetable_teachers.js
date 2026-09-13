@@ -13,21 +13,22 @@ const Class = require('../models/Class');
 const Subject = require('../models/Subject');
 const Timetable = require('../models/Timetable');
 
+// Exact timings from NVP_School_Time_Table...pdf
 const periodTimes = [
-  { periodNumber: 1, startTime: '08:30 AM', endTime: '09:10 AM', periodTitle: 'Period 1' },
-  { periodNumber: 2, startTime: '09:10 AM', endTime: '09:50 AM', periodTitle: 'Period 2' },
-  { periodNumber: 3, startTime: '09:50 AM', endTime: '10:30 AM', periodTitle: 'Period 3' },
-  { periodNumber: 4, startTime: '10:30 AM', endTime: '11:10 AM', periodTitle: 'Period 4' },
-  { periodNumber: 5, startTime: '11:10 AM', endTime: '11:45 AM', periodTitle: 'Lunch Break', isBreak: true },
-  { periodNumber: 6, startTime: '11:45 AM', endTime: '12:25 PM', periodTitle: 'Period 5' },
-  { periodNumber: 7, startTime: '12:25 PM', endTime: '01:05 PM', periodTitle: 'Period 6' },
-  { periodNumber: 8, startTime: '01:05 PM', endTime: '01:45 PM', periodTitle: 'Period 7' },
-  { periodNumber: 9, startTime: '01:45 PM', endTime: '02:25 PM', periodTitle: 'Period 8' },
+  { periodNumber: 1, startTime: '08:00 AM', endTime: '08:40 AM', periodTitle: 'Period 1' },
+  { periodNumber: 2, startTime: '08:40 AM', endTime: '09:10 AM', periodTitle: 'Period 2' },
+  { periodNumber: 3, startTime: '09:10 AM', endTime: '09:45 AM', periodTitle: 'Period 3' },
+  { periodNumber: 4, startTime: '09:45 AM', endTime: '10:20 AM', periodTitle: 'Period 4' },
+  { periodNumber: 5, startTime: '10:20 AM', endTime: '10:40 AM', periodTitle: 'Lunch Break', isBreak: true },
+  { periodNumber: 6, startTime: '10:40 AM', endTime: '11:20 AM', periodTitle: 'Period 5' },
+  { periodNumber: 7, startTime: '11:20 AM', endTime: '11:50 AM', periodTitle: 'Period 6' },
+  { periodNumber: 8, startTime: '11:50 AM', endTime: '12:25 PM', periodTitle: 'Period 7' },
+  { periodNumber: 9, startTime: '12:25 PM', endTime: '01:00 PM', periodTitle: 'Period 8' },
 ];
 
-async function setup() {
+async function syncOfficialTimetable() {
   await connectDB();
-  console.log('--- Setting up NVP School Real Teachers & Timetable ---');
+  console.log('=== Syncing Official Timetable from NVP_School_Time_Table...pdf ===');
 
   // 1. Ensure Standard Subjects exist
   const subjectsConfig = [
@@ -42,7 +43,8 @@ async function setup() {
     { name: 'EVS', code: 'EVS' },
     { name: 'Oral', code: 'ORAL' },
     { name: 'Games & Activity', code: 'GAME' },
-    { name: 'Diary & Rhymes', code: 'DIARY' }
+    { name: 'Diary & Rhymes', code: 'DIARY' },
+    { name: 'Activity / Self Study', code: 'ACT' }
   ];
 
   const subjectMap = {};
@@ -55,8 +57,8 @@ async function setup() {
     subjectMap[s.code.toUpperCase()] = subDoc;
   }
 
-  // 2. Ensure Classes exist
-  const classNames = ['PG', 'Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  // 2. Fetch Active Classes (PG, LKG, UKG, 1, 2, 3, 4, 5, 6, 7)
+  const classNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
   const allSubjectIds = Object.values(subjectMap).map(s => s._id);
   const classMap = {};
 
@@ -74,9 +76,9 @@ async function setup() {
     classMap[name] = cls;
   }
 
-  // 3. Define 10 Teachers
+  // 3. Teachers definitions
   const teacherDefs = [
-    { name: 'Priti', email: 'priti@nvpschool.edu.in', phone: '+91 98290 11001', empId: 'EMP-T101', classTeacherOf: ['PG', 'Nursery'], classesTaught: ['PG', 'Nursery'] },
+    { name: 'Priti', email: 'priti@nvpschool.edu.in', phone: '+91 98290 11001', empId: 'EMP-T101', classTeacherOf: ['PG'], classesTaught: ['PG'] },
     { name: 'Lalita', email: 'lalita@nvpschool.edu.in', phone: '+91 98290 11002', empId: 'EMP-T102', classTeacherOf: ['LKG'], classesTaught: ['LKG'] },
     { name: 'Priya', email: 'priya@nvpschool.edu.in', phone: '+91 98290 11003', empId: 'EMP-T103', classTeacherOf: ['UKG'], classesTaught: ['UKG'] },
     { name: 'Sarita', email: 'sarita@nvpschool.edu.in', phone: '+91 98290 11004', empId: 'EMP-T104', classTeacherOf: ['1'], classesTaught: ['1', '2', '3', '4', '5'] },
@@ -112,32 +114,33 @@ async function setup() {
         mustChangePassword: true,
         status: 'active'
       });
-      console.log(`Created Teacher account: ${t.name} (${t.email})`);
+      console.log(`Created Teacher: ${t.name}`);
     } else {
       user.name = t.name;
       user.role = 'TEACHER';
-      user.assignedClasses = Array.from(new Set([...(user.assignedClasses || []).map(id => id.toString()), ...assignedClassIds.map(id => id.toString())]));
+      user.assignedClasses = assignedClassIds;
       user.generatedPassword = defaultPassword;
       user.status = 'active';
       await user.save();
-      console.log(`Updated Teacher account: ${t.name}`);
+      console.log(`Updated Teacher: ${t.name}`);
     }
 
     teacherMap[t.name.toUpperCase()] = user;
 
-    // Set Class Teacher for their respective classes (1st Period Teachers)
+    // Set Class Teacher (1st Period Teacher)
     for (const cName of t.classTeacherOf) {
       const cls = classMap[cName];
       if (cls) {
         cls.classTeacher = user._id;
         await cls.save();
-        console.log(`Assigned Class Teacher: ${t.name} -> Class ${cName}`);
+        console.log(`Assigned Class Teacher of Class ${cName}: ${t.name}`);
       }
     }
   }
 
-  // Helper to map subject string to Subject Document
+  // Subject resolver
   const findSubjectDoc = (str) => {
+    if (!str || str === '-') return subjectMap['ACTIVITY / SELF STUDY'] || subjectMap['EVS'];
     const upper = str.toUpperCase();
     if (upper.includes('HINDI')) return subjectMap['HINDI'] || subjectMap['HIN'];
     if (upper.includes('MATH')) return subjectMap['MATHEMATICS'] || subjectMap['MATH'];
@@ -154,13 +157,13 @@ async function setup() {
     return subjectMap['GENERAL KNOWLEDGE'] || allSubjectIds[0];
   };
 
-  // Helper to find teacher
   const findTeacherDoc = (name) => {
-    return teacherMap[name.toUpperCase()] || teacherMap['PAWAN'];
+    if (!name || name === '-') return null;
+    return teacherMap[name.toUpperCase()] || null;
   };
 
-  // 4. Raw schedule per class provided by user
-  const classSchedulesRaw = {
+  // 4. Exact Table from NVP_School_Time_Table...pdf
+  const classSchedulesFromPdf = {
     PG: [
       { pNum: 1, sub: 'Oral', teacher: 'Priti' },
       { pNum: 2, sub: 'English', teacher: 'Priti' },
@@ -170,7 +173,7 @@ async function setup() {
       { pNum: 6, sub: 'Games & Activity', teacher: 'Priti' },
       { pNum: 7, sub: 'Mathematics', teacher: 'Priti' },
       { pNum: 8, sub: 'Mathematics', teacher: 'Priti' },
-      { pNum: 9, sub: 'Oral & Diary', teacher: 'Priti' }
+      { pNum: 9, sub: 'Oral + Diary', teacher: 'Priti' }
     ],
     LKG: [
       { pNum: 1, sub: 'Hindi', teacher: 'Lalita' },
@@ -178,21 +181,21 @@ async function setup() {
       { pNum: 3, sub: 'Mathematics', teacher: 'Lalita' },
       { pNum: 4, sub: 'Mathematics', teacher: 'Lalita' },
       { pNum: 5, isBreak: true },
-      { pNum: 6, sub: 'English & GK', teacher: 'Lalita' },
-      { pNum: 7, sub: 'English & GK', teacher: 'Lalita' },
-      { pNum: 8, sub: 'Diary & Rhymes', teacher: 'Lalita' },
+      { pNum: 6, sub: 'English + GK', teacher: 'Lalita' },
+      { pNum: 7, sub: 'English + GK', teacher: 'Lalita' },
+      { pNum: 8, sub: 'Diary', teacher: 'Lalita' },
       { pNum: 9, sub: 'Oral', teacher: 'Lalita' }
     ],
     UKG: [
       { pNum: 1, sub: 'Mathematics', teacher: 'Priya' },
       { pNum: 2, sub: 'Mathematics', teacher: 'Priya' },
-      { pNum: 3, sub: 'GK & Hindi', teacher: 'Priya' },
-      { pNum: 4, sub: 'GK & Hindi', teacher: 'Priya' },
+      { pNum: 3, sub: 'GK + Hindi', teacher: 'Priya' },
+      { pNum: 4, sub: 'GK + Hindi', teacher: 'Priya' },
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'English', teacher: 'Priya' },
       { pNum: 7, sub: 'English', teacher: 'Priya' },
       { pNum: 8, sub: 'Oral', teacher: 'Priya' },
-      { pNum: 9, sub: 'Oral & Diary', teacher: 'Priya' }
+      { pNum: 9, sub: 'Oral + Diary', teacher: 'Priya' }
     ],
     '1': [
       { pNum: 1, sub: 'EVS', teacher: 'Sarita' },
@@ -201,9 +204,9 @@ async function setup() {
       { pNum: 4, sub: 'Mathematics', teacher: 'Sarita' },
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'Computer', teacher: 'Pawan' },
-      { pNum: 7, sub: 'Computer & Games', teacher: 'Pawan' },
-      { pNum: 8, sub: 'General Knowledge', teacher: 'Durga' },
-      { pNum: 9, sub: 'Hindi', teacher: 'Durga' }
+      { pNum: 7, sub: 'Computer + Game (3/3)', teacher: 'Pawan' },
+      { pNum: 8, sub: 'Activity / Self Study', teacher: null },
+      { pNum: 9, sub: 'GK + Hindi', teacher: 'Durga' }
     ],
     '2': [
       { pNum: 1, sub: 'Hindi', teacher: 'Durga' },
@@ -211,16 +214,16 @@ async function setup() {
       { pNum: 3, sub: 'Computer', teacher: 'Pawan' },
       { pNum: 4, sub: 'English', teacher: 'Megha' },
       { pNum: 5, isBreak: true },
-      { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
-      { pNum: 7, sub: 'Math & GK', teacher: 'Sarita' },
-      { pNum: 8, sub: 'Games & Activity', teacher: 'Sarita' },
-      { pNum: 9, sub: 'EVS', teacher: 'Sarita' }
+      { pNum: 6, sub: 'Activity / Self Study', teacher: null },
+      { pNum: 7, sub: 'Hindi', teacher: 'Durga' },
+      { pNum: 8, sub: 'Math + GK', teacher: 'Sarita' },
+      { pNum: 9, sub: 'Games & Activity', teacher: 'Sarita' }
     ],
     '3': [
       { pNum: 1, sub: 'Computer', teacher: 'Pawan' },
-      { pNum: 2, sub: 'EVS', teacher: 'Sarita' },
-      { pNum: 3, sub: 'Hindi', teacher: 'Durga' },
-      { pNum: 4, sub: 'English', teacher: 'Vanshika' },
+      { pNum: 2, sub: 'Activity / Self Study', teacher: null },
+      { pNum: 3, sub: 'EVS', teacher: 'Sarita' },
+      { pNum: 4, sub: 'Hindi', teacher: 'Durga' },
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'EVS', teacher: 'Sarita' },
       { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
@@ -233,10 +236,10 @@ async function setup() {
       { pNum: 3, sub: 'English', teacher: 'Kavita' },
       { pNum: 4, sub: 'Computer', teacher: 'Pawan' },
       { pNum: 5, isBreak: true },
-      { pNum: 6, sub: 'GK & English', teacher: 'Sarita' },
-      { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
+      { pNum: 6, sub: 'GK + English', teacher: 'Sarita' },
+      { pNum: 7, sub: 'Activity / Self Study', teacher: null },
       { pNum: 8, sub: 'Hindi', teacher: 'Durga' },
-      { pNum: 9, sub: 'Games & Activity', teacher: 'Sarita' }
+      { pNum: 9, sub: 'Activity / Self Study', teacher: null }
     ],
     '5': [
       { pNum: 1, sub: 'Hindi Grammar', teacher: 'Megha' },
@@ -247,7 +250,7 @@ async function setup() {
       { pNum: 6, sub: 'Mathematics', teacher: 'Chanchal' },
       { pNum: 7, sub: 'Hindi', teacher: 'Sarita' },
       { pNum: 8, sub: 'Computer', teacher: 'Pawan' },
-      { pNum: 9, sub: 'English', teacher: 'Megha' }
+      { pNum: 9, sub: 'Activity / Self Study', teacher: null }
     ],
     '6': [
       { pNum: 1, sub: 'English', teacher: 'Kavita' },
@@ -268,19 +271,19 @@ async function setup() {
       { pNum: 5, isBreak: true },
       { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
       { pNum: 7, sub: 'Science', teacher: 'Kavita' },
-      { pNum: 8, sub: 'Mathematics & Sanskrit', teacher: 'Chanchal' },
-      { pNum: 9, sub: 'Computer & Science', teacher: 'Pawan' }
+      { pNum: 8, sub: 'Mathematics + Sanskrit (3/3)', teacher: 'Chanchal' },
+      { pNum: 9, sub: 'Computer + Science + English (3/3)', teacher: 'Pawan' }
     ]
   };
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  for (const [cName, rawPeriods] of Object.entries(classSchedulesRaw)) {
+  for (const [cName, rawPeriods] of Object.entries(classSchedulesFromPdf)) {
     const cls = classMap[cName];
     if (!cls) continue;
 
     const formattedPeriods = rawPeriods.map((item, idx) => {
-      const pTime = periodTimes[idx] || periodTimes[periodTimes.length - 1];
+      const pTime = periodTimes[idx];
       if (item.isBreak) {
         return {
           periodNumber: pTime.periodNumber,
@@ -304,7 +307,7 @@ async function setup() {
         subject: subDoc?._id,
         subjectName: item.sub,
         teacher: teachDoc?._id,
-        teacherName: teachDoc?.name || item.teacher,
+        teacherName: teachDoc?.name || (item.teacher === null ? 'Self Study' : item.teacher),
         roomNo: `Class ${cName}`
       };
     });
@@ -326,14 +329,14 @@ async function setup() {
       { upsert: true, new: true }
     );
 
-    console.log(`Timetable created & synced for Class ${cName}`);
+    console.log(`Timetable updated for Class ${cName} with exact PDF timings`);
   }
 
-  console.log('=== SETUP COMPLETED SUCCESSFULLY ===');
+  console.log('=== OFFICIAL NVP TIMETABLE SYNCED SUCCESSFULLY ===');
   process.exit(0);
 }
 
-setup().catch(err => {
-  console.error('Fatal setup error:', err);
+syncOfficialTimetable().catch(err => {
+  console.error('Fatal timetable sync error:', err);
   process.exit(1);
 });

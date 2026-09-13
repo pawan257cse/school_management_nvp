@@ -28,14 +28,15 @@ import {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const DEFAULT_TIME_SLOTS = [
-  { periodNumber: 1, periodTitle: 'Period 1', startTime: '08:00 AM', endTime: '08:45 AM', roomNo: 'Room 102' },
-  { periodNumber: 2, periodTitle: 'Period 2', startTime: '08:45 AM', endTime: '09:30 AM', roomNo: 'Room 102' },
-  { periodNumber: 3, periodTitle: 'Period 3', startTime: '09:30 AM', endTime: '10:15 AM', roomNo: 'Room 102' },
-  { periodNumber: 4, periodTitle: 'Period 4', startTime: '10:15 AM', endTime: '11:00 AM', roomNo: 'Room 102' },
-  { periodNumber: 5, periodTitle: 'Lunch Break', startTime: '11:00 AM', endTime: '11:35 AM', isBreak: true, subjectName: 'Lunch Break', roomNo: 'Cafeteria' },
-  { periodNumber: 6, periodTitle: 'Period 5', startTime: '11:35 AM', endTime: '12:20 PM', roomNo: 'Room 102' },
-  { periodNumber: 7, periodTitle: 'Period 6', startTime: '12:20 PM', endTime: '01:05 PM', roomNo: 'Comp Lab 1' },
-  { periodNumber: 8, periodTitle: 'Period 7', startTime: '01:05 PM', endTime: '01:50 PM', roomNo: 'Room 102' },
+  { periodNumber: 1, periodTitle: 'Period 1', startTime: '08:00 AM', endTime: '08:40 AM', roomNo: 'Classroom' },
+  { periodNumber: 2, periodTitle: 'Period 2', startTime: '08:40 AM', endTime: '09:10 AM', roomNo: 'Classroom' },
+  { periodNumber: 3, periodTitle: 'Period 3', startTime: '09:10 AM', endTime: '09:45 AM', roomNo: 'Classroom' },
+  { periodNumber: 4, periodTitle: 'Period 4', startTime: '09:45 AM', endTime: '10:20 AM', roomNo: 'Classroom' },
+  { periodNumber: 5, periodTitle: 'Lunch Break', startTime: '10:20 AM', endTime: '10:40 AM', isBreak: true, subjectName: 'Lunch Break', roomNo: 'Cafeteria' },
+  { periodNumber: 6, periodTitle: 'Period 5', startTime: '10:40 AM', endTime: '11:20 AM', roomNo: 'Classroom' },
+  { periodNumber: 7, periodTitle: 'Period 6', startTime: '11:20 AM', endTime: '11:50 AM', roomNo: 'Classroom' },
+  { periodNumber: 8, periodTitle: 'Period 7', startTime: '11:50 AM', endTime: '12:25 PM', roomNo: 'Classroom' },
+  { periodNumber: 9, periodTitle: 'Period 8', startTime: '12:25 PM', endTime: '01:00 PM', roomNo: 'Classroom' },
 ];
 
 export default function TimetableManagement() {
