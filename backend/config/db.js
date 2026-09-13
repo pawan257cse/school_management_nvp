@@ -1,4 +1,12 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Configure public DNS fallback for MongoDB Atlas SRV resolution
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // Ignore in environments where setting DNS servers is restricted
+}
 
 const connectDB = async () => {
   try {
@@ -9,15 +17,16 @@ const connectDB = async () => {
       try {
         console.log('[MongoDB] Connecting to database (MONGODB_URI)...');
         const conn = await mongoose.connect(mongoUri, {
-          serverSelectionTimeoutMS: 4000,
+          serverSelectionTimeoutMS: 8000,
         });
         console.log(`[MongoDB] Connected successfully to database: ${conn.connection.host}`);
         return;
       } catch (cloudErr) {
+        console.warn(`[MongoDB Warning] Cloud connection attempt failed: ${cloudErr.message}`);
         if (process.env.NODE_ENV === 'production') {
           throw cloudErr;
         }
-        console.log('[MongoDB] Configured URI not reachable locally. Falling back to embedded MongoMemoryServer...');
+        console.log('[MongoDB] Falling back to embedded MongoMemoryServer for local development...');
       }
     }
 
