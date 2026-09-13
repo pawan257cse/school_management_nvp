@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://nvp-school-portal.onrender.com/api/$1"
+      "destination": "https://nvp-school-backend.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

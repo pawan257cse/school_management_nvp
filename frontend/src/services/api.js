@@ -2,9 +2,14 @@ import axios from 'axios';
 
 const rawApiBase = import.meta.env.VITE_API_URL || '';
 const cleanApiBase = () => {
-  if (!rawApiBase) return '/api';
-  const trimmed = rawApiBase.trim().replace(/\/+$/, '');
-  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  if (rawApiBase) {
+    const trimmed = rawApiBase.trim().replace(/\/+$/, '');
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  }
+  if (typeof window !== 'undefined' && window.location.origin.includes('localhost')) {
+    return 'https://nvp-school-backend.onrender.com/api';
+  }
+  return '/api';
 };
 
 const API = axios.create({
