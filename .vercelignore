@@ -1,1 +1,3 @@
-backend/
+# Vercel Ignore
+node_modules
+.git
