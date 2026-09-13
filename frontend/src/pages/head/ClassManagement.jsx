@@ -115,7 +115,7 @@ export default function ClassManagement() {
       header: 'Enrolled Students',
       render: (row) => (
         <span className="font-bold text-slate-700 text-xs">
-          {row.studentCount || 15} Students
+          {row.studentCount || 0} Students
         </span>
       )
     },
