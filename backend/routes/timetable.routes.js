@@ -394,4 +394,87 @@ router.delete('/class/:classId', protect, checkRole('HEAD', 'PRINCIPAL'), async 
   }
 });
 
+// @route   GET /api/timetable/holidays
+// @desc    Get all school holidays
+// @access  Private (All authenticated users)
+router.get('/holidays', protect, async (req, res) => {
+  try {
+    const holidays = await Holiday.find()
+      .populate('createdBy', 'name role')
+      .sort({ date: 1 });
+
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(now.getTime() + istOffset);
+    const todayStr = istDate.toISOString().split('T')[0];
+
+    const todayHoliday = holidays.find(h => {
+      if (h.date === todayStr) return true;
+      if (h.endDate && todayStr >= h.date && todayStr <= h.endDate) return true;
+      return false;
+    }) || null;
+
+    res.json({
+      success: true,
+      todayStr,
+      todayHoliday,
+      holidays
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/timetable/holidays
+// @desc    Declare a school holiday
+// @access  Private (HEAD, PRINCIPAL)
+router.post('/holidays', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
+  try {
+    const { title, date, endDate, description, type, academicYear } = req.body;
+
+    if (!title || !date) {
+      return res.status(400).json({ success: false, message: 'Holiday title and date are required.' });
+    }
+
+    const newHoliday = await Holiday.create({
+      title: title.trim(),
+      date: date.trim(),
+      endDate: endDate ? endDate.trim() : null,
+      description: description ? description.trim() : '',
+      type: type || 'FESTIVAL',
+      academicYear: academicYear || '2026-2027',
+      createdBy: req.user._id
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'School holiday declared successfully.',
+      holiday: newHoliday
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   DELETE /api/timetable/holidays/:id
+// @desc    Delete a school holiday
+// @access  Private (HEAD, PRINCIPAL)
+router.delete('/holidays/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
+  try {
+    const holiday = await Holiday.findById(req.params.id);
+    if (!holiday) {
+      return res.status(404).json({ success: false, message: 'Holiday record not found.' });
+    }
+
+    await Holiday.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Holiday deleted successfully.'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

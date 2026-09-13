@@ -195,10 +195,34 @@ export const saveClassTimetableApi = (data) => API.post('/timetable/save', data)
 export const deleteClassTimetableApi = (classId) => API.delete(`/timetable/class/${classId}`);
 
 // Holiday Services
-export const getHolidaysApi = () => API.get('/holidays');
-export const createHolidayApi = (data) => API.post('/holidays', data);
-export const updateHolidayApi = (id, data) => API.put(`/holidays/${id}`, data);
-export const deleteHolidayApi = (id) => API.delete(`/holidays/${id}`);
+export const getHolidaysApi = async () => {
+  try {
+    return await API.get('/holidays');
+  } catch (e) {
+    return await API.get('/timetable/holidays');
+  }
+};
+export const createHolidayApi = async (data) => {
+  try {
+    return await API.post('/holidays', data);
+  } catch (e) {
+    return await API.post('/timetable/holidays', data);
+  }
+};
+export const updateHolidayApi = async (id, data) => {
+  try {
+    return await API.put(`/holidays/${id}`, data);
+  } catch (e) {
+    return await API.put(`/timetable/holidays/${id}`, data);
+  }
+};
+export const deleteHolidayApi = async (id) => {
+  try {
+    return await API.delete(`/holidays/${id}`);
+  } catch (e) {
+    return await API.delete(`/timetable/holidays/${id}`);
+  }
+};
 
 // Student Portal Services (mTOP Style Dedicated Endpoints)
 export const getStudentDashboardApi = () => API.get('/student-portal/dashboard');
