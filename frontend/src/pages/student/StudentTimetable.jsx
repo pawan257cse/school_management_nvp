@@ -40,6 +40,31 @@ const getDayDateString = (dayName) => {
   return targetDate.toISOString().split('T')[0];
 };
 
+const getWeekDayInfo = (dayName) => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const targetIdx = days.indexOf(dayName);
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istDate = new Date(now.getTime() + istOffset);
+  const currentIdx = istDate.getDay();
+  const diff = targetIdx === -1 ? 0 : targetIdx - currentIdx;
+  const targetDate = new Date(istDate.getTime() + diff * 24 * 60 * 60 * 1000);
+  const dateStr = targetDate.toISOString().split('T')[0];
+
+  const fullDate = targetDate.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  const shortDate = targetDate.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short'
+  });
+
+  return { dayName, dateStr, fullDate, shortDate };
+};
+
 const findHolidayForDay = (dayName, holidays = [], todayHoliday = null) => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const now = new Date();
@@ -259,6 +284,7 @@ export default function StudentTimetable() {
                   const periods = dayData?.periods || [];
                   const isToday = !isSunday && currentDayName === day;
                   const dayHoliday = findHolidayForDay(day, apiData?.holidays, apiData?.todayHoliday);
+                  const dayInfo = getWeekDayInfo(day);
 
                   if (dayHoliday) {
                     return (
@@ -275,6 +301,9 @@ export default function StudentTimetable() {
                             {isToday && (
                               <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
                             )}
+                          </div>
+                          <div className="text-[9px] font-mono text-amber-800/80 font-bold mt-0.5">
+                            {dayInfo.shortDate}
                           </div>
                         </td>
 
@@ -310,6 +339,9 @@ export default function StudentTimetable() {
                           {isToday && (
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
                           )}
+                        </div>
+                        <div className="text-[9px] font-mono text-slate-400 font-semibold mt-0.5">
+                          {dayInfo.shortDate}
                         </div>
                       </td>
 
@@ -369,18 +401,25 @@ export default function StudentTimetable() {
               const isSelected = selectedDay === day;
               const isToday = !isSunday && currentDayName === day;
               const dayHoliday = findHolidayForDay(day, apiData?.holidays, apiData?.todayHoliday);
+              const dayInfo = getWeekDayInfo(day);
 
               return (
                 <button
                   key={day}
                   onClick={() => setSelectedDay(day)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     isSelected
                       ? (dayHoliday ? 'bg-amber-600 text-white shadow-xs' : 'bg-indigo-600 text-white shadow-xs')
                       : (dayHoliday ? 'bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900')
                   }`}
                 >
-                  <span>{day}</span>
+                  <div className="flex items-center gap-1">
+                    <span>{day}</span>
+                    <span className={`text-[10px] font-mono font-bold ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
+                      ({dayInfo.shortDate})
+                    </span>
+                  </div>
+
                   {dayHoliday ? (
                     <span className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
                       isSelected ? 'bg-white text-amber-950' : 'bg-amber-200 text-amber-950'
@@ -405,6 +444,7 @@ export default function StudentTimetable() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
             {(() => {
               const selectedDayHoliday = findHolidayForDay(selectedDay, apiData?.holidays, apiData?.todayHoliday);
+              const selectedDayInfo = getWeekDayInfo(selectedDay);
 
               if (selectedDayHoliday) {
                 return (
@@ -423,9 +463,12 @@ export default function StudentTimetable() {
                         {selectedDayHoliday.description || 'School campus is officially closed on account of this declared holiday. No teaching periods or classes will be held.'}
                       </p>
                     </div>
-                    <div className="pt-2">
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-amber-950 font-extrabold text-xs border border-amber-300 shadow-2xs">
+                    <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-amber-950 font-extrabold text-xs border border-amber-300 shadow-2xs">
                         <Calendar className="w-4 h-4 text-amber-600" />
+                        {selectedDay}, {selectedDayInfo.fullDate}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 text-white font-black text-xs shadow-2xs">
                         Campus Closed • Regular Classes Suspended
                       </span>
                     </div>
@@ -439,7 +482,9 @@ export default function StudentTimetable() {
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-indigo-600" />
                       <h2 className="font-heading font-black text-slate-900 text-sm">
-                        {selectedDay}'s Class Schedule ({currentDaySchedule.periods?.length || 0} Periods)
+                        <span>{selectedDay} ({selectedDayInfo.fullDate}) Routine</span>
+                        <span className="text-slate-400 font-normal mx-1">•</span>
+                        <span className="text-indigo-700">{currentDaySchedule.periods?.length || 0} Periods</span>
                       </h2>
                     </div>
                     <span className="text-[11px] font-bold text-slate-500">

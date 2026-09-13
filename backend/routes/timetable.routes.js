@@ -157,20 +157,32 @@ router.get('/my-timetable', protect, async (req, res) => {
         return Math.min(Math.max(displayNum, 1), 8);
       };
 
+      const isBreakOrLunch = (p) => {
+        if (!p) return true;
+        if (p.isBreak) return true;
+        const sName = (p.subjectName || '').toLowerCase().trim();
+        const pTitle = (p.periodTitle || '').toLowerCase().trim();
+        if (sName === 'lunch break' || sName === 'lunch' || sName === 'recess' || sName === 'break') return true;
+        if (pTitle === 'lunch break' || pTitle === 'lunch' || pTitle === 'recess' || pTitle === 'break') return true;
+        if (p.startTime && p.startTime.includes('10:20')) return true;
+        if (p.endTime && p.endTime.includes('10:40')) return true;
+        return false;
+      };
+
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const teacherSchedule = days.map(dayName => {
-        const dayPeriods = [];
+        const rawDayPeriods = [];
 
         allTimetables.forEach(tt => {
           const dayData = tt.schedule.find(s => s.day === dayName);
           if (dayData && Array.isArray(dayData.periods)) {
             dayData.periods.forEach(p => {
-              if (p.teacher && p.teacher.toString() === user._id.toString() && !p.isBreak && p.subjectName !== 'Lunch Break') {
+              if (p.teacher && p.teacher.toString() === user._id.toString() && !isBreakOrLunch(p)) {
                 const pNum = Number(p.periodNumber) || 1;
                 const exactNum = getExactPeriodNumber(pNum, p.startTime);
                 const displayTitle = `Period ${exactNum}`;
 
-                dayPeriods.push({
+                rawDayPeriods.push({
                   classId: tt.class?._id,
                   className: tt.className,
                   section: tt.section,
@@ -187,7 +199,17 @@ router.get('/my-timetable', protect, async (req, res) => {
           }
         });
 
-        dayPeriods.sort((a, b) => a.periodNumber - b.periodNumber);
+        // Deduplicate periods by periodNumber and sort P1 to P8
+        rawDayPeriods.sort((a, b) => a.periodNumber - b.periodNumber);
+        const seenSlots = new Set();
+        const dayPeriods = [];
+        rawDayPeriods.forEach(p => {
+          if (!seenSlots.has(p.periodNumber) && p.periodNumber >= 1 && p.periodNumber <= 8) {
+            seenSlots.add(p.periodNumber);
+            dayPeriods.push(p);
+          }
+        });
+
         return { day: dayName, periods: dayPeriods };
       });
 
