@@ -8,7 +8,10 @@ const path = require('path');
 const connectDB = require('./config/db');
 const seedInitialData = require('./utils/seedData');
 
+const sanitizeInput = require('./middleware/sanitizeInput');
+
 const app = express();
+app.disable('x-powered-by');
 
 // Ensure uploads folder exists
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -16,10 +19,13 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Security Middlewares
+// Security Middlewares: Helmet
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  frameguard: { action: 'deny' },
+  noSniff: true,
+  xssFilter: true
 }));
 
 // CORS — allow frontend URL in production, all origins in dev
@@ -31,25 +37,36 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, mobile apps, same-origin)
     if (!origin) return callback(null, true);
     if (process.env.NODE_ENV !== 'production') return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(null, true); // Allow all in initial deployment; tighten later
+    callback(null, true);
   },
   credentials: true
 }));
 
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+app.use(sanitizeInput);
 
-// Rate Limiter
+// General Rate Limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
   message: { success: false, message: 'Too many requests from this IP, please try again later.' }
 });
 app.use('/api', apiLimiter);
+
+// Strict Brute-Force Rate Limiter for Login & Password Recovery (Max 15 requests per 15 min per IP)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts from this network. For security reasons, please wait 15 minutes before trying again.' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/admin-recovery-reset', authLimiter);
 
 // Serve static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

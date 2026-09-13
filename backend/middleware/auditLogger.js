@@ -1,5 +1,18 @@
 const ActivityLog = require('../models/ActivityLog');
 
+const SENSITIVE_KEYS = ['password', 'currentPassword', 'newPassword', 'passwordHash', 'token', 'recoveryKey', 'secret', 'jwt'];
+
+const sanitizeMetadata = (meta) => {
+  if (!meta || typeof meta !== 'object') return meta;
+  const sanitized = { ...meta };
+  for (const key of Object.keys(sanitized)) {
+    if (SENSITIVE_KEYS.some(s => key.toLowerCase().includes(s.toLowerCase()))) {
+      sanitized[key] = '[REDACTED]';
+    }
+  }
+  return sanitized;
+};
+
 const logActivity = async (req, action, entity = '', entityId = '', metadata = {}) => {
   try {
     const user = req.user;
@@ -8,12 +21,12 @@ const logActivity = async (req, action, entity = '', entityId = '', metadata = {
 
     await ActivityLog.create({
       user: user ? user._id : null,
-      userName: user ? user.name : (metadata.email || 'Anonymous'),
+      userName: user ? user.name : (metadata.email || metadata.username || 'Anonymous'),
       userRole: user ? user.role : 'GUEST',
       action,
       entity,
       entityId,
-      metadata,
+      metadata: sanitizeMetadata(metadata),
       ipAddress,
       userAgent
     });

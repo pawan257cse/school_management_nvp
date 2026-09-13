@@ -47,7 +47,10 @@ const userSchema = new mongoose.Schema({
     of: Boolean,
     default: defaultPermissions
   },
-  lastLogin: { type: Date }
+  lastLogin: { type: Date },
+  // Security & Account Lockout
+  loginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

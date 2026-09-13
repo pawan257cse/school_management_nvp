@@ -39,8 +39,18 @@ router.post('/login', async (req, res) => {
       .populate('studentRef');
 
     if (!user) {
-      await logActivity(req, 'LOGIN_FAILED', 'User', '', { email, reason: 'Invalid credentials' });
+      await logActivity(req, 'LOGIN_FAILED', 'User', '', { email, reason: 'User not found' });
       return res.status(401).json({ success: false, message: 'Invalid Login ID / Email or password.' });
+    }
+
+    // Check if account is temporarily locked due to consecutive failed attempts
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const remainingMinutes = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+      await logActivity(req, 'LOGIN_LOCKED_ATTEMPT', 'User', user._id, { email: user.email, remainingMinutes });
+      return res.status(423).json({
+        success: false,
+        message: `Account temporarily locked due to 5 consecutive failed attempts. Please try again in ${remainingMinutes} minute(s) or contact the Head Administrator.`
+      });
     }
 
     if (user.status !== 'active') {
@@ -50,11 +60,31 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      await logActivity(req, 'LOGIN_FAILED', 'User', user._id, { email, reason: 'Invalid password' });
-      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+      // Increment failed login attempts
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+      if (user.loginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15-minute lockout
+        await user.save();
+        await logActivity(req, 'ACCOUNT_LOCKED', 'User', user._id, { email: user.email, attempts: user.loginAttempts });
+        return res.status(423).json({
+          success: false,
+          message: 'Account temporarily locked for 15 minutes due to 5 consecutive failed login attempts.'
+        });
+      }
+
+      await user.save();
+      await logActivity(req, 'LOGIN_FAILED', 'User', user._id, { email: user.email, attempts: user.loginAttempts });
+      const attemptsRemaining = 5 - user.loginAttempts;
+      return res.status(401).json({
+        success: false,
+        message: `Invalid Login ID or Password. (${attemptsRemaining} attempt(s) remaining before temporary lockout).`
+      });
     }
 
-    // Update last login timestamp
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
     user.lastLogin = new Date();
     await user.save();
 
