@@ -348,7 +348,7 @@ export default function TimetableManagement() {
           >
             {classes.map(c => (
               <option key={c._id} value={c._id}>
-                Class {c.name} ({c.section || 'A'}){c.classTeacher?.name ? ` — CT: ${c.classTeacher.name}` : ''}
+                Class {c.name} ({c.section || 'A'}){c.classTeacher?.name ? ` — Class Teacher: ${c.classTeacher.name}` : ''}
               </option>
             ))}
           </select>
@@ -357,6 +357,11 @@ export default function TimetableManagement() {
         {selectedClassObj && (
           <div className="flex items-center gap-4 text-xs font-bold text-slate-600 flex-wrap">
             <span>Class: <strong className="text-indigo-600 font-extrabold">{selectedClassObj.name} ({selectedClassObj.section || 'A'})</strong></span>
+            {selectedClassObj.classTeacher?.name && (
+              <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Class Teacher: <strong className="text-emerald-950 font-black">{selectedClassObj.classTeacher.name}</strong>
+              </span>
+            )}
             <span>Academic Year: <strong className="text-slate-900 font-extrabold">2026-2027</strong></span>
           </div>
         )}
