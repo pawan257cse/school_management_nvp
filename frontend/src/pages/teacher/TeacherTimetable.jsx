@@ -28,6 +28,23 @@ const TIME_SLOTS = [
   { periodNumber: 9, displayPeriodNumber: 8, title: 'Period 8', time: '12:25 - 01:00 PM' },
 ];
 
+const getExactPeriodNumber = (periodNumber, startTime) => {
+  if (startTime) {
+    const cleanTime = startTime.trim().toUpperCase();
+    if (cleanTime.startsWith('08:00') || cleanTime.startsWith('8:00')) return 1;
+    if (cleanTime.startsWith('08:40') || cleanTime.startsWith('8:40')) return 2;
+    if (cleanTime.startsWith('09:10') || cleanTime.startsWith('9:10')) return 3;
+    if (cleanTime.startsWith('09:45') || cleanTime.startsWith('9:45')) return 4;
+    if (cleanTime.startsWith('10:40')) return 5;
+    if (cleanTime.startsWith('11:20')) return 6;
+    if (cleanTime.startsWith('11:50')) return 7;
+    if (cleanTime.startsWith('12:25')) return 8;
+  }
+  const pNum = Number(periodNumber) || 1;
+  const displayNum = pNum > 5 ? pNum - 1 : pNum;
+  return Math.min(Math.max(displayNum, 1), 8);
+};
+
 const getDayDateString = (dayName) => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const targetIdx = days.indexOf(dayName);
@@ -489,9 +506,7 @@ export default function TeacherTimetable() {
                   ) : (
                     <div className="space-y-2">
                       {selectedPeriods.map((p, idx) => {
-                        const pNum = Number(p.rawPeriodNumber || p.periodNumber) || 1;
-                        const displayNum = pNum > 5 ? pNum - 1 : pNum;
-                        const clampedNum = displayNum > 8 ? 8 : displayNum;
+                        const exactNum = getExactPeriodNumber(p.rawPeriodNumber || p.periodNumber, p.startTime);
 
                         return (
                           <div
@@ -501,14 +516,14 @@ export default function TeacherTimetable() {
                             {/* Left: Period Badge & Time */}
                             <div className="flex items-center gap-2.5 shrink-0">
                               <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-2xs">
-                                P{clampedNum}
+                                P{exactNum}
                               </span>
                               <div>
                                 <span className="font-mono font-extrabold text-xs text-slate-900 block">
                                   {p.startTime} - {p.endTime}
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  Period {clampedNum}
+                                  Period {exactNum}
                                 </span>
                               </div>
                             </div>

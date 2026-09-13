@@ -140,6 +140,23 @@ router.get('/my-timetable', protect, async (req, res) => {
         .populate('class', 'name section')
         .populate('schedule.periods.subject', 'name code');
 
+      const getExactPeriodNumber = (periodNumber, startTime) => {
+        if (startTime) {
+          const cleanTime = startTime.trim().toUpperCase();
+          if (cleanTime.startsWith('08:00') || cleanTime.startsWith('8:00')) return 1;
+          if (cleanTime.startsWith('08:40') || cleanTime.startsWith('8:40')) return 2;
+          if (cleanTime.startsWith('09:10') || cleanTime.startsWith('9:10')) return 3;
+          if (cleanTime.startsWith('09:45') || cleanTime.startsWith('9:45')) return 4;
+          if (cleanTime.startsWith('10:40')) return 5;
+          if (cleanTime.startsWith('11:20')) return 6;
+          if (cleanTime.startsWith('11:50')) return 7;
+          if (cleanTime.startsWith('12:25')) return 8;
+        }
+        const pNum = Number(periodNumber) || 1;
+        const displayNum = pNum > 5 ? pNum - 1 : pNum;
+        return Math.min(Math.max(displayNum, 1), 8);
+      };
+
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const teacherSchedule = days.map(dayName => {
         const dayPeriods = [];
@@ -150,17 +167,14 @@ router.get('/my-timetable', protect, async (req, res) => {
             dayData.periods.forEach(p => {
               if (p.teacher && p.teacher.toString() === user._id.toString() && !p.isBreak && p.subjectName !== 'Lunch Break') {
                 const pNum = Number(p.periodNumber) || 1;
-                // If period is after Lunch Break (slot 5), display as Period 5, 6, 7, 8 sequentially
-                const displayNum = pNum > 5 ? pNum - 1 : pNum;
-                const displayTitle = (p.periodTitle && !p.periodTitle.includes('Lunch'))
-                  ? p.periodTitle
-                  : `Period ${displayNum}`;
+                const exactNum = getExactPeriodNumber(pNum, p.startTime);
+                const displayTitle = `Period ${exactNum}`;
 
                 dayPeriods.push({
                   classId: tt.class?._id,
                   className: tt.className,
                   section: tt.section,
-                  periodNumber: displayNum,
+                  periodNumber: exactNum,
                   rawPeriodNumber: pNum,
                   periodTitle: displayTitle,
                   startTime: p.startTime,
