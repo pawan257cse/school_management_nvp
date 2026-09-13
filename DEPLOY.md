@@ -65,9 +65,9 @@ This guide explains how to deploy the entire school management portal on **Rende
    |---|---|---|
    | `NODE_ENV` | `production` | Enables production optimizations & frontend serving |
    | `PORT` | `10000` | Port for Render web service |
-   | `MONGODB_URI` | `mongodb+srv://nvp_admin:Password@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
-   | `JWT_SECRET` | `nvp_school_super_secret_jwt_key_2026` | Any long random secret string |
-   | `ADMIN_RECOVERY_KEY` | `NVP-HEAD-RECOVERY-KEY-2026` | Secret master key to reset admin password anytime |
+   | `MONGODB_URI` | `mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
+   | `JWT_SECRET` | `your_super_secret_jwt_key_here` | Any long random secret string |
+   | `ADMIN_RECOVERY_KEY` | `your_secret_recovery_key_here` | Secret master key to reset admin password anytime |
 
 6. Click **Create Web Service**.
 7. Wait 3–4 minutes while Render:
