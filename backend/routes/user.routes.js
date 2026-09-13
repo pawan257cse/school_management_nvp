@@ -257,9 +257,19 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
       return res.status(403).json({ success: false, message: 'Cannot edit Head Administrator account.' });
     }
 
+    // Check and update email (Gmail)
+    if (req.body.email && req.body.email.trim().toLowerCase() !== userToUpdate.email.toLowerCase()) {
+      const newEmail = req.body.email.trim().toLowerCase();
+      const existingUser = await User.findOne({ _id: { $ne: userToUpdate._id }, email: newEmail });
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: 'This email / Gmail is already in use by another user.' });
+      }
+      userToUpdate.email = newEmail;
+    }
+
     const allowedFields = ['name', 'mobile', 'qualification', 'gender', 'status', 'assignedClasses', 'assignedSubjects'];
     if (req.user.role === 'HEAD') {
-      allowedFields.push('email', 'role', 'employeeId', 'admissionNo', 'studentRef', 'studentClass');
+      allowedFields.push('role', 'employeeId', 'admissionNo', 'studentRef', 'studentClass');
     }
 
     allowedFields.forEach(field => {

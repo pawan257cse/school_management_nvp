@@ -78,136 +78,33 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Live Classroom & Period Duty Tracker or Sunday Holiday Banner */}
-      {liveToday?.isSunday || new Date().getDay() === 0 ? (
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white shadow-xl border border-indigo-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black uppercase tracking-wider">
-                Sunday • Weekly Holiday
-              </span>
-              <span className="text-xs text-slate-400 font-medium">School is closed today</span>
-            </div>
-            <h3 className="text-xl font-heading font-black text-white">
-              No Teaching Duties Today
-            </h3>
-            <p className="text-xs text-slate-300 max-w-xl">
-              Classes and campus activities are closed for Sunday. Weekday teaching schedule resumes on Monday at 08:00 AM.
-            </p>
+      {/* Teaching Routine Overview Banner */}
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black uppercase tracking-wider">
+              Teaching Schedule
+            </span>
+            <span className="text-xs text-slate-500 font-semibold">
+              Today: {new Date().getDay() === 0 ? 'Sunday (Holiday)' : (liveToday?.dayName || 'Weekday')}
+            </span>
           </div>
-          <Link
-            to="/teacher/timetable"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition shrink-0"
-          >
-            <Clock className="w-4 h-4" />
-            <span>View Weekly Schedule &rarr;</span>
-          </Link>
+          <h3 className="text-xl font-heading font-black text-slate-900">
+            My Weekly Teaching Timetable
+          </h3>
+          <p className="text-xs text-slate-500 max-w-xl">
+            Check your period timings, assigned class standards, and subject allocations.
+          </p>
         </div>
-      ) : (
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white shadow-xl border border-blue-800/80 space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-black uppercase text-emerald-300 tracking-wider">
-                  Live Teaching Duty Tracker · Today ({liveToday?.dayName || 'Today'})
-                </span>
-              </div>
-              <h3 className="text-xl font-heading font-black text-white mt-1">
-                Where is My Class Right Now?
-              </h3>
-            </div>
 
-            <Link
-              to="/teacher/timetable"
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center gap-1.5"
-            >
-              <Clock className="w-3.5 h-3.5 text-blue-300" />
-              <span>Full Routine ({liveToday?.totalClassesToday || 0} Lectures) &rarr;</span>
-            </Link>
-          </div>
-
-          {/* Current Class and Next Class */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Active Period */}
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Active Class Right Now
-                </span>
-                <span className="text-xs font-mono font-bold text-blue-200">
-                  {liveToday?.currentPeriod ? `${liveToday.currentPeriod.startTime} - ${liveToday.currentPeriod.endTime}` : '08:00 AM - 01:50 PM'}
-                </span>
-              </div>
-
-              {liveToday?.currentPeriod ? (
-                <div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h4 className="text-xl font-black text-white">
-                      {liveToday.currentPeriod.subjectName}
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-lg bg-blue-500/30 text-blue-200 text-xs font-bold border border-blue-400/30">
-                      {liveToday.currentPeriod.className} ({liveToday.currentPeriod.section})
-                    </span>
-                  </div>
-                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center gap-2 text-emerald-200 text-xs">
-                    <MapPin className="w-4 h-4 text-emerald-400 shrink-0 animate-bounce" />
-                    <span>
-                      Location: <strong className="text-white">{liveToday.currentPeriod.roomNo || `Room ${liveToday.currentPeriod.className}`}</strong>
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-slate-300 py-3">
-                  No active lecture at this moment. Free preparation period.
-                </p>
-              )}
-            </div>
-
-            {/* Next Class */}
-            <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/30 text-blue-200 border border-blue-400/30 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Next Lecture Today
-                </span>
-                {liveToday?.nextPeriod && (
-                  <span className="text-xs font-mono font-bold text-slate-300">
-                    Starts {liveToday.nextPeriod.startTime}
-                  </span>
-                )}
-              </div>
-
-              {liveToday?.nextPeriod ? (
-                <div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h4 className="text-lg font-bold text-slate-100">
-                      {liveToday.nextPeriod.subjectName}
-                    </h4>
-                    <span className="px-2 py-0.5 rounded-lg bg-white/10 text-slate-200 text-xs font-bold">
-                      {liveToday.nextPeriod.className} ({liveToday.nextPeriod.section})
-                    </span>
-                  </div>
-                  <div className="mt-2 p-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-slate-300 text-xs">
-                    <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                    <span>
-                      Location: <strong className="text-white">{liveToday.nextPeriod.roomNo || `Room ${liveToday.nextPeriod.className}`}</strong>
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 py-3">
-                  No further lectures scheduled for today.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+        <Link
+          to="/teacher/timetable"
+          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition shrink-0"
+        >
+          <Clock className="w-4 h-4" />
+          <span>View Class Timetable & Routine &rarr;</span>
+        </Link>
+      </div>
 
       {/* Class & Subject Isolation Card Banner */}
       <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">

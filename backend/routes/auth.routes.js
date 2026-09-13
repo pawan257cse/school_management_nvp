@@ -158,6 +158,51 @@ router.get('/me', protect, async (req, res) => {
   });
 });
 
+// @route   PUT /api/auth/profile
+// @desc    Update logged-in user profile (Email/Gmail, Name, Mobile, Qualification)
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const { name, email, mobile, qualification } = req.body;
+
+    if (email && email.toLowerCase().trim() !== user.email.toLowerCase()) {
+      const emailExists = await User.findOne({
+        _id: { $ne: user._id },
+        email: email.toLowerCase().trim()
+      });
+      if (emailExists) {
+        return res.status(400).json({ success: false, message: 'This email / Gmail is already registered with another account.' });
+      }
+      user.email = email.toLowerCase().trim();
+    }
+
+    if (name && name.trim()) user.name = name.trim();
+    if (mobile !== undefined) user.mobile = mobile.trim();
+    if (qualification !== undefined) user.qualification = qualification.trim();
+
+    await user.save();
+    await logActivity(req, 'UPDATE_PROFILE', 'User', user._id, { email: user.email, name: user.name });
+
+    const updatedUser = await User.findById(user._id)
+      .populate('assignedClasses')
+      .populate('assignedSubjects')
+      .populate('studentClass');
+
+    res.json({
+      success: true,
+      message: 'Profile details updated successfully.',
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @route   POST /api/auth/change-password
 // @desc    User changes own password
 // @access  Private

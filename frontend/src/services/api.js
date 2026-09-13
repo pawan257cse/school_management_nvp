@@ -44,6 +44,7 @@ API.interceptors.response.use(
 // Auth Services
 export const loginApi = (email, password) => API.post('/auth/login', { email, password });
 export const getMeApi = () => API.get('/auth/me');
+export const updateProfileApi = (data) => API.put('/auth/profile', data);
 export const changePasswordApi = (data) => API.post('/auth/change-password', data);
 export const logoutApi = () => API.post('/auth/logout');
 export const adminRecoveryResetApi = (data) => API.post('/auth/admin-recovery-reset', data);

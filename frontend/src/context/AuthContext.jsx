@@ -86,6 +86,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateCurrentUser = (newUserData) => {
+    setUser(newUserData);
+    localStorage.setItem('nvp_user', JSON.stringify(newUserData));
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -93,6 +98,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       login,
       logout,
+      updateCurrentUser,
       toast,
       showToast,
       getDefaultRouteForRole

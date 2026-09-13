@@ -328,11 +328,14 @@ export default function TeacherManagement() {
               <input
                 type="email"
                 required
-                disabled={showEditModal}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 disabled:bg-slate-100"
+                placeholder="e.g. teacher@gmail.com"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <span className="text-[10px] text-slate-500 mt-0.5 block">
+                Administrator can change teacher's Gmail address anytime
+              </span>
             </div>
           </div>
 

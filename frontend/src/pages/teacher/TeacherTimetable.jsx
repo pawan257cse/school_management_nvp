@@ -7,11 +7,9 @@ import {
   MapPin, 
   ArrowLeft, 
   RefreshCw, 
-  CheckCircle2, 
   AlertCircle,
   Sparkles,
-  ChevronRight,
-  UserCheck
+  Layers
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getMyTimetableApi } from '../../services/api';
@@ -51,25 +49,9 @@ export default function TeacherTimetable() {
 
   useEffect(() => {
     fetchTimetable();
-    const interval = setInterval(() => {
-      fetchTimetable(true);
-    }, 45000);
-    return () => clearInterval(interval);
   }, []);
 
   const teacherSchedule = data?.teacherSchedule || [];
-  const liveToday = data?.liveToday || {
-    dayName: currentDayName,
-    isSunday,
-    isHoliday: isSunday,
-    todayPeriods: [],
-    currentPeriod: null,
-    nextPeriod: null,
-    totalClassesToday: 0
-  };
-
-  const currentPeriod = liveToday.currentPeriod;
-  const nextPeriod = liveToday.nextPeriod;
 
   // Selected Day Periods
   const selectedDayData = teacherSchedule.find(s => s.day === selectedDay) || { day: selectedDay, periods: [] };
@@ -77,9 +59,9 @@ export default function TeacherTimetable() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-slate-500 gap-3">
-        <RefreshCw className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="font-semibold text-sm">Loading your Teaching Schedule & Classroom Routine...</p>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-500 gap-3">
+        <RefreshCw className="w-9 h-9 animate-spin text-blue-600" />
+        <p className="font-semibold text-sm">Loading your Teaching Timetable...</p>
       </div>
     );
   }
@@ -89,23 +71,23 @@ export default function TeacherTimetable() {
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm print:hidden">
         <div>
-          <Link to="/teacher-dashboard" className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold mb-1 transition">
-            <ArrowLeft className="w-4 h-4" /> Back to Faculty Dashboard
+          <Link to="/teacher-dashboard" className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold mb-1.5 transition">
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="px-3 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-xs font-black uppercase tracking-wider">
-              Faculty Routine & Period Allocations
+              Weekly Routine
             </span>
             <span className="px-3 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
               {user?.name}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 flex items-center gap-2.5 tracking-tight">
-            <Clock className="w-8 h-8 text-blue-600 shrink-0" />
-            My Class Routine & Room Tracker
+            <Calendar className="w-8 h-8 text-blue-600 shrink-0" />
+            My Teaching Timetable & Schedule
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-            Live tracker of your assigned classrooms, period timings, class standards, and weekly teaching routine.
+            Complete day-wise list of your assigned classes, subjects, and period timings.
           </p>
         </div>
 
@@ -113,171 +95,32 @@ export default function TeacherTimetable() {
           <button
             onClick={() => fetchTimetable(true)}
             disabled={refreshing}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-2 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Syncing...' : 'Sync Live Duty'}</span>
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
+            <span>{refreshing ? 'Refreshing...' : 'Refresh Timetable'}</span>
           </button>
-          <span className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Schedule set by Principal / Head only
-          </span>
         </div>
       </div>
 
-      {/* 2. SUNDAY HOLIDAY BANNER OR LIVE TODAY CLASSROOM TRACKER */}
-      {isSunday || liveToday.isSunday ? (
-        <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white shadow-xl border border-indigo-700/60 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
-                  Weekly Holiday • Sunday
-                </span>
-                <span className="text-xs text-slate-400">•</span>
-                <span className="text-xs font-bold text-slate-300">School is Closed Today</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight text-white">
-                No Classes Scheduled Today (Sunday)
-              </h2>
-              <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                Campus is closed for weekly holiday. No teaching periods or active duties are scheduled for today. Regular weekday timetable resumes on <strong className="text-amber-200">Monday at 08:00 AM</strong>. You can review your weekly routine using the day tabs below.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center shrink-0 min-w-[180px]">
-              <span className="text-[11px] font-extrabold uppercase text-indigo-300 block mb-1">Upcoming Duty</span>
-              <strong className="text-lg text-white font-black block">Monday 08:00 AM</strong>
-              <span className="text-[11px] text-emerald-300 font-semibold mt-1 inline-flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Normal Routine
-              </span>
-            </div>
+      {/* Sunday Note Banner */}
+      {isSunday && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-white font-black text-xs">
+              Sunday Holiday
+            </span>
+            <p className="text-xs sm:text-sm font-semibold">
+              Today is Sunday (Weekly Holiday). You are viewing <strong>Monday's</strong> timetable to prepare for tomorrow.
+            </p>
           </div>
-        </div>
-      ) : (
-        <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-950 text-white shadow-xl border border-blue-800/80 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-5 border-b border-white/10">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-black uppercase text-blue-300 tracking-wider">
-                  Live Teaching Duty Tracker
-                </span>
-                <span className="text-xs text-slate-400">•</span>
-                <span className="text-xs font-bold text-slate-300">
-                  Today is {currentDayName} ({liveToday.totalClassesToday} lectures scheduled)
-                </span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black font-heading tracking-tight">
-                Where is My Class Right Now?
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15">
-              <Clock className="w-4 h-4 text-blue-300" />
-              <span className="font-semibold">School Hours: 08:00 AM - 01:50 PM</span>
-            </div>
-          </div>
-
-          {/* Current Active Class Card & Next Upcoming Class Card */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
-            {/* Active Period Card */}
-            <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md shadow-emerald-500/30 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Active Class Right Now
-                </span>
-                {currentPeriod && (
-                  <span className="text-xs font-mono font-bold text-blue-200">
-                    {currentPeriod.startTime} - {currentPeriod.endTime}
-                  </span>
-                )}
-              </div>
-
-              {currentPeriod ? (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="text-2xl font-black text-white tracking-tight">
-                      {currentPeriod.subjectName}
-                    </h3>
-                    <span className="px-2.5 py-1 rounded-xl bg-blue-500/30 border border-blue-400/40 text-blue-200 font-bold text-xs">
-                      {currentPeriod.className} ({currentPeriod.section})
-                    </span>
-                  </div>
-
-                  {/* Big Room Pill */}
-                  <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center gap-2.5 text-emerald-200">
-                    <MapPin className="w-5 h-5 text-emerald-400 shrink-0 animate-bounce" />
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                        Target Classroom / Location:
-                      </span>
-                      <strong className="text-sm font-black text-white">
-                        {currentPeriod.roomNo || `Room ${currentPeriod.className}`}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-6 text-center text-slate-300 text-xs">
-                  No active lecture at this moment. Free preparation period.
-                </div>
-              )}
-            </div>
-
-            {/* Next Upcoming Period Card */}
-            <div className="p-5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-500/30 text-blue-200 border border-blue-400/30 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-blue-300" />
-                  Next Class Today
-                </span>
-                {nextPeriod && (
-                  <span className="text-xs font-mono font-bold text-slate-300">
-                    Starts at {nextPeriod.startTime}
-                  </span>
-                )}
-              </div>
-
-              {nextPeriod ? (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="text-xl font-bold text-slate-100">
-                      {nextPeriod.subjectName}
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-slate-200 font-bold text-xs">
-                      {nextPeriod.className} ({nextPeriod.section})
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-slate-300 text-xs">
-                    <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span>
-                      Location: <strong className="text-white">{nextPeriod.roomNo || `Room ${nextPeriod.className}`}</strong>
-                    </span>
-                    <span className="mx-1">•</span>
-                    <span className="font-mono text-blue-300">{nextPeriod.periodTitle}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-6 text-center text-slate-400 text-xs">
-                  No further classes scheduled for today.
-                </div>
-              )}
-            </div>
-          </div>
+          <span className="text-xs font-bold text-amber-800 bg-white/90 px-3 py-1 rounded-lg border border-amber-200 shrink-0">
+            Viewing Monday Routine
+          </span>
         </div>
       )}
 
-      {/* 3. Weekday Selector Tabs */}
+      {/* 2. Weekday Selector Tabs */}
       <div className="flex items-center gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto print:hidden">
         {DAYS.map((day) => {
           const isSelected = selectedDay === day;
@@ -313,69 +156,75 @@ export default function TeacherTimetable() {
         })}
       </div>
 
-      {/* 4. Day Periods Table / Card Grid */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      {/* 3. Pure Schedule List: Kab kaun sa class hai */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <h3 className="font-heading font-black text-slate-900 text-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              Schedule for {selectedDay}
-            </h3>
-            <p className="text-xs text-slate-500">
-              Showing all teaching lectures, target standards, and room locations assigned to you.
+            <h2 className="font-heading font-black text-slate-900 text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              {selectedDay}'s Routine ({selectedPeriods.length} Classes)
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              List of periods, timings, assigned classes, and subjects for {selectedDay}.
             </p>
           </div>
-          <span className="text-xs font-bold px-3 py-1 bg-blue-50 text-blue-700 rounded-xl border border-blue-200">
-            {selectedPeriods.length} Lecture Sessions
+          <span className="text-xs font-bold px-3 py-1.5 bg-blue-50 text-blue-800 rounded-xl border border-blue-200 self-start sm:self-auto">
+            {selectedPeriods.length} Periods Scheduled
           </span>
         </div>
 
         {selectedPeriods.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-xs font-medium">
+          <div className="py-14 text-center text-slate-400 text-sm font-medium">
+            <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-300" />
             No classes scheduled for you on {selectedDay}.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {selectedPeriods.map((period, idx) => (
-              <div
-                key={idx}
-                className="p-5 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200 hover:border-blue-300 transition-all space-y-3"
-              >
-                {/* Period timing header */}
-                <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-blue-600 text-white">
-                    {period.periodTitle || `Period ${period.periodNumber}`}
-                  </span>
-                  <span className="font-mono text-xs font-bold text-slate-600">
-                    {period.startTime} — {period.endTime}
-                  </span>
-                </div>
-
-                {/* CLASS is the PRIMARY info for the teacher */}
-                <div className="p-3 rounded-xl bg-blue-600 text-white flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200 mb-0.5">Go to Class</p>
-                    <p className="text-xl font-black tracking-tight">Class {period.className}</p>
-                    {period.section && (
-                      <p className="text-xs font-semibold text-blue-200">Section {period.section}</p>
-                    )}
+          <div className="space-y-3">
+            {selectedPeriods.map((p, idx) => {
+              return (
+                <div
+                  key={idx}
+                  className="p-4 sm:p-4.5 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-white shadow-xs"
+                >
+                  {/* Left: Period Badge & Time */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="w-11 h-11 rounded-xl bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-xs">
+                      P{p.periodNumber}
+                    </span>
+                    <div>
+                      <span className="font-mono font-extrabold text-sm text-slate-900 block">
+                        {p.startTime} - {p.endTime}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        {p.periodTitle || `Period ${p.periodNumber}`}
+                      </span>
+                    </div>
                   </div>
-                  <School className="w-9 h-9 text-blue-200 opacity-70 shrink-0" />
-                </div>
 
-                {/* Subject */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-0.5">Subject</p>
-                  <h4 className="font-black text-slate-900 text-sm">{period.subjectName}</h4>
-                </div>
+                  {/* Middle: Subject Name */}
+                  <div className="flex-1 sm:px-4">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                      Subject
+                    </span>
+                    <strong className="text-base sm:text-lg font-black text-slate-900">
+                      {p.subjectName || 'Academic Subject'}
+                    </strong>
+                  </div>
 
-                {/* Room */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Classroom: <strong className="text-slate-900">{period.roomNo || `Room ${period.className}`}</strong></span>
+                  {/* Right: Class, Section & Room */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:justify-end shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                    <span className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 border border-blue-200 font-extrabold text-xs">
+                      {p.className} ({p.section || 'A'})
+                    </span>
+
+                    <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{p.roomNo || `Class ${p.className}`}</span>
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
