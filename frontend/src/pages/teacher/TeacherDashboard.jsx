@@ -36,6 +36,14 @@ export default function TeacherDashboard() {
   const assignedSubjects = user?.assignedSubjects || [];
   const liveToday = timetableData?.liveToday;
 
+  const isClassTeacher = Boolean(
+    user?.role === 'HEAD' ||
+    user?.role === 'PRINCIPAL' ||
+    user?.isClassTeacher ||
+    (user?.classTeacherOf && user.classTeacherOf.length > 0) ||
+    (user?.attendanceClasses && user.attendanceClasses.length > 0)
+  );
+
   return (
     <div className="space-y-6">
       {/* Teacher Personal Greeting Banner */}
@@ -46,6 +54,11 @@ export default function TeacherDashboard() {
               Faculty Portal
             </span>
             <span className="text-xs text-slate-400 font-medium">EMP ID: {user?.employeeId}</span>
+            {isClassTeacher && (
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                Class Teacher
+              </span>
+            )}
           </div>
           <h2 className="font-heading font-extrabold text-2xl sm:text-3xl tracking-tight">
             Good Morning, {user?.name}!
@@ -71,13 +84,15 @@ export default function TeacherDashboard() {
             <Plus className="w-4 h-4" />
             <span>Create Paper</span>
           </Link>
-          <Link
-            to="/teacher/attendance"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all"
-          >
-            <CheckSquare className="w-4 h-4 text-emerald-400" />
-            <span>Mark Attendance</span>
-          </Link>
+          {isClassTeacher && (
+            <Link
+              to="/teacher/attendance"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all"
+            >
+              <CheckSquare className="w-4 h-4 text-white" />
+              <span>Mark Attendance</span>
+            </Link>
+          )}
         </div>
       </div>
 

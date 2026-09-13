@@ -118,6 +118,14 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
     }
   ];
 
+  const isClassTeacher = Boolean(
+    role === 'HEAD' ||
+    role === 'PRINCIPAL' ||
+    user?.isClassTeacher ||
+    (user?.classTeacherOf && user.classTeacherOf.length > 0) ||
+    (user?.attendanceClasses && user.attendanceClasses.length > 0)
+  );
+
   const teacherSections = [
     {
       title: null,
@@ -133,7 +141,9 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'My Subjects', path: '/teacher/subjects', icon: BookOpen },
         { name: 'Question Papers', path: '/teacher/question-papers', icon: FileText },
         { name: 'Assignments', path: '/teacher/assignments', icon: ClipboardList },
-        { name: 'Attendance', path: '/teacher/attendance', icon: CheckSquare },
+        ...(isClassTeacher ? [
+          { name: 'Student Attendance', path: '/teacher/attendance', icon: CheckSquare, badge: 'Class Teacher' }
+        ] : []),
         { name: 'Student Results', path: '/teacher/results', icon: Award },
         { name: 'Exams & Schedule', path: '/teacher/exams', icon: Calendar },
         { name: 'Study Materials', path: '/teacher/materials', icon: BookMarked }

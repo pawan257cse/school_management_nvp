@@ -117,6 +117,20 @@ router.post('/login', async (req, res) => {
     req.user = user;
     await logActivity(req, 'LOGIN', 'User', user._id, { email: user.email, role: user.role });
 
+    const Class = require('../models/Class');
+    let classTeacherOf = [];
+    if (user.role === 'TEACHER') {
+      const classesWhereCT = await Class.find({
+        status: 'active',
+        $or: [
+          { classTeacher: user._id },
+          { attendanceTeacher: user._id },
+          { _id: { $in: user.attendanceClasses || [] } }
+        ]
+      }).select('name section');
+      classTeacherOf = classesWhereCT.map(c => ({ _id: c._id, name: c.name, section: c.section || 'A' }));
+    }
+
     res.json({
       success: true,
       message: `Welcome back, ${user.name}!`,
@@ -139,6 +153,8 @@ router.post('/login', async (req, res) => {
         permissions: user.permissions,
         assignedClasses: user.assignedClasses,
         assignedSubjects: user.assignedSubjects,
+        isClassTeacher: user.role === 'HEAD' || user.role === 'PRINCIPAL' || classTeacherOf.length > 0,
+        classTeacherOf,
         lastLogin: user.lastLogin
       }
     });
@@ -152,10 +168,36 @@ router.post('/login', async (req, res) => {
 // @desc    Get current user profile
 // @access  Private
 router.get('/me', protect, async (req, res) => {
-  res.json({
-    success: true,
-    user: req.user
-  });
+  try {
+    const user = req.user;
+    const Class = require('../models/Class');
+    let classTeacherOf = [];
+    if (user.role === 'TEACHER') {
+      const classesWhereCT = await Class.find({
+        status: 'active',
+        $or: [
+          { classTeacher: user._id },
+          { attendanceTeacher: user._id },
+          { _id: { $in: user.attendanceClasses || [] } }
+        ]
+      }).select('name section');
+      classTeacherOf = classesWhereCT.map(c => ({ _id: c._id, name: c.name, section: c.section || 'A' }));
+    }
+
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    userObj.isClassTeacher = user.role === 'HEAD' || user.role === 'PRINCIPAL' || classTeacherOf.length > 0;
+    userObj.classTeacherOf = classTeacherOf;
+
+    res.json({
+      success: true,
+      user: userObj
+    });
+  } catch (error) {
+    res.json({
+      success: true,
+      user: req.user
+    });
+  }
 });
 
 // @route   PUT /api/auth/profile
