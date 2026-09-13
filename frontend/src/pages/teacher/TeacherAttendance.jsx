@@ -82,6 +82,7 @@ export default function TeacherAttendance() {
     }
   };
 
+  const isAdmin = user?.role === 'HEAD' || user?.role === 'PRINCIPAL';
   const selectedClass = classes.find(c => c._id === selectedClassId);
   const presentCount = records.filter(r => r.status === 'present').length;
   const absentCount = records.filter(r => r.status === 'absent').length;
@@ -91,42 +92,58 @@ export default function TeacherAttendance() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm">
         <div>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+              isAdmin ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'
+            }`}>
+              {isAdmin ? 'Administrative Master Console' : 'Teacher Attendance Portal'}
+            </span>
+            {selectedClass?.attendanceTeacher?.name && (
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
+                Duty In-Charge: {selectedClass.attendanceTeacher.name}
+              </span>
+            )}
+          </div>
           <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 flex items-center gap-2">
             <CheckSquare className="w-6 h-6 text-emerald-600" />
-            Class Student Attendance Portal
+            {isAdmin ? 'Master Student Attendance Roster' : 'Class Student Attendance Portal'}
           </h2>
-          <p className="text-xs text-slate-500">
-            Strictly restricted to your assigned classes ({classes.length} class{classes.length === 1 ? '' : 'es'} allocated).
+          <p className="text-xs text-slate-500 mt-1">
+            {isAdmin 
+              ? `Master oversight across all school standards (${classes.length} active classes available).`
+              : `Strictly restricted to your assigned class (${classes.length} class allocated).`
+            }
           </p>
         </div>
 
         {/* Selection bar */}
         {classes.length > 0 && (
-          <div className="flex flex-wrap items-center gap-3">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase">Assigned Class</label>
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="flex-1 sm:flex-initial">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Class</label>
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-white shadow-sm"
+                className="w-full sm:w-auto px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 hover:bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {classes.map(c => (
-                  <option key={c._id} value={c._id}>Class {c.name} ({c.section})</option>
+                  <option key={c._id} value={c._id}>
+                    Class {c.name} ({c.section}){c.attendanceTeacher?.name ? ` — ${c.attendanceTeacher.name}` : ''}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase">Attendance Date</label>
+            <div className="flex-1 sm:flex-initial">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Attendance Date</label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-white shadow-sm"
-              >
-              </input>
+                className="w-full sm:w-auto px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 hover:bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              />
             </div>
           </div>
         )}
@@ -140,17 +157,22 @@ export default function TeacherAttendance() {
           </div>
           <div className="space-y-1">
             <h3 className="font-heading font-bold text-lg text-amber-950">
-              {permissionDenied ? 'Attendance Access Restricted' : 'No Class Attendance Duty Assigned'}
+              {isAdmin ? 'No Active Classes Found' : (permissionDenied ? 'Attendance Access Restricted' : 'No Class Attendance Duty Assigned')}
             </h3>
             <p className="text-xs text-amber-800 leading-relaxed max-w-md">
-              {permissionDenied
-                ? 'Security Policy: You do not have permission to mark or submit student attendance. Please contact the Head Administrator or Principal.'
-                : 'Security Policy: Teachers can strictly view and submit attendance ONLY for classes where they are designated as the official Attendance In-Charge. Currently, no class attendance duty has been assigned to your account.'}
+              {isAdmin
+                ? 'There are currently no active class standards configured in the database. Please ensure classes are active in Class Management.'
+                : (permissionDenied
+                  ? 'Security Policy: You do not have permission to mark or submit student attendance. Please contact the Head Administrator or Principal.'
+                  : 'Security Policy: Teachers can strictly view and submit attendance ONLY for classes where they are designated as the official Attendance In-Charge. Currently, no class attendance duty has been assigned to your account.')
+              }
             </p>
           </div>
-          <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-medium text-amber-900">
-            Please contact the <strong>Head Administrator</strong> or <strong>Principal</strong> to assign you as the Attendance In-Charge for a class standard.
-          </div>
+          {!isAdmin && (
+            <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200 text-[11px] font-medium text-amber-900">
+              Please contact the <strong>Head Administrator</strong> or <strong>Principal</strong> to assign you as the Attendance In-Charge for a class standard.
+            </div>
+          )}
         </div>
       )}
 
