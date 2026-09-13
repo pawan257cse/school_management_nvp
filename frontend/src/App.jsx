@@ -97,6 +97,22 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
   );
 };
 
+// Root Index Gate: Automatically routes active logged-in user to their respective dashboard
+const IndexGate = () => {
+  const { user, loading, getDefaultRouteForRole } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-bold text-sm">
+        Initializing NVP Portal Session...
+      </div>
+    );
+  }
+  if (user && user.role) {
+    return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
+  }
+  return <Navigate to="/login" replace />;
+};
+
 // Dedicated Admin Gate: renders Head Dashboard if logged in as HEAD, otherwise renders private Admin Console login
 const AdminGate = () => {
   const { user, loading } = useAuth();
@@ -118,6 +134,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Root App Entry - Instant Dashboard Redirection for logged in users */}
+          <Route path="/" element={<IndexGate />} />
           <Route path="/login" element={<Login isAdminMode={false} />} />
 
           {/* Dedicated /admin and /head Gateway (Hidden from standard /login) */}

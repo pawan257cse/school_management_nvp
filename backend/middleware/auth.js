@@ -35,7 +35,7 @@ const protect = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         isPasswordChanged: true,
-        message: 'Aapka password badal diya gaya hai. Kripya naye password se login karein.'
+        message: 'Your password was changed or reset. Please log in with your new password.'
       });
     }
 
@@ -45,7 +45,7 @@ const protect = async (req, res, next) => {
         return res.status(401).json({
           success: false,
           isPasswordChanged: true,
-          message: 'Aapka password badal diya gaya hai. Kripya naye password se login karein.'
+          message: 'Your password was changed or reset. Please log in with your new password.'
         });
       }
     }

@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
           // Only clear session if server explicitly rejected the token with 401
           if (err.response && err.response.status === 401) {
             if (err.response.data?.isPasswordChanged) {
-              sessionStorage.setItem('password_reset_alert', err.response.data.message || 'Aapka password badal diya gaya hai. Kripya naye password se login karein.');
+              sessionStorage.setItem('password_reset_alert', err.response.data.message || 'Your password was changed. Please log in again with your new password.');
             }
             logout();
           }

@@ -9,12 +9,19 @@ import {
 import Modal from '../components/common/Modal';
 
 export default function Login({ isAdminMode = false }) {
-  const { login, getDefaultRouteForRole } = useAuth();
+  const { user, login, getDefaultRouteForRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Detect whether user navigated specifically to /admin or /head
   const isAdmin = isAdminMode || location.pathname === '/admin' || location.pathname === '/head';
+
+  // Auto-redirect to dashboard if already logged in and not in dedicated /admin mode
+  useEffect(() => {
+    if (!isAdmin && user && user.role) {
+      navigate(getDefaultRouteForRole(user.role), { replace: true });
+    }
+  }, [user, isAdmin, navigate, getDefaultRouteForRole]);
 
   // Login form state
   const [identifier, setIdentifier] = useState('');
