@@ -65,30 +65,19 @@ router.get('/my-attendance-classes', protect, async (req, res) => {
       });
     }
 
-    const teacherId = req.user._id;
-
-    // 2. Query classes where teacher is specifically designated as attendanceTeacher OR in attendanceClasses
+    // 2. Query classes where teacher is designated as classTeacher, attendanceTeacher, or in class lists
     let classes = await Class.find({
       status: 'active',
       $or: [
         { attendanceTeacher: teacherId },
-        { _id: { $in: req.user.attendanceClasses || [] } }
+        { classTeacher: teacherId },
+        { _id: { $in: req.user.attendanceClasses || [] } },
+        { _id: { $in: req.user.assignedClasses || [] } }
       ]
     })
       .populate('classTeacher', 'name email mobile')
       .populate('attendanceTeacher', 'name email mobile')
       .populate('subjects', 'name code');
-
-    // 3. Fallback: If no explicit attendanceTeacher is configured school-wide, fall back to classTeacher
-    if (classes.length === 0) {
-      const anyExplicitSet = await Class.exists({ attendanceTeacher: { $ne: null } });
-      if (!anyExplicitSet) {
-        classes = await Class.find({ status: 'active', classTeacher: teacherId })
-          .populate('classTeacher', 'name email mobile')
-          .populate('attendanceTeacher', 'name email mobile')
-          .populate('subjects', 'name code');
-      }
-    }
 
     classes.sort((a, b) => {
       const idxA = classSortOrder.indexOf(a.name);

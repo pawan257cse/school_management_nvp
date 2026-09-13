@@ -40,27 +40,18 @@ async function getTeacherAttendanceClassIds(user) {
     return [];
   }
 
-  // 1. Check classes where attendanceTeacher is specifically assigned to this user
-  // or user's attendanceClasses array
+  // 1. Check classes where teacher is assigned as classTeacher, attendanceTeacher, or in user's class lists
   const attendanceDocs = await Class.find({
     status: 'active',
     $or: [
       { attendanceTeacher: user._id },
-      { _id: { $in: user.attendanceClasses || [] } }
+      { classTeacher: user._id },
+      { _id: { $in: user.attendanceClasses || [] } },
+      { _id: { $in: user.assignedClasses || [] } }
     ]
   }).select('_id');
 
-  let classIds = attendanceDocs.map(c => c._id.toString());
-
-  // 2. Fallback: If no class in the school has attendanceTeacher assigned yet, fall back to classTeacher
-  if (classIds.length === 0) {
-    const anyExplicitSet = await Class.exists({ attendanceTeacher: { $ne: null } });
-    if (!anyExplicitSet) {
-      const ctDocs = await Class.find({ status: 'active', classTeacher: user._id }).select('_id');
-      classIds = ctDocs.map(c => c._id.toString());
-    }
-  }
-
+  const classIds = attendanceDocs.map(c => c._id.toString());
   return Array.from(new Set(classIds));
 }
 
