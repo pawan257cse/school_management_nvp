@@ -6,18 +6,16 @@ const Setting = require('../models/Setting');
 const Timetable = require('../models/Timetable');
 
 /**
- * Clean & Robust System Initializer:
- * - Ensures All Standard Subjects (English, Hindi, Math, Science, SST, Computer, Sanskrit, GK, EVS, Oral, etc.)
- * - Ensures All 10 Real Classes (PG, LKG, UKG, 1, 2, 3, 4, 5, 6, 7)
- * - Ensures All 10 Real Teachers + Principal + Head Administrator exist and have their
- *   full assignedClasses, assignedSubjects, and Class Teacher assignments permanently configured.
- * - Ensures all 10 Timetables are populated and linked with real Subject & Teacher IDs.
+ * Non-Destructive System Initializer:
+ * - SAFE: Never deletes existing classes, teachers, subjects, or timetables.
+ * - SAFE: Never overwrites live customizations made by Head Administrator, Principal, or Teachers.
+ * - Only seeds initial records if the database or record is missing.
  */
 const seedInitialData = async () => {
   try {
-    console.log('[System Init] Verifying core system configuration...');
+    console.log('[System Init] Checking database state (Safe Non-Destructive Mode)...');
 
-    // 1. Standard Subjects
+    // 1. Standard Subjects (Insert only if missing, never overwrite existing)
     const standardSubjectsDef = [
       { name: 'English', code: 'ENG' },
       { name: 'Hindi', code: 'HIN' },
@@ -35,46 +33,37 @@ const seedInitialData = async () => {
       { name: 'Hindi Grammar', code: 'HING' }
     ];
 
-    const subMap = {};
     for (const s of standardSubjectsDef) {
-      const doc = await Subject.findOneAndUpdate(
-        { name: s.name },
-        { name: s.name, code: s.code, status: 'active' },
-        { upsert: true, new: true }
-      );
-      subMap[s.name.toUpperCase()] = doc;
-      subMap[s.code.toUpperCase()] = doc;
+      const exists = await Subject.findOne({ name: { $regex: new RegExp(`^${s.name}$`, 'i') } });
+      if (!exists) {
+        await Subject.create({ name: s.name, code: s.code, status: 'active' });
+      }
     }
 
     const allSubjectDocs = await Subject.find({ status: 'active' });
     const allSubjectIds = allSubjectDocs.map(s => s._id);
+    const subMap = {};
+    allSubjectDocs.forEach(s => {
+      subMap[s.name.toUpperCase()] = s;
+      subMap[s.code.toUpperCase()] = s;
+    });
 
-    // 2. Standard Classes (PG to 7)
+    // 2. Standard Classes (Insert only if missing, NEVER delete or overwrite existing classes)
     const standardClassNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
-    const classMap = {};
-
     for (const name of standardClassNames) {
-      let cls = await Class.findOne({ name, section: 'A' });
-      if (!cls) {
-        cls = await Class.create({
+      const clsExists = await Class.findOne({ name, section: 'A' });
+      if (!clsExists) {
+        await Class.create({
           name,
           section: 'A',
           subjects: allSubjectIds,
           studentCount: 0,
           status: 'active'
         });
-      } else {
-        cls.subjects = allSubjectIds;
-        cls.status = 'active';
-        await cls.save();
       }
-      classMap[name] = cls;
     }
 
-    // Delete obsolete classes
-    await Class.deleteMany({ name: { $in: ['Nursery', '8', '9', '10'] } });
-
-    // 3. Ensure Default School Setting
+    // 3. Ensure Default School Setting (Only if missing)
     const existingSetting = await Setting.findOne();
     if (!existingSetting) {
       await Setting.create({
@@ -92,7 +81,7 @@ const seedInitialData = async () => {
       });
     }
 
-    // 4. Head Administrator
+    // 4. Head Administrator (Only if missing)
     let headDoc = await User.findOne({ role: 'HEAD' });
     if (!headDoc) {
       const salt = await bcrypt.genSalt(10);
@@ -113,7 +102,7 @@ const seedInitialData = async () => {
       console.log('[System Init] Head Administrator created');
     }
 
-    // 5. Faculty / Teachers (10 Real Teachers + Principal)
+    // 5. Faculty / Teachers (Create only if missing; never overwrite modified live profiles)
     const realFacultyDef = [
       {
         name: 'Priti',
@@ -247,8 +236,6 @@ const seedInitialData = async () => {
       }
     ];
 
-    const teacherMap = {};
-
     for (const f of realFacultyDef) {
       let userDoc = await User.findOne({
         $or: [
@@ -257,23 +244,22 @@ const seedInitialData = async () => {
         ]
       });
 
-      const salt = await bcrypt.genSalt(10);
-      const passHash = await bcrypt.hash(f.pass, salt);
-
-      const assignedSubjectIds = f.teachingSubjects
-        .map(subName => subMap[subName.toUpperCase()]?._id)
-        .filter(Boolean);
-
-      const assignedClassIds = f.teachingClasses
-        .map(cName => classMap[cName]?._id)
-        .filter(Boolean);
-
-      const ctClassDoc = classMap[f.ctClass];
-      if (ctClassDoc && !assignedClassIds.some(id => id.toString() === ctClassDoc._id.toString())) {
-        assignedClassIds.push(ctClassDoc._id);
-      }
-
       if (!userDoc) {
+        const salt = await bcrypt.genSalt(10);
+        const passHash = await bcrypt.hash(f.pass, salt);
+
+        const assignedSubjectIds = f.teachingSubjects
+          .map(subName => subMap[subName.toUpperCase()]?._id)
+          .filter(Boolean);
+
+        const assignedClasses = await Class.find({ name: { $in: f.teachingClasses } });
+        const assignedClassIds = assignedClasses.map(c => c._id);
+
+        const ctClassDoc = await Class.findOne({ name: f.ctClass });
+        if (ctClassDoc && !assignedClassIds.some(id => id.toString() === ctClassDoc._id.toString())) {
+          assignedClassIds.push(ctClassDoc._id);
+        }
+
         userDoc = await User.create({
           name: f.name,
           email: f.email.toLowerCase(),
@@ -289,213 +275,40 @@ const seedInitialData = async () => {
           assignedSubjects: assignedSubjectIds,
           attendanceClasses: ctClassDoc ? [ctClassDoc._id] : []
         });
-      } else {
-        userDoc.name = f.name;
-        userDoc.email = f.email.toLowerCase();
-        userDoc.role = f.role;
-        userDoc.mobile = f.mobile;
-        userDoc.employeeId = f.empId;
-        userDoc.gender = f.gender;
-        userDoc.qualification = f.qual;
-        userDoc.status = 'active';
-        userDoc.assignedClasses = assignedClassIds;
-        userDoc.assignedSubjects = assignedSubjectIds;
-        userDoc.attendanceClasses = ctClassDoc ? [ctClassDoc._id] : [];
-        if (!userDoc.generatedPassword) userDoc.generatedPassword = f.pass;
-        await userDoc.save();
-      }
 
-      teacherMap[f.name.toUpperCase()] = userDoc;
-
-      // Link Class Teacher in Class document
-      if (ctClassDoc) {
-        ctClassDoc.classTeacher = userDoc._id;
-        ctClassDoc.attendanceTeacher = userDoc._id;
-        await ctClassDoc.save();
+        // Link Class Teacher if class didn't have one
+        if (ctClassDoc && !ctClassDoc.classTeacher) {
+          ctClassDoc.classTeacher = userDoc._id;
+          ctClassDoc.attendanceTeacher = userDoc._id;
+          await ctClassDoc.save();
+        }
       }
     }
 
-    // 6. Timetable Setup (PG to 7)
-    const periodTimes = [
-      { periodNumber: 1, periodTitle: 'Period 1', startTime: '08:00 AM', endTime: '08:45 AM' },
-      { periodNumber: 2, periodTitle: 'Period 2', startTime: '08:45 AM', endTime: '09:30 AM' },
-      { periodNumber: 3, periodTitle: 'Period 3', startTime: '09:30 AM', endTime: '10:15 AM' },
-      { periodNumber: 4, periodTitle: 'Period 4', startTime: '10:15 AM', endTime: '11:00 AM' },
-      { periodNumber: 5, periodTitle: 'Lunch Break', startTime: '11:00 AM', endTime: '11:35 AM', isBreak: true },
-      { periodNumber: 6, periodTitle: 'Period 5', startTime: '11:35 AM', endTime: '12:20 PM' },
-      { periodNumber: 7, periodTitle: 'Period 6', startTime: '12:20 PM', endTime: '01:05 PM' },
-      { periodNumber: 8, periodTitle: 'Period 7', startTime: '01:05 PM', endTime: '01:50 PM' },
-      { periodNumber: 9, periodTitle: 'Period 8', startTime: '01:50 PM', endTime: '02:30 PM' }
-    ];
+    // 6. Timetable Setup (Only insert default if class has NO timetable at all)
+    const activeClasses = await Class.find({ status: 'active' });
+    for (const cls of activeClasses) {
+      const existingTT = await Timetable.findOne({ class: cls._id });
+      if (!existingTT) {
+        // Create initial default empty timetable structure for this class
+        const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const emptySchedule = daysOfWeek.map(day => ({
+          day,
+          periods: []
+        }));
 
-    const classSchedulesRaw = {
-      PG: [
-        { pNum: 1, sub: 'Oral', teacher: 'Priti' },
-        { pNum: 2, sub: 'English', teacher: 'Priti' },
-        { pNum: 3, sub: 'Hindi', teacher: 'Priti' },
-        { pNum: 4, sub: 'Hindi', teacher: 'Priti' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'General Knowledge', teacher: 'Priti' },
-        { pNum: 7, sub: 'Mathematics', teacher: 'Priti' },
-        { pNum: 8, sub: 'Mathematics', teacher: 'Priti' },
-        { pNum: 9, sub: 'General Knowledge', teacher: 'Priti' }
-      ],
-      LKG: [
-        { pNum: 1, sub: 'Hindi', teacher: 'Lalita' },
-        { pNum: 2, sub: 'Hindi', teacher: 'Lalita' },
-        { pNum: 3, sub: 'Mathematics', teacher: 'Lalita' },
-        { pNum: 4, sub: 'Mathematics', teacher: 'Lalita' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'English', teacher: 'Lalita' },
-        { pNum: 7, sub: 'English', teacher: 'Lalita' },
-        { pNum: 8, sub: 'General Knowledge', teacher: 'Lalita' },
-        { pNum: 9, sub: 'Hindi', teacher: 'Lalita' }
-      ],
-      UKG: [
-        { pNum: 1, sub: 'Mathematics', teacher: 'Priya' },
-        { pNum: 2, sub: 'Mathematics', teacher: 'Priya' },
-        { pNum: 3, sub: 'Hindi', teacher: 'Priya' },
-        { pNum: 4, sub: 'Hindi', teacher: 'Priya' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'English', teacher: 'Priya' },
-        { pNum: 7, sub: 'English', teacher: 'Priya' },
-        { pNum: 8, sub: 'General Knowledge', teacher: 'Priya' },
-        { pNum: 9, sub: 'Hindi', teacher: 'Priya' }
-      ],
-      '1': [
-        { pNum: 1, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 2, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 3, sub: 'English', teacher: 'Megha' },
-        { pNum: 4, sub: 'Mathematics', teacher: 'Sarita' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 7, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 8, sub: 'General Knowledge', teacher: 'Durga' },
-        { pNum: 9, sub: 'Hindi', teacher: 'Durga' }
-      ],
-      '2': [
-        { pNum: 1, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 2, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 3, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 4, sub: 'English', teacher: 'Megha' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 7, sub: 'Mathematics', teacher: 'Sarita' },
-        { pNum: 8, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 9, sub: 'EVS', teacher: 'Sarita' }
-      ],
-      '3': [
-        { pNum: 1, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 2, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 3, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 4, sub: 'English', teacher: 'Vanshika' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 8, sub: 'English', teacher: 'Vanshika' },
-        { pNum: 9, sub: 'General Knowledge', teacher: 'Chanchal' }
-      ],
-      '4': [
-        { pNum: 1, sub: 'EVS', teacher: 'Vanshika' },
-        { pNum: 2, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 3, sub: 'English', teacher: 'Kavita' },
-        { pNum: 4, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'English', teacher: 'Sarita' },
-        { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 8, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 9, sub: 'General Knowledge', teacher: 'Sarita' }
-      ],
-      '5': [
-        { pNum: 1, sub: 'Hindi', teacher: 'Megha' },
-        { pNum: 2, sub: 'EVS', teacher: 'Vanshika' },
-        { pNum: 3, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 4, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 7, sub: 'Hindi', teacher: 'Sarita' },
-        { pNum: 8, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 9, sub: 'English', teacher: 'Megha' }
-      ],
-      '6': [
-        { pNum: 1, sub: 'English', teacher: 'Kavita' },
-        { pNum: 2, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 3, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 4, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Social Science', teacher: 'Vanshika' },
-        { pNum: 7, sub: 'Sanskrit', teacher: 'Megha' },
-        { pNum: 8, sub: 'Science', teacher: 'Kavita' },
-        { pNum: 9, sub: 'Social Science', teacher: 'Vanshika' }
-      ],
-      '7': [
-        { pNum: 1, sub: 'Mathematics', teacher: 'Chanchal' },
-        { pNum: 2, sub: 'English', teacher: 'Kavita' },
-        { pNum: 3, sub: 'Social Science', teacher: 'Vanshika' },
-        { pNum: 4, sub: 'General Knowledge', teacher: 'Vanshika' },
-        { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 7, sub: 'Science', teacher: 'Kavita' },
-        { pNum: 8, sub: 'Sanskrit', teacher: 'Chanchal' },
-        { pNum: 9, sub: 'Computer', teacher: 'Pawan' }
-      ]
-    };
-
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-    for (const [cName, rawPeriods] of Object.entries(classSchedulesRaw)) {
-      const cls = classMap[cName];
-      if (!cls) continue;
-
-      const formattedPeriods = rawPeriods.map((item, idx) => {
-        const pTime = periodTimes[idx] || periodTimes[periodTimes.length - 1];
-        if (item.isBreak) {
-          return {
-            periodNumber: pTime.periodNumber,
-            periodTitle: 'Lunch Break',
-            isBreak: true,
-            startTime: pTime.startTime,
-            endTime: pTime.endTime,
-            roomNo: `Class ${cName}`
-          };
-        }
-
-        const subDoc = subMap[item.sub.toUpperCase()] || subMap['GK'];
-        const teachDoc = teacherMap[item.teacher.toUpperCase()];
-
-        return {
-          periodNumber: pTime.periodNumber,
-          periodTitle: pTime.periodTitle,
-          isBreak: false,
-          startTime: pTime.startTime,
-          endTime: pTime.endTime,
-          subject: subDoc?._id,
-          subjectName: item.sub,
-          teacher: teachDoc?._id,
-          teacherName: teachDoc?.name || item.teacher,
-          roomNo: `Class ${cName}`
-        };
-      });
-
-      const weeklySchedule = daysOfWeek.map(day => ({
-        day,
-        periods: formattedPeriods
-      }));
-
-      await Timetable.findOneAndUpdate(
-        { class: cls._id, academicYear: '2026-2027' },
-        {
+        await Timetable.create({
           class: cls._id,
           className: `Class ${cls.name}`,
           section: cls.section || 'A',
           academicYear: '2026-2027',
-          schedule: weeklySchedule
-        },
-        { upsert: true, new: true }
-      );
+          schedule: emptySchedule
+        });
+        console.log(`[System Init] Initialized empty timetable placeholder for Class ${cls.name}`);
+      }
     }
 
-    console.log('[System Init] Core faculty & timetable verified successfully.');
+    console.log('[System Init] System verification completed (All existing data preserved 100%).');
   } catch (error) {
     console.error('[System Init Error]:', error.message);
   }
