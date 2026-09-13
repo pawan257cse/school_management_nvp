@@ -76,7 +76,7 @@ export default function TimetableManagement() {
           }
         }
         if (subRes.data?.subjects) setSubjects(subRes.data.subjects);
-        if (tRes.data?.teachers) setTeachers(tRes.data.teachers);
+        setTeachers(tRes.data?.users || tRes.data?.teachers || []);
       } catch (err) {
         console.error('Error loading metadata:', err);
       }
@@ -94,7 +94,17 @@ export default function TimetableManagement() {
       try {
         const res = await getClassTimetableApi(selectedClassId);
         if (res.data?.success && res.data.timetable?.schedule?.length > 0) {
-          setSchedule(res.data.timetable.schedule);
+          const normalized = res.data.timetable.schedule.map(dayData => ({
+            ...dayData,
+            periods: (dayData.periods || []).map(p => ({
+              ...p,
+              subject: p.subject?._id ? p.subject._id.toString() : (p.subject ? p.subject.toString() : ''),
+              subjectName: p.subjectName || p.subject?.name || '',
+              teacher: p.teacher?._id ? p.teacher._id.toString() : (p.teacher ? p.teacher.toString() : ''),
+              teacherName: p.teacherName || p.teacher?.name || ''
+            }))
+          }));
+          setSchedule(normalized);
         } else {
           // Initialize blank schedule for all 6 days using default period slots
           const initialSchedule = DAYS.map(day => ({
@@ -133,11 +143,11 @@ export default function TimetableManagement() {
 
         if (field === 'subject') {
           periodToUpdate.subject = value;
-          const subObj = subjects.find(s => s._id === value);
+          const subObj = subjects.find(s => (s._id || '').toString() === value.toString());
           periodToUpdate.subjectName = subObj ? subObj.name : '';
         } else if (field === 'teacher') {
           periodToUpdate.teacher = value;
-          const tObj = teachers.find(t => t._id === value);
+          const tObj = teachers.find(t => (t._id || '').toString() === value.toString());
           periodToUpdate.teacherName = tObj ? tObj.name : '';
         } else {
           periodToUpdate[field] = value;
@@ -411,10 +421,10 @@ export default function TimetableManagement() {
                     {/* Subject */}
                     <td className="py-3 px-3">
                       {period.isBreak ? (
-                        <span className="text-amber-700 font-bold">Lunch / Recess</span>
+                        <span className="text-amber-700 font-bold">Lunch Break</span>
                       ) : (
                         <select
-                          value={period.subject || ''}
+                          value={period.subject?._id ? period.subject._id.toString() : (period.subject || '')}
                           onChange={(e) => handlePeriodChange(idx, 'subject', e.target.value)}
                           className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         >
@@ -432,7 +442,7 @@ export default function TimetableManagement() {
                         <span className="text-slate-500">Duty Proctor</span>
                       ) : (
                         <select
-                          value={period.teacher || ''}
+                          value={period.teacher?._id ? period.teacher._id.toString() : (period.teacher || '')}
                           onChange={(e) => handlePeriodChange(idx, 'teacher', e.target.value)}
                           className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         >

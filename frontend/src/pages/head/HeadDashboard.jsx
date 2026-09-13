@@ -203,10 +203,10 @@ export default function HeadDashboard() {
               </div>
             </div>
             <div className="text-2xl font-black font-heading text-slate-900 mt-2">
-              {classOverview.length || stats?.totalClasses || 13}
+              {classOverview.length || stats?.totalClasses || 10}
             </div>
             <span className="text-[10px] text-purple-700 font-extrabold mt-0.5 block">
-              Nursery to 10th Standard
+              PG to 7th Standard ({classOverview.length || stats?.totalClasses || 10} Classes)
             </span>
           </div>
 

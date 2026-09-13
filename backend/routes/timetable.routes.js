@@ -230,13 +230,34 @@ router.post('/save', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) =
       return res.status(404).json({ success: false, message: 'Class not found' });
     }
 
+    const mongoose = require('mongoose');
+    const cleanedSchedule = schedule.map(dayData => ({
+      day: dayData.day,
+      periods: (dayData.periods || []).map(p => {
+        const subId = p.subject?._id || p.subject;
+        const teachId = p.teacher?._id || p.teacher;
+        return {
+          periodNumber: p.periodNumber,
+          periodTitle: p.periodTitle || `Period ${p.periodNumber}`,
+          isBreak: !!p.isBreak,
+          startTime: p.startTime,
+          endTime: p.endTime,
+          subject: (subId && mongoose.Types.ObjectId.isValid(subId)) ? subId : null,
+          subjectName: p.subjectName || '',
+          teacher: (teachId && mongoose.Types.ObjectId.isValid(teachId)) ? teachId : null,
+          teacherName: p.teacherName || '',
+          roomNo: p.roomNo || `Class ${cls.name}`
+        };
+      })
+    }));
+
     const filter = { class: classId, academicYear: academicYear || '2026-2027' };
     const update = {
       class: classId,
       className: `Class ${cls.name}`,
       section: cls.section || 'A',
       academicYear: academicYear || '2026-2027',
-      schedule
+      schedule: cleanedSchedule
     };
 
     const timetable = await Timetable.findOneAndUpdate(filter, update, {
