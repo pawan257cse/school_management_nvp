@@ -63,9 +63,13 @@ export const getCredentialsApi = (params) => API.get('/users/credentials', { par
 export const bulkCreateStudentsApi = () => API.post('/users/bulk-create-students');
 // Reset password (can auto-generate if no password provided)
 export const autoResetPasswordApi = (id) => API.put(`/users/${id}/reset-password`, {});
+// Class Attendance In-Charge Assignments (HEAD & PRINCIPAL)
+export const getAttendanceAssignmentsApi = () => API.get('/users/attendance-assignments');
+export const saveAttendanceAssignmentsApi = (assignments) => API.put('/users/attendance-assignments', { assignments });
 
 // Academic Services
 export const getClassesApi = () => API.get('/classes');
+export const getMyAttendanceClassesApi = () => API.get('/classes/my-attendance-classes');
 export const createClassApi = (data) => API.post('/classes', data);
 export const updateClassApi = (id, data) => API.put(`/classes/${id}`, data);
 export const deleteClassApi = (id) => API.delete(`/classes/${id}`);

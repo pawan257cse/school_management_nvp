@@ -14,6 +14,7 @@ router.get('/', protect, async (req, res) => {
   try {
     let classes = await Class.find({ status: 'active' })
       .populate('classTeacher', 'name email mobile')
+      .populate('attendanceTeacher', 'name email mobile')
       .populate('subjects', 'name code')
       .sort({ name: 1 });
 
@@ -29,12 +30,85 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/classes/my-attendance-classes
+// @desc    Get ONLY the classes where current teacher is designated Attendance In-Charge
+// @access  Private (TEACHER, PRINCIPAL, HEAD)
+router.get('/my-attendance-classes', protect, async (req, res) => {
+  try {
+    const classSortOrder = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+    if (req.user.role === 'HEAD' || req.user.role === 'PRINCIPAL') {
+      const classes = await Class.find({ status: 'active' })
+        .populate('classTeacher', 'name email mobile')
+        .populate('attendanceTeacher', 'name email mobile')
+        .populate('subjects', 'name code');
+
+      classes.sort((a, b) => {
+        const idxA = classSortOrder.indexOf(a.name);
+        const idxB = classSortOrder.indexOf(b.name);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        return a.name.localeCompare(b.name);
+      });
+
+      return res.json({ success: true, count: classes.length, classes });
+    }
+
+    // For TEACHER role:
+    // 1. Permission check: Does teacher have manageAttendance rights?
+    if (req.user.permissions && req.user.permissions.manageAttendance === false) {
+      return res.json({
+        success: true,
+        count: 0,
+        classes: [],
+        permissionDenied: true,
+        message: 'You do not have permission to record or view attendance.'
+      });
+    }
+
+    const teacherId = req.user._id;
+
+    // 2. Query classes where teacher is specifically designated as attendanceTeacher OR in attendanceClasses
+    let classes = await Class.find({
+      status: 'active',
+      $or: [
+        { attendanceTeacher: teacherId },
+        { _id: { $in: req.user.attendanceClasses || [] } }
+      ]
+    })
+      .populate('classTeacher', 'name email mobile')
+      .populate('attendanceTeacher', 'name email mobile')
+      .populate('subjects', 'name code');
+
+    // 3. Fallback: If no explicit attendanceTeacher is configured school-wide, fall back to classTeacher
+    if (classes.length === 0) {
+      const anyExplicitSet = await Class.exists({ attendanceTeacher: { $ne: null } });
+      if (!anyExplicitSet) {
+        classes = await Class.find({ status: 'active', classTeacher: teacherId })
+          .populate('classTeacher', 'name email mobile')
+          .populate('attendanceTeacher', 'name email mobile')
+          .populate('subjects', 'name code');
+      }
+    }
+
+    classes.sort((a, b) => {
+      const idxA = classSortOrder.indexOf(a.name);
+      const idxB = classSortOrder.indexOf(b.name);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      return a.name.localeCompare(b.name);
+    });
+
+    res.json({ success: true, count: classes.length, classes });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // @route   POST /api/classes
 // @desc    Add new Class
 // @access  Private (HEAD, PRINCIPAL)
 router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
-    const { name, section, classTeacher, subjects, studentCount } = req.body;
+    const { name, section, classTeacher, attendanceTeacher, subjects, studentCount } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, message: 'Class name is required (e.g., 7, Nursery, 10).' });
@@ -44,13 +118,17 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
       name,
       section: section || 'A',
       classTeacher: classTeacher || null,
+      attendanceTeacher: attendanceTeacher || classTeacher || null,
       subjects: subjects || [],
-      studentCount: studentCount || 30
+      studentCount: studentCount || 0
     });
 
-    // Auto-sync class teacher's assignedClasses
+    // Auto-sync class teacher's assignedClasses & attendanceClasses
     if (classTeacher) {
       await User.findByIdAndUpdate(classTeacher, { $addToSet: { assignedClasses: newClass._id } });
+    }
+    if (attendanceTeacher) {
+      await User.findByIdAndUpdate(attendanceTeacher, { $addToSet: { attendanceClasses: newClass._id } });
     }
 
     await logActivity(req, 'CREATE_CLASS', 'Class', newClass._id, { name: newClass.name });
@@ -70,7 +148,10 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('classTeacher').populate('subjects');
+    )
+      .populate('classTeacher', 'name email mobile')
+      .populate('attendanceTeacher', 'name email mobile')
+      .populate('subjects');
 
     if (!updatedClass) {
       return res.status(404).json({ success: false, message: 'Class not found.' });
@@ -79,6 +160,10 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
     // Auto-sync class teacher's assignedClasses
     if (req.body.classTeacher) {
       await User.findByIdAndUpdate(req.body.classTeacher, { $addToSet: { assignedClasses: updatedClass._id } });
+    }
+    // Auto-sync attendance teacher's attendanceClasses
+    if (req.body.attendanceTeacher) {
+      await User.findByIdAndUpdate(req.body.attendanceTeacher, { $addToSet: { attendanceClasses: updatedClass._id } });
     }
 
     await logActivity(req, 'EDIT_CLASS', 'Class', updatedClass._id, { name: updatedClass.name });

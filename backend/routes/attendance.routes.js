@@ -4,7 +4,7 @@ const Attendance = require('../models/Attendance');
 const Class = require('../models/Class');
 const { protect } = require('../middleware/auth');
 const { logActivity } = require('../middleware/auditLogger');
-const { getTeacherClassIds } = require('../utils/teacherScope');
+const { getTeacherClassIds, getTeacherAttendanceClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/attendance
 // @desc    Get attendance record for class and date
@@ -18,11 +18,11 @@ router.get('/', protect, async (req, res) => {
     }
 
     if (req.user.role === 'TEACHER') {
-      const allowedClassIds = await getTeacherClassIds(req.user);
+      const allowedClassIds = await getTeacherAttendanceClassIds(req.user);
       if (!allowedClassIds.includes(classId.toString())) {
         return res.status(403).json({
           success: false,
-          message: 'Access Denied: You are only authorized to view attendance for your assigned classes.'
+          message: 'Access Denied: You are not designated as the Attendance In-Charge for this class.'
         });
       }
     }
@@ -79,11 +79,11 @@ router.post('/', protect, async (req, res) => {
     }
 
     if (req.user.role === 'TEACHER') {
-      const allowedClassIds = await getTeacherClassIds(req.user);
+      const allowedClassIds = await getTeacherAttendanceClassIds(req.user);
       if (!allowedClassIds.includes(classId.toString())) {
         return res.status(403).json({
           success: false,
-          message: 'Access Denied: You can only record or update attendance for your assigned classes.'
+          message: 'Access Denied: You are not designated as the Attendance In-Charge for this class.'
         });
       }
     }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getClassesApi, getAttendanceApi, saveAttendanceApi } from '../../services/api';
+import { getMyAttendanceClassesApi, getAttendanceApi, saveAttendanceApi } from '../../services/api';
 import AttendanceTable from '../../components/attendance/AttendanceTable';
 import { useAuth } from '../../context/AuthContext';
-import { CheckSquare, Calendar, School, ShieldAlert, Users, UserCheck, UserX, Percent } from 'lucide-react';
+import { CheckSquare, Calendar, School, ShieldAlert, Users, UserCheck, UserX, Percent, AlertCircle } from 'lucide-react';
 
 export default function TeacherAttendance() {
   const { showToast, user } = useAuth();
@@ -12,13 +12,21 @@ export default function TeacherAttendance() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingClasses, setLoadingClasses] = useState(true);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
       try {
         setLoadingClasses(true);
-        const res = await getClassesApi();
-        if (res.data.success && res.data.classes.length > 0) {
+        const res = await getMyAttendanceClassesApi();
+        if (res.data?.permissionDenied) {
+          setPermissionDenied(true);
+          setClasses([]);
+          setSelectedClassId('');
+          return;
+        }
+
+        if (res.data?.success && res.data.classes && res.data.classes.length > 0) {
           setClasses(res.data.classes);
           setSelectedClassId(res.data.classes[0]._id);
         } else {
@@ -26,7 +34,7 @@ export default function TeacherAttendance() {
           setSelectedClassId('');
         }
       } catch (err) {
-        showToast('Failed loading assigned classes.', 'error');
+        showToast('Failed loading assigned attendance classes.', 'error');
       } finally {
         setLoadingClasses(false);
       }

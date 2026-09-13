@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Student = require('../models/Student');
+const Class = require('../models/Class');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { logActivity } = require('../middleware/auditLogger');
@@ -243,6 +244,87 @@ router.post('/bulk-create-students', protect, checkRole('HEAD', 'PRINCIPAL'), as
   }
 });
 
+// ─── GET /api/users/attendance-assignments ────────────────────────────────────
+// Get all classes with their assigned attendance in-charge teacher & teacher list
+// Access: HEAD, PRINCIPAL
+router.get('/attendance-assignments', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
+  try {
+    const classSortOrder = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+    const classes = await Class.find({ status: 'active' })
+      .populate('attendanceTeacher', 'name email employeeId mobile')
+      .populate('classTeacher', 'name email employeeId mobile');
+
+    classes.sort((a, b) => {
+      const idxA = classSortOrder.indexOf(a.name);
+      const idxB = classSortOrder.indexOf(b.name);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      return a.name.localeCompare(b.name);
+    });
+
+    const teachers = await User.find({ role: 'TEACHER', status: 'active' })
+      .select('name email employeeId mobile assignedClasses attendanceClasses')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      classes,
+      teachers
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── PUT /api/users/attendance-assignments ────────────────────────────────────
+// Save class attendance in-charge assignments
+// Access: HEAD, PRINCIPAL
+router.put('/attendance-assignments', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
+  try {
+    const { assignments } = req.body;
+    if (!assignments) {
+      return res.status(400).json({ success: false, message: 'Assignments data is required.' });
+    }
+
+    const assignmentList = Array.isArray(assignments)
+      ? assignments
+      : Object.entries(assignments).map(([classId, teacherId]) => ({ classId, teacherId }));
+
+    const teacherClassesMap = {}; // teacherId -> [classId]
+
+    for (const item of assignmentList) {
+      const classId = item.classId;
+      const teacherId = item.teacherId || null;
+
+      await Class.findByIdAndUpdate(classId, { attendanceTeacher: teacherId });
+
+      if (teacherId) {
+        const tidStr = teacherId.toString();
+        if (!teacherClassesMap[tidStr]) teacherClassesMap[tidStr] = [];
+        teacherClassesMap[tidStr].push(classId);
+      }
+    }
+
+    // Update teachers attendanceClasses array
+    const allTeachers = await User.find({ role: 'TEACHER' });
+    for (const t of allTeachers) {
+      const assigned = teacherClassesMap[t._id.toString()] || [];
+      t.attendanceClasses = assigned;
+      await t.save();
+    }
+
+    await logActivity(req, 'UPDATE_ATTENDANCE_ASSIGNMENTS', 'Class', req.user._id, {
+      count: assignmentList.length
+    });
+
+    res.json({
+      success: true,
+      message: 'Class attendance in-charge assignments updated successfully.'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ─── PUT /api/users/:id ────────────────────────────────────────────────────────
 // Update user details
 // Access: HEAD, PRINCIPAL
@@ -337,18 +419,29 @@ router.put('/:id/reset-password', protect, checkRole('HEAD', 'PRINCIPAL'), async
 });
 
 // ─── PUT /api/users/:id/permissions ──────────────────────────────────────────
-// Update permissions matrix (HEAD only)
-router.put('/:id/permissions', protect, checkRole('HEAD'), async (req, res) => {
+// Update permissions matrix (HEAD and PRINCIPAL for teachers)
+router.put('/:id/permissions', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
     const { permissions } = req.body;
     const targetUser = await User.findById(req.params.id);
     if (!targetUser) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
+
+    // Security Check: PRINCIPAL can ONLY update permissions for TEACHER accounts
+    if (req.user.role === 'PRINCIPAL') {
+      if (targetUser.role === 'HEAD' || targetUser.role === 'PRINCIPAL') {
+        return res.status(403).json({ success: false, message: 'Principals can only manage permissions for Teachers.' });
+      }
+    }
+
     targetUser.permissions = permissions;
     await targetUser.save();
-    await logActivity(req, 'UPDATE_PERMISSIONS', 'User', targetUser._id);
-    res.json({ success: true, message: 'Permissions updated.', user: targetUser });
+    await logActivity(req, 'UPDATE_PERMISSIONS', 'User', targetUser._id, {
+      targetUser: targetUser.name,
+      targetRole: targetUser.role
+    });
+    res.json({ success: true, message: `Permissions updated successfully for ${targetUser.name}.`, user: targetUser });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

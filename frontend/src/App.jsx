@@ -163,7 +163,8 @@ export default function App() {
           <Route path="/classes" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ClassManagement /></ProtectedLayout>} />
           <Route path="/classes/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
           <Route path="/head/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
-          <Route path="/head/security" element={<ProtectedLayout allowedRoles={['HEAD']}><RolePermissions /></ProtectedLayout>} />
+          <Route path="/head/security" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><RolePermissions /></ProtectedLayout>} />
+          <Route path="/principal/security" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><RolePermissions /></ProtectedLayout>} />
           <Route path="/head/activity" element={<ProtectedLayout allowedRoles={['HEAD']}><ActivityLogs /></ProtectedLayout>} />
           <Route path="/head/login-history" element={<ProtectedLayout allowedRoles={['HEAD']}><LoginHistory /></ProtectedLayout>} />
           <Route path="/head/settings" element={<ProtectedLayout allowedRoles={['HEAD']}><SystemSettings /></ProtectedLayout>} />

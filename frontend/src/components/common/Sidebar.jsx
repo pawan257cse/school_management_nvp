@@ -113,7 +113,12 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     },
-
+    {
+      title: 'Security & Access',
+      items: [
+        { name: 'Role & Permissions', path: '/principal/security', icon: ShieldCheck }
+      ]
+    }
   ];
 
   const teacherSections = [

@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema({
   joiningDate: { type: Date, default: Date.now },
   profilePhoto: { type: String, default: '' },
   assignedClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
+  attendanceClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
   assignedSubjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   mustChangePassword: { type: Boolean, default: true },
