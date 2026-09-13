@@ -29,6 +29,17 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Build Web Application
+        working-directory: ./frontend
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Bundle Web App into Mobile Assets
+        run: |
+          rm -rf app/www
+          cp -r frontend/dist app/www
+
       - name: Install App Dependencies & Sync
         working-directory: ./app
         run: |

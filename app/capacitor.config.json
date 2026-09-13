@@ -4,7 +4,6 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://school-management-nvp.vercel.app",
     "cleartext": true,
     "androidScheme": "https",
     "allowNavigation": [
