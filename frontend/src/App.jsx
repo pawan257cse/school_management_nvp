@@ -85,11 +85,11 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-900 flex">
+    <div className="min-h-screen bg-slate-100/70 text-slate-900 flex w-full max-w-full overflow-x-hidden">
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-      <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
+      <div className="flex-1 lg:pl-72 flex flex-col min-w-0 w-full max-w-full overflow-x-hidden">
         <Topbar setMobileOpen={setMobileOpen} />
-        <main className="p-3 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full mx-auto">
+        <main className="p-2.5 sm:p-5 lg:p-8 flex-1 max-w-7xl w-full mx-auto min-w-0">
           {children}
         </main>
       </div>

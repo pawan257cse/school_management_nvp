@@ -36,12 +36,12 @@ export default function PrincipalDashboard() {
   return (
     <div className="space-y-6 pb-12">
       {/* Principal Banner */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-purple-800/40">
+      <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-950 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-purple-800/40">
         <div>
-          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold uppercase tracking-wider">
+          <span className="px-2.5 sm:px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
             Academic Governance & Operations
           </span>
-          <h2 className="font-heading font-black text-2xl sm:text-3xl tracking-tight mt-2">
+          <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-tight mt-2">
             Principal Control Center
           </h2>
           <p className="text-purple-200 text-xs mt-1">
@@ -49,19 +49,19 @@ export default function PrincipalDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
           {pendingPapers.length > 0 && (
             <Link
               to="/principal/question-papers"
-              className="px-4 py-2 rounded-xl bg-amber-500 text-slate-900 font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition shrink-0 animate-pulse"
+              className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 text-slate-900 font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition shrink-0 animate-pulse"
             >
               <Clock className="w-4 h-4" />
-              <span>{pendingPapers.length} Papers Pending</span>
+              <span>{pendingPapers.length} Pending</span>
             </Link>
           )}
           <button
             onClick={() => navigate('/academic/timetable')}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/30 transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/30 transition flex items-center justify-center gap-1.5"
           >
             <Clock className="w-4 h-4" />
             <span>Edit Timetable</span>
@@ -69,7 +69,7 @@ export default function PrincipalDashboard() {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition flex items-center justify-center shrink-0"
             title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -78,32 +78,32 @@ export default function PrincipalDashboard() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <StatCard
           title="Active Teachers"
           value={stats?.activeTeachers || stats?.totalTeachers || 10}
-          subtitle="10 Official Faculty Assigned"
+          subtitle="10 Official Faculty"
           icon={Users}
           color="purple"
         />
         <StatCard
           title="Pending Approvals"
           value={pendingPapers.length}
-          subtitle="Question papers requiring review"
+          subtitle="Papers to review"
           icon={FileText}
           color="amber"
         />
         <StatCard
           title="Class Timetable"
           value="9 Periods"
-          subtitle="All 10 Standards Scheduled"
+          subtitle="All 10 Scheduled"
           icon={Clock}
           color="indigo"
         />
         <StatCard
           title="Active Classes"
           value={stats?.totalClasses || 10}
-          subtitle="Class PG to 7th Standard"
+          subtitle="PG to 7th Standard"
           icon={School}
           color="blue"
         />
@@ -111,16 +111,16 @@ export default function PrincipalDashboard() {
 
       {/* ─── QUICK MANAGEMENT HUB FOR PRINCIPAL (CAN UPDATE EVERYTHING) ──────── */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
             Principal Operations Hub (Quick Edit & Management)
           </h2>
-          <span className="text-xs font-semibold text-slate-400">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-400">
             Click any section below to view and update
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* 1. Timetable */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between">
             <div>

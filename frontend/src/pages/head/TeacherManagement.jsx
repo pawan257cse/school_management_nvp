@@ -274,7 +274,7 @@ export default function TeacherManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900">
             Teacher Accounts Governance
@@ -291,7 +291,7 @@ export default function TeacherManagement() {
             });
             setShowAddModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/30"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/30 w-full sm:w-auto"
         >
           <UserPlus className="w-4 h-4" />
           <span>Add New Teacher</span>
@@ -572,7 +572,7 @@ export default function TeacherManagement() {
                 <label className="block text-[11px] font-bold text-indigo-950 mb-1">
                   Change / Set New Password:
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <input
                     type="text"
                     required
@@ -580,11 +580,11 @@ export default function TeacherManagement() {
                     value={inlineNewPassword}
                     onChange={(e) => setInlineNewPassword(e.target.value)}
                     placeholder="Enter new password (min 6 chars)"
-                    className="flex-1 px-3 py-1.5 text-xs font-mono font-bold bg-white border border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="flex-1 px-3 py-2 text-xs font-mono font-bold bg-white border border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap"
+                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap justify-center flex items-center"
                   >
                     Save Password
                   </button>

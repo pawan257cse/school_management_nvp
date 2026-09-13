@@ -13,21 +13,22 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
       />
 
       {/* Dialog */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200`}>
+      <div className="flex min-h-full items-center justify-center p-2.5 sm:p-4">
+        <div className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[94vh]`}>
           {/* Modal Header */}
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
-            <h3 className="font-heading font-bold text-lg text-slate-900">{title}</h3>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+            <h3 className="font-heading font-bold text-base sm:text-lg text-slate-900 truncate pr-2">{title}</h3>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <div className="p-3.5 sm:p-6 overflow-y-auto flex-1">
             {children}
           </div>
         </div>

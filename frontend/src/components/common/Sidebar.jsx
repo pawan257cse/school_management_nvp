@@ -181,30 +181,31 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-slate-950/70 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation */}
-      <aside className={`no-print fixed top-0 left-0 bottom-0 z-50 w-72 bg-slate-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-slate-800 shadow-2xl h-screen ${
+      <aside className={`no-print fixed top-0 left-0 bottom-0 z-50 w-72 max-w-[85vw] bg-slate-900 text-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-slate-800 shadow-2xl h-[100dvh] ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header Branding */}
-          <div className="h-20 px-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/40">
+          <div className="h-16 sm:h-20 px-4 sm:px-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center font-extrabold text-white shadow-lg shadow-indigo-500/30">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center font-extrabold text-white shadow-lg shadow-indigo-500/30 text-sm sm:text-base">
                 NVP
               </div>
               <div>
-                <h1 className="font-heading font-extrabold text-base tracking-wide text-white leading-tight">NVP ACADEMIC</h1>
-                <p className="text-[11px] text-indigo-400 font-bold tracking-wider">NIMBI JODHAN</p>
+                <h1 className="font-heading font-extrabold text-sm sm:text-base tracking-wide text-white leading-tight">NVP ACADEMIC</h1>
+                <p className="text-[10px] sm:text-[11px] text-indigo-400 font-bold tracking-wider">NIMBI JODHAN</p>
               </div>
             </div>
             <button
               onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              aria-label="Close menu"
             >
               <X className="w-5 h-5" />
             </button>

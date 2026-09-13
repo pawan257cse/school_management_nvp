@@ -76,32 +76,32 @@ export default function HeadDashboard() {
   return (
     <div className="space-y-6 pb-12">
       {/* ─── 1. EXECUTIVE WELCOME BANNER ────────────────────────────────────────── */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800">
+      <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold uppercase tracking-wider">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2.5 sm:px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
               School Head & Management Console
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] sm:text-[11px] font-semibold">
               Session 2026-2027
             </span>
           </div>
-          <h1 className="font-heading font-black text-2xl sm:text-3xl tracking-tight mt-2">
+          <h1 className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-tight mt-2">
             NVP English Medium School
           </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 flex items-center gap-2 font-medium">
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 flex items-center gap-2 font-medium flex-wrap">
             <Clock className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>{todayDate}</span>
-            <span className="text-slate-500">|</span>
+            <span className="text-slate-500 hidden sm:inline">|</span>
             <span>Nimbi Jodhan & Ladnun (Raj.)</span>
           </p>
         </div>
 
         {/* Action Header Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
           <button
             onClick={() => navigate('/academic/timetable')}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/30 transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/30 transition flex items-center justify-center gap-1.5"
           >
             <Clock className="w-4 h-4" />
             <span>Edit Timetable</span>
@@ -109,7 +109,7 @@ export default function HeadDashboard() {
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition backdrop-blur-sm flex items-center gap-1.5"
+            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition backdrop-blur-sm flex items-center justify-center gap-1.5 shrink-0"
             title="Refresh Portal Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -118,7 +118,7 @@ export default function HeadDashboard() {
       </div>
 
       {/* ─── 2. KEY VITAL METRICS (4 CLEAN CARDS) ─────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {/* 1. Students */}
         <div
           onClick={() => navigate('/students')}
@@ -198,16 +198,16 @@ export default function HeadDashboard() {
 
       {/* ─── 3. QUICK MANAGEMENT HUB (7 CLEAN ACTION CARDS) ───────────────────── */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
             Quick Administrative Management Hub
           </h2>
-          <span className="text-xs font-semibold text-slate-400">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-400">
             Click any module below to manage and update instantly
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {/* Card 1: Timetable */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between">
             <div>
@@ -353,41 +353,41 @@ export default function HeadDashboard() {
       {/* ─── 4. SIMPLE TABBED OVERVIEW (NO CLUTTER!) ────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Tab Navigation Buttons */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('teachers')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
                 activeTab === 'teachers'
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
               }`}
             >
-              10 Official Teachers Roster ({teachers.length})
+              10 Official Teachers ({teachers.length})
             </button>
             <button
               onClick={() => setActiveTab('classes')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
                 activeTab === 'classes'
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
               }`}
             >
-              10 Classes Overview ({classes.length})
+              10 Classes ({classes.length})
             </button>
             <button
               onClick={() => setActiveTab('fees')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
                 activeTab === 'fees'
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
               }`}
             >
-              Fees & Accounts Summary
+              Fees Summary
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-semibold">
+          <div className="text-[11px] sm:text-xs text-slate-500 font-semibold hidden sm:block">
             {activeTab === 'teachers' && 'All teachers from official timetable'}
             {activeTab === 'classes' && '10 Active Classes (PG to 7th)'}
             {activeTab === 'fees' && 'Academic Year 2026-2027'}
@@ -397,7 +397,7 @@ export default function HeadDashboard() {
         {/* Tab 1: Teachers */}
         {activeTab === 'teachers' && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse min-w-[620px]">
               <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
                 <tr>
                   <th className="py-3 px-4">#</th>
