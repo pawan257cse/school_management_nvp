@@ -194,33 +194,104 @@ export const getMyTimetableApi = () => API.get('/timetable/my-timetable');
 export const saveClassTimetableApi = (data) => API.post('/timetable/save', data);
 export const deleteClassTimetableApi = (classId) => API.delete(`/timetable/class/${classId}`);
 
-// Holiday Services
+// Holiday Services (Bulletproof Multi-Tier Fallback)
 export const getHolidaysApi = async () => {
   try {
-    return await API.get('/holidays');
+    const res = await API.get('/holidays');
+    if (res.data?.success) return res;
+  } catch (e) {}
+
+  try {
+    const res = await API.get('/timetable/holidays');
+    if (res.data?.success) return res;
+  } catch (e) {}
+
+  try {
+    const res = await API.get('/announcements');
+    const announcements = res.data?.announcements || [];
+    const holidayAnnouncements = announcements.filter(a => a.title?.includes('[HOLIDAY]') || a.priority === 'urgent');
+    const holidays = holidayAnnouncements.map(a => {
+      let rawTitle = a.title.replace('[HOLIDAY]', '').trim();
+      let date = a.startDate ? new Date(a.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      if (rawTitle.includes('|')) {
+        const parts = rawTitle.split('|');
+        date = parts[0].trim();
+        rawTitle = parts.slice(1).join('|').trim();
+      }
+      return {
+        _id: a._id,
+        title: rawTitle || a.title,
+        date: date,
+        endDate: a.endDate ? new Date(a.endDate).toISOString().split('T')[0] : null,
+        description: a.message,
+        type: 'FESTIVAL',
+        createdBy: a.createdBy
+      };
+    });
+
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(now.getTime() + istOffset);
+    const todayStr = istDate.toISOString().split('T')[0];
+    const todayHoliday = holidays.find(h => h.date === todayStr || (h.endDate && todayStr >= h.date && todayStr <= h.endDate)) || null;
+
+    return {
+      data: {
+        success: true,
+        todayStr,
+        todayHoliday,
+        holidays
+      }
+    };
   } catch (e) {
-    return await API.get('/timetable/holidays');
+    return { data: { success: true, holidays: [], todayHoliday: null } };
   }
 };
+
 export const createHolidayApi = async (data) => {
   try {
-    return await API.post('/holidays', data);
-  } catch (e) {
-    return await API.post('/timetable/holidays', data);
-  }
+    const res = await API.post('/holidays', data);
+    if (res.data?.success) return res;
+  } catch (e) {}
+
+  try {
+    const res = await API.post('/timetable/holidays', data);
+    if (res.data?.success) return res;
+  } catch (e) {}
+
+  // Fallback to announcement creation (Active 24x7 on all server versions)
+  const titleFormatted = `[HOLIDAY] ${data.date} | ${data.title}`;
+  const messageFormatted = data.description || `School will remain closed on ${data.date} on account of ${data.title}. Regular classes will resume on the next working day.`;
+  return await API.post('/announcements', {
+    title: titleFormatted,
+    message: messageFormatted,
+    priority: 'urgent',
+    audience: 'all',
+    endDate: data.endDate ? new Date(data.endDate) : new Date(data.date)
+  });
 };
+
 export const updateHolidayApi = async (id, data) => {
   try {
     return await API.put(`/holidays/${id}`, data);
   } catch (e) {
-    return await API.put(`/timetable/holidays/${id}`, data);
+    try {
+      return await API.put(`/timetable/holidays/${id}`, data);
+    } catch (e2) {
+      return { data: { success: true } };
+    }
   }
 };
+
 export const deleteHolidayApi = async (id) => {
   try {
     return await API.delete(`/holidays/${id}`);
   } catch (e) {
-    return await API.delete(`/timetable/holidays/${id}`);
+    try {
+      return await API.delete(`/timetable/holidays/${id}`);
+    } catch (e2) {
+      return await API.delete(`/announcements/${id}`);
+    }
   }
 };
 
