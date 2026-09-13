@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminRecoveryResetApi } from '../services/api';
 import {
@@ -8,9 +8,13 @@ import {
 } from 'lucide-react';
 import Modal from '../components/common/Modal';
 
-export default function Login() {
+export default function Login({ isAdminMode = false }) {
   const { login, getDefaultRouteForRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Detect whether user navigated specifically to /admin or /head
+  const isAdmin = isAdminMode || location.pathname === '/admin' || location.pathname === '/head';
 
   // Login form state
   const [identifier, setIdentifier] = useState('');
@@ -21,7 +25,6 @@ export default function Login() {
 
   // Forgot password modal state
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotTab, setForgotTab] = useState('student'); // 'student' | 'admin'
   const [adminEmail, setAdminEmail] = useState('head@school.local');
   const [masterKey, setMasterKey] = useState('');
   const [adminNewPassword, setAdminNewPassword] = useState('');
@@ -50,7 +53,7 @@ export default function Login() {
     setRecoveryStatus({ type: '', text: '' });
 
     if (!adminEmail || !masterKey || !adminNewPassword) {
-      setRecoveryStatus({ type: 'error', text: 'Please fill all required fields.' });
+      setRecoveryStatus({ type: 'error', text: 'Please fill all required recovery fields.' });
       return;
     }
 
@@ -82,7 +85,7 @@ export default function Login() {
     } catch (err) {
       setRecoveryStatus({
         type: 'error',
-        text: err.response?.data?.message || 'Invalid Master Recovery Key. Please check your key.'
+        text: err.response?.data?.message || 'Invalid Master Recovery Key. Please verify your key.'
       });
     } finally {
       setRecoveryLoading(false);
@@ -108,8 +111,10 @@ export default function Login() {
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-black uppercase tracking-wider">
             <span>NIMBI JODHAN</span>
           </div>
+
+          {/* Subtitle changes only when URL is /admin */}
           <p className="text-slate-400 text-xs sm:text-sm font-medium pt-0.5">
-            Student & Staff Portal
+            {isAdmin ? 'Administrative Console' : 'Student & Staff Portal'}
           </p>
         </div>
 
@@ -127,7 +132,7 @@ export default function Login() {
             {/* Login Identifier Field */}
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                Admission No / Employee ID / Email
+                {isAdmin ? 'Administrator Email / ID' : 'Admission No / Employee ID / Email'}
               </label>
               <div className="relative">
                 <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -136,7 +141,7 @@ export default function Login() {
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Enter your registered ID or Email"
+                  placeholder={isAdmin ? 'head@school.local' : 'Enter your registered ID or Email'}
                   autoComplete="username"
                   className="w-full pl-10 pr-4 py-3 text-sm font-medium rounded-xl bg-slate-950 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
@@ -188,7 +193,7 @@ export default function Login() {
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 mt-2 active:scale-[0.99]"
             >
               <LogIn className="w-4 h-4" />
-              <span>{loading ? 'Verifying...' : 'Sign In'}</span>
+              <span>{loading ? 'Verifying...' : (isAdmin ? 'Sign In to Admin Console' : 'Sign In')}</span>
             </button>
           </form>
 
@@ -210,43 +215,17 @@ export default function Login() {
       <Modal
         isOpen={showForgotModal}
         onClose={() => setShowForgotModal(false)}
-        title="Password Recovery"
+        title={isAdmin ? 'Head Administrator Emergency Recovery' : 'Password Assistance'}
         maxWidth="max-w-md"
       >
         <div className="space-y-4 text-xs">
-          {/* Recovery Tab Switcher */}
-          <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setForgotTab('student')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                forgotTab === 'student'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Student / Staff
-            </button>
-            <button
-              type="button"
-              onClick={() => setForgotTab('admin')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                forgotTab === 'admin'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Head Administrator
-            </button>
-          </div>
-
-          {/* TAB 1: Student & Teacher Help */}
-          {forgotTab === 'student' && (
+          {/* If NOT in /admin route: Purely shows standard student/staff guidance with NO mention of Head */}
+          {!isAdmin ? (
             <div className="space-y-3">
               <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 space-y-1.5">
                 <p className="font-bold flex items-center gap-1.5 text-blue-800">
                   <KeyRound className="w-4 h-4 text-blue-600" />
-                  Password Assistance
+                  Account Assistance
                 </p>
                 <p className="text-xs text-blue-700 leading-relaxed">
                   Students and teachers can obtain or reset their password directly from the <strong>School Office</strong> or <strong>Principal</strong>.
@@ -260,10 +239,8 @@ export default function Login() {
                 Back to Sign In
               </button>
             </div>
-          )}
-
-          {/* TAB 2: Head Administrator Emergency Recovery */}
-          {forgotTab === 'admin' && (
+          ) : (
+            /* If specifically on /admin URL: Allows Head Administrator password reset using Master Key */
             <form onSubmit={handleAdminRecovery} className="space-y-3">
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
                 <p className="font-bold flex items-center gap-1.5 text-amber-800">

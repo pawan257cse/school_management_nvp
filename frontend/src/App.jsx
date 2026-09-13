@@ -97,16 +97,32 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
   );
 };
 
+// Dedicated Admin Gate: renders Head Dashboard if logged in as HEAD, otherwise renders private Admin Console login
+const AdminGate = () => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-bold">Loading...</div>;
+  }
+  if (user && user.role === 'HEAD') {
+    return (
+      <ProtectedLayout allowedRoles={['HEAD']}>
+        <HeadDashboard />
+      </ProtectedLayout>
+    );
+  }
+  return <Login isAdminMode={true} />;
+};
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login isAdminMode={false} />} />
 
-          {/* Direct /admin and /head URL shortcuts for HEAD Admin */}
-          <Route path="/admin" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
-          <Route path="/head" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
+          {/* Dedicated /admin and /head Gateway (Hidden from standard /login) */}
+          <Route path="/admin" element={<AdminGate />} />
+          <Route path="/head" element={<AdminGate />} />
 
           {/* Core School Management Routes (Head & Principal Access) */}
           <Route path="/students" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />
