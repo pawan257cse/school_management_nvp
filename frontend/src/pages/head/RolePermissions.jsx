@@ -223,19 +223,19 @@ export default function RolePermissions() {
   // Permission Categories Definition
   const permissionCategories = [
     {
-      title: 'Attendance & Registry (हाजिरी एवं उपस्थिति)',
+      title: 'Attendance & Registry',
       description: 'Controls whether teacher can take attendance and view daily rosters',
       items: [
         {
           key: 'manageAttendance',
-          label: 'Take Student Attendance (हाजिरी भरना)',
+          label: 'Take Student Attendance',
           desc: 'Allows teacher to mark daily attendance for their assigned in-charge class.',
           icon: CheckSquare,
           color: 'emerald'
         },
         {
           key: 'viewReports',
-          label: 'View Attendance Records (उपस्थिति रिपोर्ट)',
+          label: 'View Attendance Records',
           desc: 'Allows teacher to view monthly attendance percentages and class registers.',
           icon: Clock,
           color: 'blue'
@@ -243,26 +243,26 @@ export default function RolePermissions() {
       ]
     },
     {
-      title: 'Exams, Marks & Grading (परीक्षा एवं प्राप्तांक)',
+      title: 'Exams, Marks & Grading',
       description: 'Controls scoring, grading, and examination question paper authoring',
       items: [
         {
           key: 'manageResults',
-          label: 'Enter Student Marks & Scores (नंबर एवं ग्रेड दर्ज करना)',
+          label: 'Enter Student Marks & Scores',
           desc: 'Allows teacher to input Unit Test, Half Yearly, and Annual exam marks.',
           icon: Award,
           color: 'purple'
         },
         {
           key: 'createQuestionPapers',
-          label: 'Author Question Papers (प्रश्न पत्र निर्माण)',
+          label: 'Author Question Papers',
           desc: 'Allows teacher to create question papers in Question Paper Generator.',
           icon: FileText,
           color: 'indigo'
         },
         {
           key: 'approveQuestionPapers',
-          label: 'Approve Question Papers (पेपर अनुमोदन)',
+          label: 'Approve Question Papers',
           desc: 'Privilege to review and approve/reject drafted papers by other staff.',
           icon: ShieldCheck,
           color: 'amber'
@@ -270,19 +270,19 @@ export default function RolePermissions() {
       ]
     },
     {
-      title: 'Coursework & Learning (गृहकार्य एवं अध्ययन सामग्री)',
+      title: 'Coursework & Learning',
       description: 'Homework issuing and study material distribution privileges',
       items: [
         {
           key: 'createAssignments',
-          label: 'Create Homework & Assignments (गृहकार्य देना)',
+          label: 'Create Homework & Assignments',
           desc: 'Allows faculty to issue homework with due dates for students.',
           icon: ClipboardList,
           color: 'teal'
         },
         {
           key: 'uploadStudyMaterial',
-          label: 'Upload Notes & Worksheets (अध्ययन सामग्री अपलोड)',
+          label: 'Upload Notes & Worksheets',
           desc: 'Allows teacher to upload PDFs, chapter summaries, and revision guides.',
           icon: BookOpen,
           color: 'cyan'
@@ -290,33 +290,33 @@ export default function RolePermissions() {
       ]
     },
     {
-      title: 'Administrative Controls (प्रशासनिक अधिकार)',
+      title: 'Administrative Controls',
       description: 'Advanced privileges generally reserved for School Principal and Head',
       items: [
         {
           key: 'manageNotifications',
-          label: 'Dispatch School Notices (सूचना जारी करना)',
+          label: 'Dispatch School Notices',
           desc: 'Allows publishing school announcements on the digital notice board.',
           icon: Sparkles,
           color: 'rose'
         },
         {
           key: 'viewTeachers',
-          label: 'View Faculty Directory (स्टाफ डायरेक्टरी)',
+          label: 'View Faculty Directory',
           desc: 'Allows viewing staff profiles and contact information.',
           icon: Users,
           color: 'slate'
         },
         {
           key: 'manageClasses',
-          label: 'Manage Classes & Sections (कक्षा प्रबंधन)',
+          label: 'Manage Classes & Sections',
           desc: 'Allows adding or modifying class standards and rooms.',
           icon: School,
           color: 'violet'
         },
         {
           key: 'resetPassword',
-          label: 'Reset Passwords (पासवर्ड रीसेट अधिकार)',
+          label: 'Reset Passwords',
           desc: 'Allows resetting user security credentials.',
           icon: Lock,
           color: 'red'
@@ -441,12 +441,12 @@ export default function RolePermissions() {
             </div>
             <div className="space-y-1">
               <h4 className="font-heading font-black text-sm text-blue-950">
-                Attendance Isolation Policy (कक्षा हाजिरी सुरक्षा नियम)
+                Attendance Isolation Policy
               </h4>
               <p className="text-xs text-blue-900 leading-relaxed">
-                Yahan par aap jis teacher ko jis class ka <strong>Attendance In-Charge</strong> assign karenge, 
-                teacher ke attendance portal me <strong>sirf wahi class</strong> aur <strong>sirf usi class ke enrolled students</strong> dikhayi denge. 
-                Koi bhi dusra teacher kisi aur class ki हाजिरी nahi le sakega.
+                When a teacher is assigned as the <strong>Attendance In-Charge</strong> for a class standard, 
+                their attendance portal will strictly display <strong>only their designated class</strong> and <strong>only students enrolled in that class</strong>. 
+                Other faculty members will not have access to mark or modify attendance for unauthorized classes.
               </p>
             </div>
           </div>
