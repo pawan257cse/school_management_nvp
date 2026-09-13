@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   KeyRound, Users, Eye, EyeOff, Copy, RefreshCw, Shield,
   CheckCircle2, Search, Download, UserCheck, BookOpen,
-  GraduationCap, AlertCircle, Zap, ArrowLeft
+  GraduationCap, AlertCircle, Zap, ArrowLeft, Edit
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCredentialsApi, autoResetPasswordApi, bulkCreateStudentsApi } from '../../services/api';
+import { getCredentialsApi, autoResetPasswordApi, resetUserPasswordApi, bulkCreateStudentsApi } from '../../services/api';
+import Modal from '../../components/common/Modal';
 import { useAuth } from '../../context/AuthContext';
 
 const ROLE_STYLES = {
@@ -29,11 +30,17 @@ export default function CredentialsManagement() {
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [showPasswords, setShowPasswords] = useState({}); // per-row reveal
-  const [showAllPasswords, setShowAllPasswords] = useState(false);
+  const [showAllPasswords, setShowAllPasswords] = useState(true); // default to showing passwords live
   const [resetting, setResetting] = useState(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [bulkResult, setBulkResult] = useState(null);
+
+  // Custom Password Change Modal
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [customPassword, setCustomPassword] = useState('');
+  const [changeLoading, setChangeLoading] = useState(false);
 
   const fetchCredentials = async () => {
     setLoading(true);
@@ -71,6 +78,27 @@ export default function CredentialsManagement() {
       showToast('Failed to reset password.', 'error');
     } finally {
       setResetting(null);
+    }
+  };
+
+  const handleCustomPasswordChange = async (e) => {
+    e.preventDefault();
+    if (!customPassword || customPassword.length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    setChangeLoading(true);
+    try {
+      const res = await resetUserPasswordApi(selectedUser._id, customPassword);
+      if (res.data.success) {
+        showToast(`Password for ${selectedUser.name} set to: ${customPassword}`, 'success');
+        setShowChangeModal(false);
+        fetchCredentials();
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update password.', 'error');
+    } finally {
+      setChangeLoading(false);
     }
   };
 
@@ -391,9 +419,21 @@ export default function CredentialsManagement() {
                         </span>
                       )}
                       <button
+                        onClick={() => {
+                          setSelectedUser(cred);
+                          setCustomPassword(cred.password && cred.password !== '(user set own password)' ? cred.password : '');
+                          setShowChangeModal(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1 transition shadow-sm"
+                        title="Set or change password"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Change</span>
+                      </button>
+                      <button
                         onClick={() => handleAutoReset(cred._id, cred.name)}
                         disabled={resetting === cred._id}
-                        title="Generate new password"
+                        title="Generate random password"
                         className="p-1.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 transition disabled:opacity-50"
                       >
                         {resetting === cred._id ? (
@@ -413,11 +453,66 @@ export default function CredentialsManagement() {
 
       {/* Legend */}
       <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 text-xs text-slate-600 space-y-1">
-        <p className="font-black text-slate-800 mb-2">Legend</p>
-        <p><span className="font-bold text-indigo-700">Temp</span> badge = User has not changed their default password yet. Share credentials with them.</p>
-        <p><span className="font-bold text-slate-400 italic">(user set own password)</span> = User already changed password. Use the 🔑 button to reset it if needed.</p>
-        <p><span className="font-bold">🔑 button</span> = Auto-generate a new password and update it immediately.</p>
+        <p className="font-black text-slate-800 mb-2">Legend & Security Oversight</p>
+        <p><span className="font-bold text-indigo-700">Change button</span> = Set any custom password directly for this user (e.g. Teacher@123).</p>
+        <p><span className="font-bold text-slate-700">🔑 Auto button</span> = Instantly generate a secure random password.</p>
+        <p><span className="font-bold text-slate-700">Show All Passwords</span> = Toggle to view or hide all live passwords simultaneously.</p>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangeModal && selectedUser && (
+        <Modal
+          isOpen={showChangeModal}
+          onClose={() => setShowChangeModal(false)}
+          title={`Change Password — ${selectedUser.name}`}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleCustomPasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">User Account</label>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <p className="font-bold text-slate-900">{selectedUser.name} ({selectedUser.role})</p>
+                <p className="text-slate-500 font-mono mt-0.5">{selectedUser.email}</p>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700">New Password *</label>
+                <button
+                  type="button"
+                  onClick={() => setCustomPassword(`${selectedUser.name.replace(/\s+/g, '')}@${Math.floor(1000 + Math.random() * 9000)}`)}
+                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                >
+                  <Zap className="w-3 h-3" />
+                  <span>Auto-Generate</span>
+                </button>
+              </div>
+              <input
+                type="text"
+                required
+                minLength={6}
+                value={customPassword}
+                onChange={(e) => setCustomPassword(e.target.value)}
+                placeholder="Enter custom password (e.g. Teacher@123)"
+                className="w-full px-3 py-2.5 text-sm font-mono font-bold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <p className="text-[11px] text-slate-500 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+              ℹ️ This password will be immediately live and visible to Head & Principal in this manager.
+            </p>
+
+            <button
+              type="submit"
+              disabled={changeLoading}
+              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+            >
+              {changeLoading ? 'Saving...' : 'Save & Set New Password'}
+            </button>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
