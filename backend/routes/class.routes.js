@@ -144,29 +144,52 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
 // @access  Private (HEAD, PRINCIPAL)
 router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
-    const updatedClass = await Class.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    )
-      .populate('classTeacher', 'name email mobile')
-      .populate('attendanceTeacher', 'name email mobile')
-      .populate('subjects');
-
-    if (!updatedClass) {
+    const existingClass = await Class.findById(req.params.id);
+    if (!existingClass) {
       return res.status(404).json({ success: false, message: 'Class not found.' });
     }
 
-    // Auto-sync class teacher's assignedClasses
-    if (req.body.classTeacher) {
-      await User.findByIdAndUpdate(req.body.classTeacher, { $addToSet: { assignedClasses: updatedClass._id } });
-    }
-    // Auto-sync attendance teacher's attendanceClasses
-    if (req.body.attendanceTeacher) {
-      await User.findByIdAndUpdate(req.body.attendanceTeacher, { $addToSet: { attendanceClasses: updatedClass._id } });
+    const oldClassTeacher = existingClass.classTeacher?.toString();
+    const oldAttendanceTeacher = existingClass.attendanceTeacher?.toString();
+
+    // If classTeacher is updated and attendanceTeacher not explicitly given, sync attendanceTeacher
+    const updatePayload = { ...req.body };
+    if (updatePayload.classTeacher && !updatePayload.attendanceTeacher) {
+      updatePayload.attendanceTeacher = updatePayload.classTeacher;
     }
 
-    await logActivity(req, 'EDIT_CLASS', 'Class', updatedClass._id, { name: updatedClass.name });
+    const updatedClass = await Class.findByIdAndUpdate(
+      req.params.id,
+      updatePayload,
+      { new: true, runValidators: true }
+    )
+      .populate('classTeacher', 'name email mobile employeeId')
+      .populate('attendanceTeacher', 'name email mobile employeeId')
+      .populate('subjects');
+
+    // Clean up old class teacher if changed
+    if (oldClassTeacher && updatePayload.classTeacher && oldClassTeacher !== updatePayload.classTeacher.toString()) {
+      await User.findByIdAndUpdate(oldClassTeacher, { $pull: { assignedClasses: existingClass._id } });
+    }
+    // Clean up old attendance teacher if changed
+    if (oldAttendanceTeacher && updatePayload.attendanceTeacher && oldAttendanceTeacher !== updatePayload.attendanceTeacher.toString()) {
+      await User.findByIdAndUpdate(oldAttendanceTeacher, { $pull: { attendanceClasses: existingClass._id } });
+    }
+
+    // Add to new class teacher
+    if (updatePayload.classTeacher) {
+      await User.findByIdAndUpdate(updatePayload.classTeacher, { $addToSet: { assignedClasses: updatedClass._id } });
+    }
+    // Add to new attendance teacher
+    if (updatePayload.attendanceTeacher) {
+      await User.findByIdAndUpdate(updatePayload.attendanceTeacher, { $addToSet: { attendanceClasses: updatedClass._id } });
+    }
+
+    await logActivity(req, 'EDIT_CLASS', 'Class', updatedClass._id, { 
+      name: updatedClass.name,
+      classTeacher: updatedClass.classTeacher?.name,
+      attendanceTeacher: updatedClass.attendanceTeacher?.name
+    });
 
     res.json({ success: true, message: 'Class updated successfully.', class: updatedClass });
   } catch (error) {
