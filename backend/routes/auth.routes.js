@@ -14,15 +14,22 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide both email and password.' });
+      return res.status(400).json({ success: false, message: 'Please provide both ID/Email and password.' });
     }
 
-    // Find user by email or admissionNo and include passwordHash
+    // Find user by email, admissionNo, employeeId, or mobile number
     const searchIdentifier = email.trim();
+    const cleanId = searchIdentifier.toLowerCase();
+    const cleanUpper = searchIdentifier.toUpperCase();
+
     const user = await User.findOne({
       $or: [
-        { email: searchIdentifier.toLowerCase() },
-        { admissionNo: searchIdentifier.toUpperCase() }
+        { email: cleanId },
+        { admissionNo: cleanUpper },
+        { admissionNo: searchIdentifier },
+        { employeeId: cleanUpper },
+        { employeeId: searchIdentifier },
+        { mobile: searchIdentifier }
       ]
     })
       .select('+passwordHash')
@@ -33,7 +40,7 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       await logActivity(req, 'LOGIN_FAILED', 'User', '', { email, reason: 'Invalid credentials' });
-      return res.status(401).json({ success: false, message: 'Invalid email/admission no or password.' });
+      return res.status(401).json({ success: false, message: 'Invalid Login ID / Email or password.' });
     }
 
     if (user.status !== 'active') {
@@ -145,6 +152,55 @@ router.post('/change-password', protect, async (req, res) => {
 router.post('/logout', protect, async (req, res) => {
   await logActivity(req, 'LOGOUT', 'User', req.user._id);
   res.json({ success: true, message: 'Logged out successfully.' });
+});
+
+// @route   POST /api/auth/admin-recovery-reset
+// @desc    Emergency password reset for HEAD / Administrator using Master Recovery Key
+// @access  Public (protected by Master Recovery Key)
+router.post('/admin-recovery-reset', async (req, res) => {
+  try {
+    const { email, recoveryKey, newPassword } = req.body;
+
+    if (!email || !recoveryKey || !newPassword) {
+      return res.status(400).json({ success: false, message: 'All fields (Admin Email, Master Recovery Key, New Password) are required.' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long.' });
+    }
+
+    // Verify master recovery key against environment variable or secure system key
+    const expectedKey = process.env.ADMIN_RECOVERY_KEY || 'NVP-HEAD-RECOVERY-KEY-2026';
+    if (recoveryKey.trim() !== expectedKey.trim()) {
+      await logActivity(req, 'ADMIN_RECOVERY_FAILED', 'User', '', { email, reason: 'Invalid Master Recovery Key' });
+      return res.status(403).json({ success: false, message: 'Invalid Master Recovery Key. Please check the key in your server environment settings.' });
+    }
+
+    // Find HEAD user
+    const headUser = await User.findOne({
+      role: 'HEAD',
+      email: email.trim().toLowerCase()
+    }).select('+passwordHash');
+
+    if (!headUser) {
+      return res.status(404).json({ success: false, message: 'Head Administrator account with this email was not found.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    headUser.passwordHash = await bcrypt.hash(newPassword, salt);
+    headUser.mustChangePassword = false;
+    headUser.generatedPassword = '';
+    await headUser.save();
+
+    await logActivity(req, 'ADMIN_RECOVERY_SUCCESS', 'User', headUser._id, { email, note: 'Admin password reset via Master Recovery Key' });
+
+    res.json({
+      success: true,
+      message: 'Head Administrator password has been reset successfully! You can now log in with your new password.'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 module.exports = router;

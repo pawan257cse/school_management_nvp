@@ -89,7 +89,7 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
         <Topbar setMobileOpen={setMobileOpen} />
-        <main className="p-4 sm:p-8 flex-1 max-w-7xl w-full mx-auto">
+        <main className="p-3 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>
@@ -103,6 +103,10 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+
+          {/* Direct /admin and /head URL shortcuts for HEAD Admin */}
+          <Route path="/admin" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
+          <Route path="/head" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
 
           {/* Core School Management Routes (Head & Principal Access) */}
           <Route path="/students" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />

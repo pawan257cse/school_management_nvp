@@ -67,6 +67,7 @@ This guide explains how to deploy the entire school management portal on **Rende
    | `PORT` | `10000` | Port for Render web service |
    | `MONGODB_URI` | `mongodb+srv://nvp_admin:Password@cluster0.xxxxx.mongodb.net/nvp_school?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
    | `JWT_SECRET` | `nvp_school_super_secret_jwt_key_2026` | Any long random secret string |
+   | `ADMIN_RECOVERY_KEY` | `NVP-HEAD-RECOVERY-KEY-2026` | Secret master key to reset admin password anytime |
 
 6. Click **Create Web Service**.
 7. Wait 3–4 minutes while Render:
@@ -82,13 +83,38 @@ This guide explains how to deploy the entire school management portal on **Rende
 
 Once deployed, the database initializes with the following default accounts:
 
-| Role | Email | Initial Password | Permissions |
-|------|-------|------------------|-------------|
+| Role | Email / ID | Initial Password | Permissions |
+|------|------------|------------------|-------------|
 | **HEAD (Director/Admin)** | `head@school.local` | `Head@12345` | Full access to all data, fees, timetable, staff, credentials & logs |
 | **PRINCIPAL** | `principal@school.local` | `Principal@12345` | Academic management, teachers, timetable, class diaries |
 | **TEACHER** | `teacher@school.local` | `Teacher@12345` | Attendance, marks, class assignments/diaries, questions |
 | **STUDENT** | `student@school.local` | `Student@12345` | Portal view: Homework diary, timetable, marks, notices |
 
-> 🔒 **Important Security Advice:**  
-> Immediately after your first login as **HEAD**, go to **Settings / Profile** and change your password to a private password known only to you!
+---
+
+## 🆘 Kya Karein Agar Admin Ka Password Bhool Jayein? (Admin Password Recovery)
+
+Agar Head Administrator apna password bhool jaye, toh reset karne ke **2 aasan tarike** hain:
+
+### Method 1: Website Ke Login Page Se (Direct UI Reset)
+1. Login page par **"Forgot Password?"** par click karein.
+2. **"🔑 Head Admin Emergency"** tab select karein.
+3. Apna Admin Email (`head@school.local`), **Master Recovery Key** (`NVP-HEAD-RECOVERY-KEY-2026`), aur naya password dalein.
+4. **"Reset Admin Password"** dabayein — password turant update ho jayega aur aap login kar payenge!
+
+### Method 2: Render Ke Web Shell Se (1 Command)
+1. Render dashboard me apni service open karein → **Shell** tab par click karein.
+2. Yeh command run karein:
+   ```bash
+   npm run reset-admin MyNewPassword2026
+   ```
+   Admin ka password turant change ho jayega!
+
+---
+
+## 🔗 Direct URL Shortcuts:
+* **Admin / Head Portal:** `https://your-site.onrender.com/admin`
+* **Login Page:** `https://your-site.onrender.com/login`
+* **Responsive Mobile Access:** Mobile phones par bhi sidebar swipe drawer, touch buttons, aur responsive cards auto-fit ho jayenge.
+
 

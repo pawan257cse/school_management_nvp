@@ -39,6 +39,7 @@ export const loginApi = (email, password) => API.post('/auth/login', { email, pa
 export const getMeApi = () => API.get('/auth/me');
 export const changePasswordApi = (data) => API.post('/auth/change-password', data);
 export const logoutApi = () => API.post('/auth/logout');
+export const adminRecoveryResetApi = (data) => API.post('/auth/admin-recovery-reset', data);
 
 // User Management Services
 export const getUsersApi = (params) => API.get('/users', { params });
