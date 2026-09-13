@@ -4,6 +4,13 @@ export default function SplashScreen({ onFinish }) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
+    // Immediately dismiss native Capacitor splash screen so this custom branded screen is shown directly
+    try {
+      if (window.Capacitor?.Plugins?.SplashScreen?.hide) {
+        window.Capacitor.Plugins.SplashScreen.hide();
+      }
+    } catch (e) {}
+
     // Start fade-out at 1750ms
     const fadeTimer = setTimeout(() => {
       setFading(true);
