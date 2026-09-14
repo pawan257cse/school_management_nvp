@@ -68,8 +68,8 @@ async function syncAllNVPData() {
     classMap[name] = cls;
   }
 
-  // Delete unwanted classes
-  await Class.deleteMany({ name: { $in: ['Nursery', '8', '9', '10'] } });
+  // SAFE: Preserve all existing classes, never auto-delete
+  // await Class.deleteMany({ name: { $in: ['Nursery', '8', '9', '10'] } });
 
   // 3. Faculty / Teachers Setup (10 Real Teachers + Head Admin)
   const realFaculty = [

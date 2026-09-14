@@ -32,9 +32,8 @@ async function seedAll() {
 
   const salt = await bcrypt.genSalt(10);
 
-  // 1. Clean up unused classes (Nursery, 8, 9, 10, etc.)
-  const delClassesRes = await Class.deleteMany({ name: { $nin: ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'] } });
-  console.log(`Removed non-standard classes count: ${delClassesRes.deletedCount}`);
+  // 1. SAFE: Preserve all classes, never auto-delete
+  // const delClassesRes = await Class.deleteMany({ name: { $nin: ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'] } });
 
   // 2. Standard Subjects
   const subjectsConfig = [
