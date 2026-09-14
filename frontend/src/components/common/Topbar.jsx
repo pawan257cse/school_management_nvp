@@ -72,15 +72,13 @@ export default function Topbar({ setMobileOpen }) {
       <header className="no-print sticky top-0 z-30 h-16 sm:h-20 bg-slate-900 border-b border-slate-800 px-3 sm:px-8 flex items-center justify-between shadow-lg">
         {/* Left Title & Mobile Menu Trigger */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {isHeadOrAdmin && (
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
-              aria-label="Open Navigation Menu"
-            >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-          )}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
 
           <div className="min-w-0 flex items-center gap-3">
             <div 
