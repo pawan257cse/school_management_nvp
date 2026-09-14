@@ -45,29 +45,29 @@ const getExactPeriodNumber = (periodNumber, startTime) => {
   return Math.min(Math.max(displayNum, 1), 8);
 };
 
+const getTodayISTString = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+};
+
 const getDayDateString = (dayName) => {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const targetIdx = days.indexOf(dayName);
   if (targetIdx === -1) return null;
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istDate = new Date(now.getTime() + istOffset);
-  const currentIdx = istDate.getDay();
+  const todayStr = getTodayISTString();
+  const todayDate = new Date(todayStr + 'T00:00:00');
+  const currentIdx = todayDate.getDay();
   const diff = targetIdx - currentIdx;
-  const targetDate = new Date(istDate.getTime() + diff * 24 * 60 * 60 * 1000);
-  return targetDate.toISOString().split('T')[0];
+  const targetDate = new Date(todayDate.getTime() + diff * 24 * 60 * 60 * 1000);
+  
+  const y = targetDate.getFullYear();
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
 
 const getWeekDayInfo = (dayName) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const targetIdx = days.indexOf(dayName);
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istDate = new Date(now.getTime() + istOffset);
-  const currentIdx = istDate.getDay();
-  const diff = targetIdx === -1 ? 0 : targetIdx - currentIdx;
-  const targetDate = new Date(istDate.getTime() + diff * 24 * 60 * 60 * 1000);
-  const dateStr = targetDate.toISOString().split('T')[0];
+  const dateStr = getDayDateString(dayName) || getTodayISTString();
+  const targetDate = new Date(dateStr + 'T00:00:00');
 
   const fullDate = targetDate.toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -96,24 +96,19 @@ const isBreakPeriod = (p) => {
 };
 
 const findHolidayForDay = (dayName, holidays = [], todayHoliday = null) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istDate = new Date(now.getTime() + istOffset);
-  const todayName = days[istDate.getDay()];
+  const todayStr = getTodayISTString();
+  const targetDateStr = getDayDateString(dayName);
 
-  if (dayName === todayName && todayHoliday) {
+  if (targetDateStr === todayStr && todayHoliday) {
     return todayHoliday;
   }
 
-  const dayInfo = getDayDateString(dayName);
-  const targetDateStr = typeof dayInfo === 'object' ? dayInfo.dateStr : dayInfo;
   if (!targetDateStr || !Array.isArray(holidays)) return null;
 
   return holidays.find(h => {
     if (!h.date) return false;
-    const hDate = typeof h.date === 'string' ? h.date.split('T')[0] : '';
-    const hEnd = h.endDate ? (typeof h.endDate === 'string' ? h.endDate.split('T')[0] : '') : null;
+    const hDate = typeof h.date === 'string' ? h.date.split('T')[0].trim() : '';
+    const hEnd = h.endDate ? (typeof h.endDate === 'string' ? h.endDate.split('T')[0].trim() : '') : null;
     if (hDate === targetDateStr) return true;
     if (hEnd && targetDateStr >= hDate && targetDateStr <= hEnd) return true;
     return false;

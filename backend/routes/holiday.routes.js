@@ -6,10 +6,7 @@ const checkRole = require('../middleware/checkRole');
 
 // Helper to get current Indian Standard Time (IST) date string in YYYY-MM-DD
 const getTodayISTString = () => {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istDate = new Date(now.getTime() + istOffset);
-  return istDate.toISOString().split('T')[0];
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 };
 
 // @route   GET /api/holidays
@@ -25,8 +22,10 @@ router.get('/', protect, async (req, res) => {
 
     // Check if today matches any holiday
     const todayHoliday = holidays.find(h => {
-      if (h.date === todayStr) return true;
-      if (h.endDate && todayStr >= h.date && todayStr <= h.endDate) return true;
+      const hDate = h.date ? h.date.split('T')[0].trim() : '';
+      const hEnd = h.endDate ? h.endDate.split('T')[0].trim() : '';
+      if (hDate === todayStr) return true;
+      if (hEnd && todayStr >= hDate && todayStr <= hEnd) return true;
       return false;
     }) || null;
 

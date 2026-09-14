@@ -69,7 +69,7 @@ export default function TimetableManagement() {
   const [showAddHolidayModal, setShowAddHolidayModal] = useState(false);
   const [newHoliday, setNewHoliday] = useState({
     title: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
     endDate: '',
     type: 'FESTIVAL',
     description: ''
@@ -329,7 +329,7 @@ export default function TimetableManagement() {
         setShowAddHolidayModal(false);
         setNewHoliday({
           title: '',
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
           endDate: '',
           type: 'FESTIVAL',
           description: ''
