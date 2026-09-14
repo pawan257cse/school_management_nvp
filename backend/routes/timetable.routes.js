@@ -113,17 +113,6 @@ router.get('/my-timetable', protect, async (req, res) => {
         .populate('schedule.periods.subject', 'name code')
         .populate('schedule.periods.teacher', 'name email mobile');
 
-      let finalTimetable = timetable;
-      if (!finalTimetable && targetClassId) {
-        const cls = await Class.findById(targetClassId);
-        if (cls) {
-          finalTimetable = await Timetable.findOne({ className: cls.name })
-            .populate('class', 'name section')
-            .populate('schedule.periods.subject', 'name code')
-            .populate('schedule.periods.teacher', 'name email mobile');
-        }
-      }
-
       return res.json({
         success: true,
         role: 'STUDENT',
@@ -141,7 +130,7 @@ router.get('/my-timetable', protect, async (req, res) => {
         } : null,
         holidays,
         message: holidayMessage,
-        timetable: finalTimetable || { schedule: [] }
+        timetable: timetable || { schedule: [] }
       });
     }
 
@@ -188,12 +177,7 @@ router.get('/my-timetable', protect, async (req, res) => {
           const dayData = tt.schedule.find(s => s.day === dayName);
           if (dayData && Array.isArray(dayData.periods)) {
             dayData.periods.forEach(p => {
-              const teacherObjId = p.teacher ? (p.teacher._id || p.teacher).toString() : '';
-              const userIdStr = user._id.toString();
-              const teacherNameMatch = p.teacherName && user.name && p.teacherName.trim().toLowerCase() === user.name.trim().toLowerCase();
-              const isTeacherMatch = (teacherObjId === userIdStr) || teacherNameMatch;
-
-              if (isTeacherMatch && !isBreakOrLunch(p)) {
+              if (p.teacher && p.teacher.toString() === user._id.toString() && !isBreakOrLunch(p)) {
                 const pNum = Number(p.periodNumber) || 1;
                 const exactNum = getExactPeriodNumber(pNum, p.startTime);
                 const displayTitle = `Period ${exactNum}`;

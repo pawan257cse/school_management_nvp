@@ -151,13 +151,8 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       collapsible: false,
       items: [
         { name: 'Dashboard', path: '/teacher-dashboard', icon: LayoutDashboard },
-        { name: 'Class Timetable', path: '/teacher/timetable', icon: Clock },
-        { name: 'Student Attendance', path: '/teacher/attendance', icon: CheckSquare },
-        { name: 'My Attendance', path: '/teacher/my-attendance', icon: UserCheck },
-        { name: 'Question Papers', path: '/teacher/question-papers', icon: FileText },
-        { name: 'Homework Diary', path: '/teacher/assignments', icon: ClipboardList },
-        { name: 'Marks Entry', path: '/teacher/results', icon: BookMarked },
-        { name: 'Study Notes', path: '/teacher/materials', icon: BookOpen },
+        { name: 'Class Routine', path: '/teacher/timetable', icon: Clock },
+        { name: 'Mark Attendance', path: '/teacher/attendance', icon: CheckSquare },
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     }
@@ -170,12 +165,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       collapsible: false,
       items: [
         { name: 'Dashboard', path: '/student-dashboard', icon: LayoutDashboard },
-        { name: 'Class Timetable', path: '/student/timetable', icon: Clock },
-        { name: 'My Attendance', path: '/student/attendance', icon: CheckSquare },
-        { name: 'Homework Diary', path: '/student/homework', icon: ClipboardList },
-        { name: 'Report Cards', path: '/student/results', icon: Award },
-        { name: 'Fee Receipts', path: '/student/fees', icon: Receipt },
-        { name: 'Library Books', path: '/library', icon: Library },
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     }
