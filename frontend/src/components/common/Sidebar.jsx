@@ -50,7 +50,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const headSections = [
     {
       key: 'overviews',
-      title: 'MAIN',
+      title: 'DASHBOARD',
       collapsible: false,
       items: [
         { name: 'Dashboard', path: '/head-dashboard', icon: LayoutDashboard }
@@ -58,34 +58,87 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
     },
     {
       key: 'academics',
-      title: 'ACADEMICS & USERS',
-      collapsible: false,
+      title: 'ACADEMICS & CURRICULUM',
+      collapsible: true,
+      items: [
+        { name: 'Class Timetable', path: '/academic/timetable', icon: Clock },
+        { name: 'Homework Diary', path: '/head/assignments', icon: ClipboardList },
+        { name: 'Question Papers', path: '/principal/question-papers', icon: FileText },
+        { name: 'Subjects & Syllabus', path: '/head/subjects', icon: BookOpen },
+        { name: 'Exams & Schedule', path: '/exams', icon: Calendar },
+        { name: 'Teacher Attendance', path: '/head/teacher-attendance', icon: UserCheck },
+        { name: 'Student Attendance', path: '/principal/attendance', icon: CheckSquare }
+      ]
+    },
+    {
+      key: 'students',
+      title: 'STUDENT MANAGEMENT',
+      collapsible: true,
       items: [
         { name: 'Student Directory', path: '/students', icon: Users },
-        { name: 'Teachers & Staff', path: '/head/teachers', icon: UserCheck },
-        { name: 'Classes & Subjects', path: '/head/classes', icon: School },
-        { name: 'Class Timetable', path: '/academic/timetable', icon: Clock },
-        { name: 'Exams & Schedule', path: '/exams', icon: Calendar }
+        { name: 'Classes & Sections', path: '/head/classes', icon: School },
+        { name: 'Parent & Guardians', path: '/head/parents', icon: Users },
+        { name: 'Student Promotions', path: '/promotions', icon: TrendingUp }
       ]
     },
     {
-      key: 'services',
-      title: 'FINANCE & SERVICES',
-      collapsible: false,
+      key: 'staff',
+      title: 'FACULTY & STAFF',
+      collapsible: true,
       items: [
-        { name: 'Fees Management', path: '/fees', icon: Receipt },
-        { name: 'Inventory & Store', path: '/inventory', icon: Package },
-        { name: 'Library & Books', path: '/library', icon: Library },
-        { name: 'Buses & Transport', path: '/transport', icon: Bus }
+        { name: 'Teachers Register', path: '/head/teachers', icon: UserCheck },
+        { name: 'Staff Directory', path: '/staff', icon: Users },
+        { name: 'Principal Admin', path: '/head/principal', icon: Award }
       ]
     },
     {
-      key: 'system',
-      title: 'SYSTEM & NOTICES',
-      collapsible: false,
+      key: 'finance',
+      title: 'FEES & FINANCE',
+      collapsible: true,
       items: [
-        { name: 'Notice Board', path: '/notifications/notices', icon: Bell },
-        { name: 'School Profile', path: '/config/school-info', icon: Building },
+        { name: 'Fees Management', path: '/fees', icon: Receipt }
+      ]
+    },
+    {
+      key: 'inventory',
+      title: 'INVENTORY & STORE',
+      collapsible: true,
+      items: [
+        { name: 'Inventory & Store', path: '/inventory', icon: Package, badge: 'Store ERP' }
+      ]
+    },
+    {
+      key: 'library',
+      title: 'LIBRARY MANAGEMENT',
+      collapsible: true,
+      items: [
+        { name: 'Library & Books', path: '/library', icon: Library, badge: 'Catalogue' }
+      ]
+    },
+    {
+      key: 'transport',
+      title: 'TRANSPORT & FLEET',
+      collapsible: true,
+      items: [
+        { name: 'Buses & Routes', path: '/transport', icon: Bus }
+      ]
+    },
+    {
+      key: 'communication',
+      title: 'COMMUNICATION',
+      collapsible: true,
+      items: [
+        { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
+      ]
+    },
+    {
+      key: 'settings',
+      title: 'SYSTEM & SECURITY',
+      collapsible: true,
+      items: [
+        { name: 'School Profile Info', path: '/config/school-info', icon: Building },
+        { name: 'Role & Permissions', path: '/head/security', icon: ShieldCheck },
+        { name: 'System Activity Logs', path: '/head/activity', icon: Activity },
         { name: 'System Settings', path: '/head/settings', icon: Settings }
       ]
     }
@@ -94,25 +147,12 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const teacherSections = [
     {
       key: 'overviews',
-      title: 'TEACHER PORTAL',
+      title: 'FACULTY PORTAL',
       collapsible: false,
       items: [
-        { name: 'My Dashboard', path: '/teacher-dashboard', icon: LayoutDashboard },
-        { name: 'My Timetable', path: '/teacher/timetable', icon: Clock, badge: 'Live' }
-      ]
-    },
-    {
-      key: 'teaching',
-      title: 'TEACHING TOOLS',
-      collapsible: false,
-      items: [
-        { name: 'My Classes', path: '/teacher/classes', icon: School },
-        { name: 'My Subjects', path: '/teacher/subjects', icon: BookOpen },
-        { name: 'Question Papers', path: '/teacher/question-papers', icon: FileText },
-        { name: 'Assignments & HW', path: '/teacher/assignments', icon: ClipboardList },
-        { name: 'Student Attendance', path: '/teacher/attendance', icon: CheckSquare, badge: 'Daily Duty' },
-        { name: 'Student Results', path: '/teacher/results', icon: Award },
-        { name: 'Study Materials', path: '/teacher/materials', icon: BookOpen },
+        { name: 'Dashboard', path: '/teacher-dashboard', icon: LayoutDashboard },
+        { name: 'Class Routine', path: '/teacher/timetable', icon: Clock },
+        { name: 'Mark Attendance', path: '/teacher/attendance', icon: CheckSquare },
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     }
@@ -124,13 +164,8 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       title: 'STUDENT PORTAL',
       collapsible: false,
       items: [
-        { name: 'My Dashboard', path: '/student-dashboard', icon: LayoutDashboard },
-        { name: 'My Daily Homework', path: '/student/assignments', icon: ClipboardList, badge: 'Daily HW' },
-        { name: 'Class Timetable', path: '/student/timetable', icon: Clock },
-        { name: 'My Attendance', path: '/student/attendance', icon: CheckSquare },
-        { name: 'My Report Card', path: '/student/results', icon: Award },
-        { name: 'Fee Ledger', path: '/student/fees', icon: Receipt },
-        { name: 'School Notices', path: '/notifications/notices', icon: Bell }
+        { name: 'Dashboard', path: '/student-dashboard', icon: LayoutDashboard },
+        { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     }
   ];
