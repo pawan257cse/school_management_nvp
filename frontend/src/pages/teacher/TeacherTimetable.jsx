@@ -101,13 +101,13 @@ const findHolidayForDay = (dayName, holidays = [], todayHoliday = null) => {
   const istOffset = 5.5 * 60 * 60 * 1000;
   const istDate = new Date(now.getTime() + istOffset);
   const todayName = days[istDate.getDay()];
-  const todayStr = istDate.toISOString().split('T')[0];
 
   if (dayName === todayName && todayHoliday) {
     return todayHoliday;
   }
 
-  const targetDateStr = getDayDateString(dayName);
+  const dayInfo = getDayDateString(dayName);
+  const targetDateStr = typeof dayInfo === 'object' ? dayInfo.dateStr : dayInfo;
   if (!targetDateStr || !Array.isArray(holidays)) return null;
 
   return holidays.find(h => {
