@@ -232,22 +232,6 @@ export default function TeacherDashboard() {
               Campus circulars & news
             </p>
           </Link>
-
-          {/* Tile 8: Faculty Profile */}
-          <Link
-            to="/teacher/profile"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-500 hover:-translate-y-0.5 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-3 group-hover:bg-cyan-600 group-hover:text-white transition">
-              <School className="w-5 h-5" />
-            </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-cyan-600 transition">
-              My Profile
-            </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-              Employee & subject info
-            </p>
-          </Link>
         </div>
       </div>
 

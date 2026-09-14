@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { changePasswordApi, updateProfileApi } from '../../services/api';
+import { changePasswordApi } from '../../services/api';
 import { 
   UserCircle, 
   Key, 
@@ -21,55 +21,11 @@ import {
 export default function TeacherProfile() {
   const { user, showToast, updateCurrentUser } = useAuth();
 
-  // Profile Form State
-  const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    mobile: '',
-    qualification: ''
-  });
-  const [profileLoading, setProfileLoading] = useState(false);
-
   // Password Form State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.name || '',
-        email: user.email || '',
-        mobile: user.mobile || '',
-        qualification: user.qualification || ''
-      });
-    }
-  }, [user]);
-
-  // Handle Profile Update (including Gmail / Email)
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    if (!profileData.email || !profileData.email.includes('@')) {
-      showToast('Please enter a valid Gmail / Email address.', 'error');
-      return;
-    }
-
-    try {
-      setProfileLoading(true);
-      const res = await updateProfileApi(profileData);
-      if (res.data?.success) {
-        showToast('Profile and Gmail address updated successfully!', 'success');
-        if (res.data.user && updateCurrentUser) {
-          updateCurrentUser(res.data.user);
-        }
-      }
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to update profile.', 'error');
-    } finally {
-      setProfileLoading(false);
-    }
-  };
 
   // Handle Password Change
   const handlePasswordChange = async (e) => {
@@ -305,100 +261,56 @@ export default function TeacherProfile() {
           </div>
         </div>
 
-        {/* Right Column (2 cols): Edit Gmail/Profile Form & Security Password Form */}
+        {/* Right Column (2 cols): Official Read-Only Record & Security Password Form */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* 1. Edit Profile & Change Gmail Form */}
+          {/* Official Read-Only Information Record */}
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                  <Edit3 className="w-5 h-5" />
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="font-heading font-black text-base text-slate-900">
-                    Update Profile & Gmail Address
+                    Official School Record
                   </h2>
                   <p className="text-xs text-slate-500">
-                    You can update your login Gmail, contact phone number, and qualification here.
+                    Official faculty credentials managed & verified by Head Administration.
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 hidden sm:inline-block">
-                Editable by Teacher
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Verified Record
               </span>
             </div>
 
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                    placeholder="Your Full Name"
-                  />
-                </div>
-
-                {/* Email / Gmail Address */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                    <span>Email / Gmail Address *</span>
-                    <span className="text-[10px] text-blue-600 font-semibold">Used for Login</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs font-mono font-bold rounded-xl border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 bg-blue-50/20"
-                    placeholder="teacher@gmail.com"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    You can change your login Gmail here. Next time, log in with this new Gmail.
-                  </span>
-                </div>
-
-                {/* Mobile Number */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Mobile Number</label>
-                  <input
-                    type="text"
-                    value={profileData.mobile}
-                    onChange={(e) => setProfileData({ ...profileData, mobile: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                    placeholder="+91 98765 43210"
-                  />
-                </div>
-
-                {/* Qualification */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Academic Qualification</label>
-                  <input
-                    type="text"
-                    value={profileData.qualification}
-                    onChange={(e) => setProfileData({ ...profileData, qualification: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-                    placeholder="e.g. M.Sc., B.Ed."
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Full Name</span>
+                <p className="text-sm font-bold text-slate-900">{user?.name}</p>
               </div>
 
-              <div className="flex items-center justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition flex items-center gap-2 disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{profileLoading ? 'Saving Changes...' : 'Save Profile & Gmail'}</span>
-                </button>
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Official Employee ID</span>
+                <p className="text-sm font-bold text-slate-900 font-mono">{user?.employeeId || 'EMP-FACULTY'}</p>
               </div>
-            </form>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Login Gmail / Email</span>
+                <p className="text-sm font-bold text-slate-900 font-mono">{user?.email}</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Contact Mobile</span>
+                <p className="text-sm font-bold text-slate-900">{user?.mobile || 'Registered'}</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>To update official name, email, or mobile number, please submit a request to Principal Admin / Head Office.</span>
+            </div>
           </div>
 
           {/* 2. Change Personal Password Form */}
