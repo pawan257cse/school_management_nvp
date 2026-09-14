@@ -30,10 +30,38 @@ API.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Response Interceptor: Handle Authorization Errors
+// Response Interceptor: Offline Caching & Session Handling
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Automatically cache successful GET API responses in localStorage for offline viewing
+    if (response.config && response.config.method === 'get' && response.data?.success) {
+      try {
+        const cacheKey = `nvp_offline_cache_${response.config.url}`;
+        localStorage.setItem(cacheKey, JSON.stringify(response.data));
+      } catch (e) {}
+    }
+    return response;
+  },
   (error) => {
+    // Fallback to offline cached data if network is disconnected or server is unreachable
+    if (error.config && error.config.method === 'get' && (!error.response || error.code === 'ERR_NETWORK')) {
+      try {
+        const cacheKey = `nvp_offline_cache_${error.config.url}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          console.log(`[Offline Cache] Serving cached data for ${error.config.url}`);
+          return Promise.resolve({
+            data: JSON.parse(cached),
+            status: 200,
+            statusText: 'OK (Offline Cache)',
+            headers: {},
+            config: error.config,
+            isOfflineCached: true
+          });
+        }
+      } catch (e) {}
+    }
+
     if (error.response && error.response.status === 401) {
       // Token expired, invalid or password reset -> Clear local session
       const alertMsg = error.response.data?.message || 'Your session has expired or password was changed. Please log in again.';
