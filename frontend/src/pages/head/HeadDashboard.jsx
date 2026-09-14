@@ -46,10 +46,21 @@ export default function HeadDashboard() {
         });
         setClasses(sorted);
       }
+      
+      // Load Teachers robustly with fallback to getUsersApi
+      let loadedTeachers = [];
       if (teachRes.status === 'fulfilled') {
-        const userList = teachRes.value.data?.users || teachRes.value.data?.teachers || [];
-        setTeachers(userList);
+        loadedTeachers = teachRes.value.data?.users || teachRes.value.data?.teachers || teachRes.value.data?.data || [];
       }
+      if (!loadedTeachers || loadedTeachers.length === 0) {
+        try {
+          const allUsersRes = await getUsersApi();
+          const userList = allUsersRes.data?.users || allUsersRes.data?.data || [];
+          loadedTeachers = userList.filter(u => u.role === 'TEACHER');
+        } catch (e) {}
+      }
+      setTeachers(loadedTeachers);
+
       if (attRes.status === 'fulfilled' && attRes.value.data?.success) {
         setAttendance(attRes.value.data.data || { roster: [], summary: {} });
       }
@@ -71,7 +82,9 @@ export default function HeadDashboard() {
     day: 'numeric'
   });
 
-  const totalStudents = classes.reduce((sum, c) => sum + (c.studentCount || 30), 0);
+  const totalStudents = classes.reduce((sum, c) => sum + (c.studentCount || 0), 0);
+  const liveStudentCount = stats?.totalStudents ?? totalStudents;
+  const liveTeacherCount = teachers.length > 0 ? teachers.length : (stats?.totalTeachers || 0);
 
   return (
     <div className="space-y-6 pb-12">
@@ -131,7 +144,7 @@ export default function HeadDashboard() {
             </div>
           </div>
           <div className="text-2xl font-black text-slate-900 mt-2">
-            {stats?.totalStudents || totalStudents || 300}
+            {liveStudentCount}
           </div>
           <span className="text-[11px] text-blue-600 font-bold mt-1 block flex items-center gap-1">
             <span>Enrolled Students</span> &rarr;
@@ -150,10 +163,10 @@ export default function HeadDashboard() {
             </div>
           </div>
           <div className="text-2xl font-black text-emerald-700 mt-2">
-            {teachers.length || 10} Faculty
+            {liveTeacherCount} Faculty
           </div>
           <span className="text-[11px] text-emerald-700 font-bold mt-1 block flex items-center gap-1">
-            <span>10 Official Teachers</span> &rarr;
+            <span>{liveTeacherCount} Official Teachers</span> &rarr;
           </span>
         </div>
 
@@ -169,7 +182,7 @@ export default function HeadDashboard() {
             </div>
           </div>
           <div className="text-2xl font-black text-purple-700 mt-2">
-            {classes.length || 10} Classes
+            {classes.length} Classes
           </div>
           <span className="text-[11px] text-purple-700 font-bold mt-1 block flex items-center gap-1">
             <span>PG to Class 7</span> &rarr;
@@ -363,7 +376,7 @@ export default function HeadDashboard() {
                   : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
               }`}
             >
-              10 Official Teachers ({teachers.length})
+              Faculty Members ({teachers.length})
             </button>
             <button
               onClick={() => setActiveTab('classes')}
@@ -373,7 +386,7 @@ export default function HeadDashboard() {
                   : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
               }`}
             >
-              10 Classes ({classes.length})
+              Classes ({classes.length})
             </button>
             <button
               onClick={() => setActiveTab('fees')}
