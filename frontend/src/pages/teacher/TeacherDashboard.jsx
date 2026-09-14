@@ -115,14 +115,13 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* QUICK ACCESS PORTAL TILES GRID (1-Click Shortcuts for Teachers) */}
+      {/* QUICK ACCESS PORTAL TILES GRID */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-heading font-black text-slate-900 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500" />
-            <span>Faculty Control Hub (Direct Access Tiles)</span>
+          <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Quick Shortcuts</span>
           </h2>
-          <span className="text-xs font-semibold text-slate-400">1-Click Direct Access</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5">
@@ -254,34 +253,6 @@ export default function TeacherDashboard() {
             </p>
           </Link>
         </div>
-      </div>
-
-      {/* Teaching Routine Overview Banner */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black uppercase tracking-wider">
-              Teaching Schedule
-            </span>
-            <span className="text-xs text-slate-500 font-semibold">
-              Today: {new Date().getDay() === 0 ? 'Sunday (Holiday)' : (liveToday?.dayName || 'Weekday')}
-            </span>
-          </div>
-          <h3 className="text-xl font-heading font-black text-slate-900">
-            My Weekly Teaching Timetable
-          </h3>
-          <p className="text-xs text-slate-500 max-w-xl">
-            Check your period timings, assigned class standards, and subject allocations.
-          </p>
-        </div>
-
-        <Link
-          to="/teacher/timetable"
-          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition shrink-0"
-        >
-          <Clock className="w-4 h-4" />
-          <span>View Class Timetable & Routine &rarr;</span>
-        </Link>
       </div>
 
       {/* Upcoming Exam Schedule Banner (Faculty Notification) */}
