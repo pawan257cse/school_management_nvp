@@ -16,13 +16,9 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
 
   const [expandedSections, setExpandedSections] = useState({
     academics: true,
-    students: true,
+    students: false,
     staff: false,
-    finance: false,
-    inventory: true,
-    library: false,
-    transport: false,
-    communication: false,
+    operations: false,
     settings: false
   });
 
@@ -50,10 +46,10 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const headSections = [
     {
       key: 'overviews',
-      title: 'DASHBOARD',
+      title: 'MAIN DASHBOARD',
       collapsible: false,
       items: [
-        { name: 'Dashboard', path: '/head-dashboard', icon: LayoutDashboard }
+        { name: 'Dashboard Overview', path: '/head-dashboard', icon: LayoutDashboard }
       ]
     },
     {
@@ -65,18 +61,17 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         { name: 'Homework Diary', path: '/head/assignments', icon: ClipboardList },
         { name: 'Question Papers', path: '/principal/question-papers', icon: FileText },
         { name: 'Subjects & Syllabus', path: '/head/subjects', icon: BookOpen },
-        { name: 'Exams & Schedule', path: '/exams', icon: Calendar },
-        { name: 'Teacher Attendance', path: '/head/teacher-attendance', icon: UserCheck },
-        { name: 'Student Attendance', path: '/principal/attendance', icon: CheckSquare }
+        { name: 'Exams & Schedule', path: '/exams', icon: Calendar }
       ]
     },
     {
       key: 'students',
-      title: 'STUDENT MANAGEMENT',
+      title: 'STUDENTS & CLASSES',
       collapsible: true,
       items: [
         { name: 'Student Directory', path: '/students', icon: Users },
         { name: 'Classes & Sections', path: '/head/classes', icon: School },
+        { name: 'Student Attendance', path: '/principal/attendance', icon: CheckSquare },
         { name: 'Parent & Guardians', path: '/head/parents', icon: Users },
         { name: 'Student Promotions', path: '/promotions', icon: TrendingUp }
       ]
@@ -87,47 +82,20 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       collapsible: true,
       items: [
         { name: 'Teachers Register', path: '/head/teachers', icon: UserCheck },
+        { name: 'Teacher Attendance', path: '/head/teacher-attendance', icon: UserCheck },
         { name: 'Staff Directory', path: '/staff', icon: Users },
-        { name: 'Principal Admin', path: '/head/principal', icon: Award }
+        { name: 'Principal Account', path: '/head/principal', icon: Award }
       ]
     },
     {
-      key: 'finance',
-      title: 'FEES & FINANCE',
+      key: 'operations',
+      title: 'MANAGEMENT & OPERATIONS',
       collapsible: true,
       items: [
-        { name: 'Fees Management', path: '/fees', icon: Receipt }
-      ]
-    },
-    {
-      key: 'inventory',
-      title: 'INVENTORY & STORE',
-      collapsible: true,
-      items: [
-        { name: 'Inventory & Store', path: '/inventory', icon: Package, badge: 'Store ERP' }
-      ]
-    },
-    {
-      key: 'library',
-      title: 'LIBRARY MANAGEMENT',
-      collapsible: true,
-      items: [
-        { name: 'Library & Books', path: '/library', icon: Library, badge: 'Catalogue' }
-      ]
-    },
-    {
-      key: 'transport',
-      title: 'TRANSPORT & FLEET',
-      collapsible: true,
-      items: [
-        { name: 'Buses & Routes', path: '/transport', icon: Bus }
-      ]
-    },
-    {
-      key: 'communication',
-      title: 'COMMUNICATION',
-      collapsible: true,
-      items: [
+        { name: 'Fees Management', path: '/fees', icon: Receipt },
+        { name: 'Inventory & Store', path: '/inventory', icon: Package, badge: 'ERP' },
+        { name: 'Library & Books', path: '/library', icon: Library, badge: 'Books' },
+        { name: 'Transport & Buses', path: '/transport', icon: Bus },
         { name: 'Notice Board', path: '/notifications/notices', icon: Bell }
       ]
     },
@@ -138,7 +106,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       items: [
         { name: 'School Profile Info', path: '/config/school-info', icon: Building },
         { name: 'Role & Permissions', path: '/head/security', icon: ShieldCheck },
-        { name: 'System Activity Logs', path: '/head/activity', icon: Activity },
+        { name: 'Activity Audit Logs', path: '/head/activity', icon: Activity },
         { name: 'System Settings', path: '/head/settings', icon: Settings }
       ]
     }

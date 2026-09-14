@@ -95,20 +95,17 @@ export default function Topbar({ setMobileOpen }) {
               <img
                 src="/logo.png"
                 alt="NVP School Logo"
-                className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full bg-white p-0.5 shadow-md border border-indigo-400/40 group-hover:scale-110 transition-transform shrink-0"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full bg-white p-0.5 shadow-md border border-indigo-400/40 group-hover:scale-105 transition-transform shrink-0"
               />
-              <div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="font-heading font-black text-white text-sm sm:text-base md:text-lg tracking-tight truncate group-hover:text-indigo-300 transition">
-                    NVP <span className="text-gradient-indigo">SCHOOL</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="font-heading font-black text-white text-sm sm:text-base tracking-tight truncate group-hover:text-indigo-300 transition">
+                    NVP SCHOOL
                   </h1>
-                  <span className="hidden md:inline-block px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
+                  <span className="hidden xl:inline-block px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
                     NIMBI JODHAN
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium hidden sm:block truncate">
-                  School Management ERP
-                </p>
               </div>
             </div>
           </div>
