@@ -133,6 +133,8 @@ app.use('/api/transport', require('./routes/transport.routes'));
 app.use('/api/timetable', require('./routes/timetable.routes'));
 app.use('/api/student-portal', require('./routes/studentPortal.routes'));
 app.use('/api/holidays', require('./routes/holiday.routes'));
+app.use('/api/inventory', require('./routes/inventory.routes'));
+app.use('/api/library', require('./routes/library.routes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

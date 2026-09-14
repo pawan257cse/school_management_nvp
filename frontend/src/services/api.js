@@ -302,4 +302,20 @@ export const getStudentFeesApi = () => API.get('/student-portal/fees');
 export const getStudentAssignmentsApi = () => API.get('/student-portal/assignments');
 export const getStudentAttendanceApi = () => API.get('/student-portal/attendance');
 
+// Inventory & Store Services
+export const getInventoryItemsApi = (params) => API.get('/inventory/items', { params });
+export const createInventoryItemApi = (data) => API.post('/inventory/items', data);
+export const updateInventoryItemApi = (id, data) => API.put(`/inventory/items/${id}`, data);
+export const recordStockMovementApi = (data) => API.post('/inventory/stock-movement', data);
+export const getStockTransactionsApi = () => API.get('/inventory/transactions');
+export const getSuppliersApi = () => API.get('/inventory/suppliers');
+export const createSupplierApi = (data) => API.post('/inventory/suppliers', data);
+
+// Library Services
+export const getLibraryBooksApi = (params) => API.get('/library/books', { params });
+export const createLibraryBookApi = (data) => API.post('/library/books', data);
+export const issueLibraryBookApi = (data) => API.post('/library/issue', data);
+export const returnLibraryBookApi = (issueId) => API.post(`/library/return/${issueId}`);
+export const getLibraryIssuesApi = () => API.get('/library/issues');
+
 export default API;

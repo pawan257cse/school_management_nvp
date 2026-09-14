@@ -34,6 +34,9 @@ import FacultyAttendance from './pages/head/TeacherAttendance';
 import TransportManagement from './pages/head/TransportManagement';
 import HeadAssignmentManagement from './pages/head/HeadAssignmentManagement';
 import CredentialsManagement from './pages/head/CredentialsManagement';
+import HeadControlCenter from './pages/head/HeadControlCenter';
+import InventoryManagement from './pages/head/InventoryManagement';
+import LibraryManagement from './pages/head/LibraryManagement';
 
 // Timetable & Student Portal Pages
 import TimetableManagement from './pages/principal/TimetableManagement';
@@ -176,6 +179,12 @@ export default function App() {
           {/* HEAD Super Admin Routes */}
           <Route path="/head-dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
           <Route path="/dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
+          <Route path="/head/control-center" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadControlCenter /></ProtectedLayout>} />
+          <Route path="/control-center" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadControlCenter /></ProtectedLayout>} />
+          <Route path="/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
+          <Route path="/head/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
+          <Route path="/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
+          <Route path="/head/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
           <Route path="/head/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
           <Route path="/accounts/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
           <Route path="/head/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
