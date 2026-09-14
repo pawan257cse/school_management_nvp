@@ -146,7 +146,7 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 2: Take Attendance */}
+          {/* Tile 2: Student Attendance */}
           <Link
             to="/teacher/attendance"
             className="p-4 rounded-2xl bg-gradient-to-b from-emerald-50/90 to-emerald-100/50 border border-emerald-200/80 shadow-sm hover:shadow-md hover:border-emerald-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
@@ -155,26 +155,26 @@ export default function TeacherDashboard() {
               <CheckSquare className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-emerald-950 text-sm group-hover:text-emerald-600 transition">
-              Mark Attendance
+              Student Attendance
             </h3>
             <p className="text-[11px] text-emerald-700/70 mt-0.5 line-clamp-1 font-medium">
-              Daily student attendance
+              Mark class students attendance
             </p>
           </Link>
 
-          {/* Tile 3: Faculty / Teacher Attendance */}
+          {/* Tile 3: My Attendance (Self Faculty Attendance) */}
           <Link
-            to="/head/teacher-attendance"
+            to="/teacher/my-attendance"
             className="p-4 rounded-2xl bg-gradient-to-b from-cyan-50/90 to-cyan-100/50 border border-cyan-200/80 shadow-sm hover:shadow-md hover:border-cyan-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <UserCheck className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-cyan-950 text-sm group-hover:text-cyan-600 transition">
-              Teacher Attendance
+              My Attendance
             </h3>
             <p className="text-[11px] text-cyan-700/70 mt-0.5 line-clamp-1 font-medium">
-              Faculty duty & log
+              My faculty duty & log
             </p>
           </Link>
 

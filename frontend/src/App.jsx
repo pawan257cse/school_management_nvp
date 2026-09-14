@@ -178,7 +178,8 @@ export default function App() {
           <Route path="/notifications/notices" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><NoticeBoard /></ProtectedLayout>} />
           <Route path="/results" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherResults /></ProtectedLayout>} />
           <Route path="/attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><TeacherAttendance /></ProtectedLayout>} />
-          <Route path="/head/teacher-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FacultyAttendance /></ProtectedLayout>} />
+          <Route path="/head/teacher-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><FacultyAttendance /></ProtectedLayout>} />
+          <Route path="/teacher/my-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><FacultyAttendance /></ProtectedLayout>} />
           <Route path="/transport" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TransportManagement /></ProtectedLayout>} />
           <Route path="/academic/timetable" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TimetableManagement /></ProtectedLayout>} />
 
