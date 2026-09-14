@@ -13,12 +13,25 @@ export default function DataTable({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const searchMatch = (obj, term) => {
+    if (obj === null || obj === undefined) return false;
+    if (typeof obj === 'string' || typeof obj === 'number') {
+      return String(obj).toLowerCase().includes(term);
+    }
+    if (Array.isArray(obj)) {
+      return obj.some(item => searchMatch(item, term));
+    }
+    if (typeof obj === 'object') {
+      return Object.values(obj).some(val => searchMatch(val, term));
+    }
+    return false;
+  };
+
   // Filter items based on search query
   const filteredData = data.filter(item => {
-    if (!search) return true;
-    return Object.values(item).some(val =>
-      String(val || '').toLowerCase().includes(search.toLowerCase())
-    );
+    if (!search.trim()) return true;
+    const term = search.toLowerCase().trim();
+    return searchMatch(item, term);
   });
 
   // Pagination logic
