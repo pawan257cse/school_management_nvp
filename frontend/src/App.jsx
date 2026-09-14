@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { WifiOff } from 'lucide-react';
 
 // Common Components
 import Sidebar from './components/common/Sidebar';
@@ -144,6 +145,21 @@ export default function App() {
     }
   });
 
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const handleSplashFinish = () => {
     try {
       sessionStorage.setItem('nvp_app_splash_shown', 'true');
@@ -153,6 +169,27 @@ export default function App() {
 
   return (
     <AuthProvider>
+      {!isOnline && (
+        <div className="fixed inset-0 z-[100000] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center text-white">
+          <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl max-w-sm w-full space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 mx-auto rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center">
+              <WifiOff className="w-8 h-8" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="font-heading font-black text-xl text-white">No Internet Connection</h3>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                NVP School ERP requires an active network. Please check your Wi-Fi or mobile data connection.
+              </p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition cursor-pointer"
+            >
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      )}
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
