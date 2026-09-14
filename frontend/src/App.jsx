@@ -136,11 +136,24 @@ const AdminGate = () => {
 };
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return !sessionStorage.getItem('nvp_app_splash_shown');
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const handleSplashFinish = () => {
+    try {
+      sessionStorage.setItem('nvp_app_splash_shown', 'true');
+    } catch (e) {}
+    setShowSplash(false);
+  };
 
   return (
     <AuthProvider>
-      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
           {/* Root App Entry - Instant Dashboard Redirection for logged in users */}
