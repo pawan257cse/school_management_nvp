@@ -28,7 +28,14 @@ export default function TeacherAttendance() {
 
         if (res.data?.success && res.data.classes && res.data.classes.length > 0) {
           setClasses(res.data.classes);
-          setSelectedClassId(res.data.classes[0]._id);
+          // Priority auto-selection: pre-select class where teacher is classTeacher or attendanceTeacher
+          const userIdStr = (user?._id || '').toString();
+          const myClass = res.data.classes.find(c => {
+            const ctId = (c.classTeacher?._id || c.classTeacher || '').toString();
+            const atId = (c.attendanceTeacher?._id || c.attendanceTeacher || '').toString();
+            return ctId === userIdStr || atId === userIdStr;
+          });
+          setSelectedClassId(myClass ? myClass._id : res.data.classes[0]._id);
         } else {
           setClasses([]);
           setSelectedClassId('');

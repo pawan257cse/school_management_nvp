@@ -69,6 +69,7 @@ router.get('/my-attendance-classes', protect, async (req, res) => {
     }
 
     // 2. Query classes where teacher is designated as classTeacher, attendanceTeacher, or in class lists
+    const teacherId = req.user._id;
     let classes = await Class.find({
       status: 'active',
       $or: [
