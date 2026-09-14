@@ -18,13 +18,16 @@ router.get('/', protect, async (req, res) => {
       .populate('subjects', 'name code')
       .sort({ name: 1 });
 
-    // Restrict teachers strictly to their assigned classes
-    if (req.user.role === 'TEACHER') {
-      const allowedClassIds = await getTeacherClassIds(req.user);
-      classes = classes.filter(c => allowedClassIds.includes(c._id.toString()));
-    }
+    // Compute real live studentCount for each class from Student database
+    const Student = require('../models/Student');
+    const enrichedClasses = await Promise.all(classes.map(async (cls) => {
+      const realCount = await Student.countDocuments({ class: cls._id, status: 'active' });
+      const doc = cls.toObject();
+      doc.studentCount = realCount;
+      return doc;
+    }));
 
-    res.json({ success: true, count: classes.length, classes });
+    res.json({ success: true, count: enrichedClasses.length, classes: enrichedClasses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
