@@ -72,16 +72,25 @@ export default function Topbar({ setMobileOpen }) {
       <header className="no-print sticky top-0 z-30 h-16 sm:h-20 bg-slate-900 border-b border-slate-800 px-3 sm:px-8 flex items-center justify-between shadow-lg">
         {/* Left Title & Mobile Menu Trigger */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
-            aria-label="Open Navigation Menu"
-          >
-            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
+          {isHeadOrAdmin && (
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          )}
 
           <div className="min-w-0 flex items-center gap-3">
-            <div>
+            <div 
+              onClick={() => {
+                if (user?.role === 'TEACHER') navigate('/teacher-dashboard');
+                else if (user?.role === 'STUDENT') navigate('/student-dashboard');
+                else navigate('/head-dashboard');
+              }}
+              className="cursor-pointer"
+            >
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="font-heading font-black text-white text-sm sm:text-base md:text-lg tracking-tight truncate">
                   NVP <span className="text-gradient-indigo">SCHOOL</span>
@@ -91,7 +100,7 @@ export default function Topbar({ setMobileOpen }) {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 font-medium hidden sm:block truncate">
-                School Management SaaS ERP
+                School Management ERP
               </p>
             </div>
           </div>
@@ -202,13 +211,21 @@ export default function Topbar({ setMobileOpen }) {
             )}
           </div>
 
-          {/* User Badge */}
-          <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-800">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black flex items-center justify-center text-xs sm:text-sm shadow-lg shadow-indigo-500/30">
+          {/* User Badge - Click to view Profile */}
+          <div
+            onClick={() => {
+              if (user?.role === 'TEACHER') navigate('/teacher/profile');
+              else if (user?.role === 'STUDENT') navigate('/student-dashboard');
+              else navigate('/head/credentials');
+            }}
+            className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-800 cursor-pointer hover:opacity-90 transition group"
+            title="Click to View My Profile"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black flex items-center justify-center text-xs sm:text-sm shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
               {user?.name?.[0]}
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-xs font-bold text-white truncate max-w-[150px]">{user?.name}</p>
+              <p className="text-xs font-bold text-white group-hover:text-indigo-300 transition truncate max-w-[150px]">{user?.name}</p>
               <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">{user?.role}</span>
             </div>
           </div>
