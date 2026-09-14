@@ -107,7 +107,148 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* 2. TCS mTOP Signature Highlight: LIVE TODAY'S CLASS TRACKER CARD */}
+      {/* 2. QUICK ACCESS PORTAL TILES GRID (1-Click Shortcuts for Students) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-heading font-black text-slate-900 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            <span>Student Dashboard Portal (Quick Action Tiles)</span>
+          </h2>
+          <span className="text-xs font-semibold text-slate-400">1-Click Direct Access</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5">
+          {/* Tile 1: Class Timetable */}
+          <Link
+            to="/student/timetable"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition">
+              Class Timetable
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Daily periods & timings
+            </p>
+          </Link>
+
+          {/* Tile 2: Homework & Diary */}
+          <Link
+            to="/student/homework"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition">
+              <FileText className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-blue-600 transition">
+              Homework Diary
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Daily tasks & assignments
+            </p>
+          </Link>
+
+          {/* Tile 3: My Attendance */}
+          <Link
+            to="/student/attendance"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:bg-emerald-600 group-hover:text-white transition">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition">
+              My Attendance
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Present days & percentage
+            </p>
+          </Link>
+
+          {/* Tile 4: Exam Results & Marks */}
+          <Link
+            to="/student/results"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:bg-amber-600 group-hover:text-white transition">
+              <Award className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-amber-600 transition">
+              Report Cards
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Exam marks & grades
+            </p>
+          </Link>
+
+          {/* Tile 5: Fee Receipts */}
+          <Link
+            to="/student/fees"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition">
+              <Receipt className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-purple-600 transition">
+              Fee Receipts
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Payments & pending dues
+            </p>
+          </Link>
+
+          {/* Tile 6: School Notice Board */}
+          <Link
+            to="/notifications"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3 group-hover:bg-rose-600 group-hover:text-white transition">
+              <Bell className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-rose-600 transition">
+              Notice Board
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Holidays & circulars
+            </p>
+          </Link>
+
+          {/* Tile 7: Digital Library */}
+          <Link
+            to="/library"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3 group-hover:bg-teal-600 group-hover:text-white transition">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-teal-600 transition">
+              Library Books
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Book catalogue & issues
+            </p>
+          </Link>
+
+          {/* Tile 8: Transport & Bus */}
+          <Link
+            to="/transport"
+            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-500 hover:-translate-y-0.5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-3 group-hover:bg-cyan-600 group-hover:text-white transition">
+              <School className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-cyan-600 transition">
+              Transport & Bus
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+              Bus routes & timings
+            </p>
+          </Link>
+        </div>
+      </div>
+
+      {/* 3. TCS mTOP Signature Highlight: LIVE TODAY'S CLASS TRACKER CARD */}
       <div className="p-6 rounded-3xl bg-white border border-indigo-200 shadow-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -z-10 pointer-events-none" />
 
