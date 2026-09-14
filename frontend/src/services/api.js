@@ -31,12 +31,19 @@ API.interceptors.request.use((config) => {
 });
 
 // Response Interceptor: Offline Caching & Session Handling
+const buildCacheKey = (config) => {
+  if (!config) return 'nvp_cache_default';
+  const url = config.url || '';
+  const paramsStr = config.params ? JSON.stringify(config.params) : '';
+  return `nvp_offline_cache_${url}_${paramsStr}`;
+};
+
 API.interceptors.response.use(
   (response) => {
     // Automatically cache successful GET API responses in localStorage for offline viewing
     if (response.config && response.config.method === 'get' && response.data?.success) {
       try {
-        const cacheKey = `nvp_offline_cache_${response.config.url}`;
+        const cacheKey = buildCacheKey(response.config);
         localStorage.setItem(cacheKey, JSON.stringify(response.data));
       } catch (e) {}
     }
@@ -46,10 +53,10 @@ API.interceptors.response.use(
     // Fallback to offline cached data if network is disconnected or server is unreachable
     if (error.config && error.config.method === 'get' && (!error.response || error.code === 'ERR_NETWORK')) {
       try {
-        const cacheKey = `nvp_offline_cache_${error.config.url}`;
+        const cacheKey = buildCacheKey(error.config);
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
-          console.log(`[Offline Cache] Serving cached data for ${error.config.url}`);
+          console.log(`[Offline Cache] Serving cached data for ${cacheKey}`);
           return Promise.resolve({
             data: JSON.parse(cached),
             status: 200,
