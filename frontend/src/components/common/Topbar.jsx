@@ -10,6 +10,8 @@ export default function Topbar({ setMobileOpen }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const isHeadOrAdmin = user?.role === 'HEAD' || user?.role === 'PRINCIPAL';
+
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -37,17 +39,17 @@ export default function Topbar({ setMobileOpen }) {
     }
   }, [user]);
 
-  // Keyboard shortcut Ctrl+K / Cmd+K for search
+  // Keyboard shortcut Ctrl+K / Cmd+K for search (Only for Head & Principal)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if (isHeadOrAdmin && (e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setShowSearchModal(prev => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isHeadOrAdmin]);
 
   const handleMarkRead = async (id) => {
     try {
@@ -64,8 +66,6 @@ export default function Topbar({ setMobileOpen }) {
     month: 'short',
     year: 'numeric'
   });
-
-  const isHeadOrAdmin = user?.role === 'HEAD' || user?.role === 'PRINCIPAL';
 
   return (
     <>
@@ -106,32 +106,36 @@ export default function Topbar({ setMobileOpen }) {
           </div>
         </div>
 
-        {/* Global Search Trigger Bar */}
-        <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
-          <button
-            onClick={() => setShowSearchModal(true)}
-            className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-400 text-xs font-medium flex items-center justify-between hover:border-indigo-500/50 hover:bg-slate-950 transition group"
-          >
-            <div className="flex items-center gap-2.5">
-              <Search className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
-              <span>Search students, teachers, inventory, books...</span>
-            </div>
-            <kbd className="hidden lg:inline-block px-2 py-0.5 text-[10px] font-mono text-slate-500 bg-slate-900 border border-slate-800 rounded">
-              Ctrl+K
-            </kbd>
-          </button>
-        </div>
+        {/* Global Search Trigger Bar (Head / Principal ONLY) */}
+        {isHeadOrAdmin && (
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-400 text-xs font-medium flex items-center justify-between hover:border-indigo-500/50 hover:bg-slate-950 transition group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Search className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <span>Search students, teachers, inventory, books...</span>
+              </div>
+              <kbd className="hidden lg:inline-block px-2 py-0.5 text-[10px] font-mono text-slate-500 bg-slate-900 border border-slate-800 rounded">
+                Ctrl+K
+              </kbd>
+            </button>
+          </div>
+        )}
 
         {/* Right Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Mobile Search Icon Trigger */}
-          <button
-            onClick={() => setShowSearchModal(true)}
-            className="md:hidden p-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-800 hover:text-white"
-            title="Search ERP"
-          >
-            <Search className="w-4 h-4" />
-          </button>
+          {/* Mobile Search Icon Trigger (Head / Principal ONLY) */}
+          {isHeadOrAdmin && (
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="md:hidden p-2 rounded-xl bg-slate-900 text-slate-300 border border-slate-800 hover:text-white"
+              title="Search ERP"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Quick Actions Drawer Trigger (Head/Principal) */}
           {isHeadOrAdmin && (
