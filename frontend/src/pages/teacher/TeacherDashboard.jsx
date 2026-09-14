@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getTeacherMyAnalyticsApi, getQuestionPapersApi, getMyTimetableApi, getExamsApi } from '../../services/api';
 import StatCard from '../../components/common/StatCard';
-import { School, BookOpen, FileText, ClipboardList, CheckSquare, BookMarked, Plus, ArrowRight, Sparkles, Clock, MapPin, CheckCircle2, Calendar } from 'lucide-react';
+import { School, BookOpen, FileText, ClipboardList, CheckSquare, BookMarked, Plus, ArrowRight, Sparkles, Clock, MapPin, CheckCircle2, Calendar, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function TeacherDashboard() {
@@ -120,7 +120,7 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* QUICK ACCESS PORTAL TILES GRID - COLORFUL & AESTHETIC */}
+      {/* QUICK ACCESS PORTAL TILES GRID - CENTER ALIGNED & COLORFUL */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase flex items-center gap-2">
@@ -133,9 +133,9 @@ export default function TeacherDashboard() {
           {/* Tile 1: Teaching Timetable */}
           <Link
             to="/teacher/timetable"
-            className="p-4 rounded-2xl bg-gradient-to-b from-indigo-50/90 to-indigo-100/50 border border-indigo-200/80 shadow-sm hover:shadow-md hover:border-indigo-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-indigo-50/90 to-indigo-100/50 border border-indigo-200/80 shadow-sm hover:shadow-md hover:border-indigo-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <Clock className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-indigo-950 text-sm group-hover:text-indigo-600 transition">
@@ -149,9 +149,9 @@ export default function TeacherDashboard() {
           {/* Tile 2: Take Attendance */}
           <Link
             to="/teacher/attendance"
-            className="p-4 rounded-2xl bg-gradient-to-b from-emerald-50/90 to-emerald-100/50 border border-emerald-200/80 shadow-sm hover:shadow-md hover:border-emerald-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-emerald-50/90 to-emerald-100/50 border border-emerald-200/80 shadow-sm hover:shadow-md hover:border-emerald-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <CheckSquare className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-emerald-950 text-sm group-hover:text-emerald-600 transition">
@@ -162,12 +162,28 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 3: Question Paper Creator */}
+          {/* Tile 3: Faculty / Teacher Attendance */}
+          <Link
+            to="/head/teacher-attendance"
+            className="p-4 rounded-2xl bg-gradient-to-b from-cyan-50/90 to-cyan-100/50 border border-cyan-200/80 shadow-sm hover:shadow-md hover:border-cyan-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <h3 className="font-heading font-bold text-cyan-950 text-sm group-hover:text-cyan-600 transition">
+              Teacher Attendance
+            </h3>
+            <p className="text-[11px] text-cyan-700/70 mt-0.5 line-clamp-1 font-medium">
+              Faculty duty & log
+            </p>
+          </Link>
+
+          {/* Tile 4: Question Paper Creator */}
           <Link
             to="/teacher/question-papers"
-            className="p-4 rounded-2xl bg-gradient-to-b from-blue-50/90 to-blue-100/50 border border-blue-200/80 shadow-sm hover:shadow-md hover:border-blue-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-blue-50/90 to-blue-100/50 border border-blue-200/80 shadow-sm hover:shadow-md hover:border-blue-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-700 text-white shadow-md shadow-blue-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-700 text-white shadow-md shadow-blue-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <FileText className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-blue-950 text-sm group-hover:text-blue-600 transition">
@@ -178,12 +194,12 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 4: Post Homework */}
+          {/* Tile 5: Post Homework */}
           <Link
             to="/teacher/assignments"
-            className="p-4 rounded-2xl bg-gradient-to-b from-amber-50/90 to-amber-100/50 border border-amber-200/80 shadow-sm hover:shadow-md hover:border-amber-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-amber-50/90 to-amber-100/50 border border-amber-200/80 shadow-sm hover:shadow-md hover:border-amber-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <ClipboardList className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-amber-950 text-sm group-hover:text-amber-600 transition">
@@ -194,12 +210,12 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 5: Upload Marks / Results */}
+          {/* Tile 6: Upload Marks / Results */}
           <Link
             to="/teacher/results"
-            className="p-4 rounded-2xl bg-gradient-to-b from-purple-50/90 to-purple-100/50 border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-purple-50/90 to-purple-100/50 border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700 text-white shadow-md shadow-purple-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700 text-white shadow-md shadow-purple-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <BookMarked className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-purple-950 text-sm group-hover:text-purple-600 transition">
@@ -210,12 +226,12 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 6: Upload Study Materials */}
+          {/* Tile 7: Upload Study Materials */}
           <Link
             to="/teacher/materials"
-            className="p-4 rounded-2xl bg-gradient-to-b from-teal-50/90 to-teal-100/50 border border-teal-200/80 shadow-sm hover:shadow-md hover:border-teal-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-teal-50/90 to-teal-100/50 border border-teal-200/80 shadow-sm hover:shadow-md hover:border-teal-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white shadow-md shadow-teal-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white shadow-md shadow-teal-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-teal-950 text-sm group-hover:text-teal-600 transition">
@@ -226,12 +242,12 @@ export default function TeacherDashboard() {
             </p>
           </Link>
 
-          {/* Tile 7: School Notice Board */}
+          {/* Tile 8: School Notice Board */}
           <Link
             to="/notifications"
-            className="p-4 rounded-2xl bg-gradient-to-b from-rose-50/90 to-rose-100/50 border border-rose-200/80 shadow-sm hover:shadow-md hover:border-rose-400 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-rose-50/90 to-rose-100/50 border border-rose-200/80 shadow-sm hover:shadow-md hover:border-rose-400 hover:-translate-y-0.5 transition-all group flex flex-col items-center justify-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-md shadow-rose-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-md shadow-rose-500/25 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
               <Sparkles className="w-5 h-5" />
             </div>
             <h3 className="font-heading font-bold text-rose-950 text-sm group-hover:text-rose-600 transition">
