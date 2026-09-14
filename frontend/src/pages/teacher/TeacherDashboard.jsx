@@ -65,13 +65,15 @@ export default function TeacherDashboard() {
   return (
     <div className="space-y-6">
       {/* Teacher Personal Greeting Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="space-y-2">
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold uppercase tracking-wider">
+            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold uppercase tracking-wider">
               Faculty Portal
             </span>
-            <span className="text-xs text-slate-400 font-medium">EMP ID: {user?.employeeId}</span>
+            {user?.employeeId && (
+              <span className="text-xs text-slate-400 font-medium font-mono">EMP ID: {user.employeeId}</span>
+            )}
             {isClassTeacher && (
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -79,39 +81,33 @@ export default function TeacherDashboard() {
               </span>
             )}
           </div>
-          <h2 className="font-heading font-extrabold text-2xl sm:text-3xl tracking-tight">
+          
+          <h2 className="font-heading font-black text-2xl sm:text-3xl tracking-tight">
             Hello, {user?.name}!
           </h2>
-          <p className="text-blue-200 text-xs max-w-xl">
-            You are currently assigned to <strong className="text-white">{assignedClasses.length} Classes</strong> and <strong className="text-white">{assignedSubjects.length} Subjects</strong>.
-          </p>
-        </div>
 
-        {/* Quick Action Buttons Bar */}
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <Link
-            to="/teacher/timetable"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all"
-          >
-            <Clock className="w-4 h-4" />
-            <span>My Routine</span>
-          </Link>
-          <Link
-            to="/teacher/question-papers/create"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Paper</span>
-          </Link>
-          {isClassTeacher && (
-            <Link
-              to="/teacher/attendance"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition-all"
-            >
-              <CheckSquare className="w-4 h-4 text-white" />
-              <span>Mark Attendance</span>
-            </Link>
-          )}
+          {/* Clean Assigned Classes & Subjects Badges */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            {assignedClasses.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+                <School className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span className="text-slate-300 font-medium">Assigned Classes:</span>
+                <span className="font-bold text-white">
+                  {assignedClasses.map(c => `Class ${c.name} (${c.section || 'A'})`).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {assignedSubjects.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+                <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="text-slate-300 font-medium">Assigned Subjects:</span>
+                <span className="font-bold text-white">
+                  {assignedSubjects.map(s => s.name || s).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

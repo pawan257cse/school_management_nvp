@@ -236,8 +236,8 @@ export default function TeacherProfile() {
                   </h3>
                 </div>
               </div>
-              <p className="text-xs text-emerald-200/90 leading-relaxed">
-                You have active student attendance marking and class roster authority for your assigned class.
+              <p className="text-xs text-emerald-200 font-medium">
+                Assigned Class Teacher & Student Roster In-Charge.
               </p>
             </div>
           )}
