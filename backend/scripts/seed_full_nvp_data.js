@@ -400,12 +400,84 @@ async function seedAll() {
     console.log(`Timetable synchronized for Class ${cName}`);
   }
 
-  // 8. Sample Students Seeding (DISABLED - Students should only be added manually by School Admin)
-  console.log('Skipping Sample Students (Waiting for real student admission by School Admin)...');
+  // 8. Students Seeding for all classes (PG to 7)
+  console.log('Seeding initial active students and student portal accounts for all classes...');
+  const sampleStudentsData = [
+    { class: 'PG', name: 'Aarav Sharma', gender: 'Male', rollNo: 1, dob: '2022-04-15' },
+    { class: 'PG', name: 'Ananya Verma', gender: 'Female', rollNo: 2, dob: '2022-06-20' },
+    { class: 'LKG', name: 'Kabir Rathore', gender: 'Male', rollNo: 1, dob: '2021-02-10' },
+    { class: 'LKG', name: 'Riya Kanwar', gender: 'Female', rollNo: 2, dob: '2021-08-12' },
+    { class: 'UKG', name: 'Devendra Singh', gender: 'Male', rollNo: 1, dob: '2020-03-25' },
+    { class: 'UKG', name: 'Kavya Choudhary', gender: 'Female', rollNo: 2, dob: '2020-09-05' },
+    { class: '1', name: 'Aditya Raj', gender: 'Male', rollNo: 1, dob: '2019-01-14' },
+    { class: '1', name: 'Pooja Jangid', gender: 'Female', rollNo: 2, dob: '2019-07-22' },
+    { class: '2', name: 'Harish Kumar', gender: 'Male', rollNo: 1, dob: '2018-05-18' },
+    { class: '2', name: 'Suman Saini', gender: 'Female', rollNo: 2, dob: '2018-11-30' },
+    { class: '3', name: 'Manish Sharma', gender: 'Male', rollNo: 1, dob: '2017-03-12' },
+    { class: '3', name: 'Divya Kumawat', gender: 'Female', rollNo: 2, dob: '2017-10-08' },
+    { class: '4', name: 'Yashwardhan Singh', gender: 'Male', rollNo: 1, dob: '2016-02-19' },
+    { class: '4', name: 'Sneha Prajapat', gender: 'Female', rollNo: 2, dob: '2016-08-14' },
+    { class: '5', name: 'Rahul Gurjar', gender: 'Male', rollNo: 1, dob: '2015-04-05' },
+    { class: '5', name: 'Neha Sharma', gender: 'Female', rollNo: 2, dob: '2015-12-01' },
+    { class: '6', name: 'Vikas Shekhawat', gender: 'Male', rollNo: 1, dob: '2014-06-25' },
+    { class: '6', name: 'Priya Meena', gender: 'Female', rollNo: 2, dob: '2014-09-17' },
+    { class: '7', name: 'Amit Kumar', gender: 'Male', rollNo: 1, dob: '2013-01-30' },
+    { class: '7', name: 'Pooja Kanwar', gender: 'Female', rollNo: 2, dob: '2013-11-11' }
+  ];
+
+  for (const stDef of sampleStudentsData) {
+    const clsDoc = classMap[stDef.class];
+    if (!clsDoc) continue;
+
+    const admissionNo = `NVP2026${stDef.class.toUpperCase()}${stDef.rollNo.toString().padStart(2, '0')}`;
+    let stDoc = await Student.findOne({ admissionNo });
+
+    if (!stDoc) {
+      stDoc = await Student.create({
+        name: stDef.name,
+        admissionNo,
+        rollNo: stDef.rollNo,
+        class: clsDoc._id,
+        gender: stDef.gender,
+        dob: new Date(stDef.dob),
+        fatherName: `Father of ${stDef.name}`,
+        motherName: `Mother of ${stDef.name}`,
+        guardianMobile: '+91 98290 99999',
+        address: 'Nimbi Jodhan, Ladnun, Rajasthan',
+        status: 'active',
+        academicYear: '2026-2027'
+      });
+      console.log(`Created Student: ${stDef.name} (Class ${stDef.class}, AdmNo: ${admissionNo})`);
+    }
+
+    // Ensure Student Portal User Account exists
+    const email = `student.${admissionNo.toLowerCase()}@nvpschool.edu.in`;
+    let userDoc = await User.findOne({ email });
+    if (!userDoc) {
+      const studentPass = `Nvp@${admissionNo}`;
+      const passHash = await bcrypt.hash(studentPass, salt);
+      await User.create({
+        name: stDef.name,
+        email,
+        passwordHash: passHash,
+        generatedPassword: studentPass,
+        role: 'STUDENT',
+        mobile: '+91 98290 99999',
+        studentRef: stDoc._id,
+        studentClass: clsDoc._id,
+        admissionNo,
+        status: 'active'
+      });
+      console.log(`  -> Created Student Portal User: ${email}`);
+    }
+  }
+
+  // Update Class student counts
   for (const cName of classNames) {
     const cls = classMap[cName];
     if (cls) {
-      cls.studentCount = 0;
+      const cnt = await Student.countDocuments({ class: cls._id, status: 'active' });
+      cls.studentCount = cnt;
       await cls.save();
     }
   }
