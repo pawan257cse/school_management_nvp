@@ -50,11 +50,10 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const headSections = [
     {
       key: 'overviews',
-      title: 'DASHBOARD & CENTER',
+      title: 'DASHBOARD',
       collapsible: false,
       items: [
-        { name: 'Executive Overview', path: '/head-dashboard', icon: LayoutDashboard },
-        { name: 'Head Control Center', path: '/head/control-center', icon: ShieldCheck, badge: 'ERP Hub' }
+        { name: 'Dashboard', path: '/head-dashboard', icon: LayoutDashboard }
       ]
     },
     {
