@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Users, UserCheck, School, BookOpen, Clock, FileText, 
   Receipt, Package, Library, Bus, Bell, ShieldCheck, 
@@ -10,6 +11,7 @@ import { getDashboardStatsApi, getInventoryItemsApi, getLibraryBooksApi } from '
 
 export default function HeadControlCenter() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [inventoryStats, setInventoryStats] = useState({ count: 0, lowStockCount: 0 });
   const [libraryStats, setLibraryStats] = useState({ totalCopies: 0, availableCopies: 0 });
@@ -48,6 +50,11 @@ export default function HeadControlCenter() {
     }
     loadControlCenterData();
   }, []);
+
+  const gLower = (user?.gender || '').toLowerCase();
+  const nLower = (user?.name || '').toLowerCase();
+  const isFemale = gLower === 'female' || gLower === 'f' || nLower.startsWith('mrs') || nLower.startsWith('ms') || nLower.startsWith('miss');
+  const honorific = isFemale ? "Ma'am" : "Sir";
 
   const erpModules = [
     {
@@ -219,10 +226,10 @@ export default function HeadControlCenter() {
             </span>
           </div>
           <h1 className="font-heading font-black text-2xl sm:text-3xl tracking-tight mt-2">
-            NVP School Master Management Hub
+            Hello, {user?.name || 'Head Admin'} {honorific}!
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm mt-1 font-medium">
-            Centralized administrative control center for all 13 ERP modules, store inventory, library, academics & security.
+            NVP School Master Management Hub — Centralized control center for all 13 ERP modules & operations.
           </p>
         </div>
 

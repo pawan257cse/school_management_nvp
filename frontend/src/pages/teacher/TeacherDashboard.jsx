@@ -82,9 +82,18 @@ export default function TeacherDashboard() {
             )}
           </div>
           
-          <h2 className="font-heading font-black text-2xl sm:text-3xl tracking-tight">
-            Hello, {user?.name}!
-          </h2>
+          {/* Dynamic Gender Honorific: Sir vs Ma'am */}
+          {(() => {
+            const gLower = (user?.gender || '').toLowerCase();
+            const nLower = (user?.name || '').toLowerCase();
+            const isFemale = gLower === 'female' || gLower === 'f' || nLower.startsWith('mrs') || nLower.startsWith('ms') || nLower.startsWith('miss');
+            const honorific = isFemale ? "Ma'am" : "Sir";
+            return (
+              <h2 className="font-heading font-black text-2xl sm:text-3xl tracking-tight">
+                Hello, {user?.name} {honorific}!
+              </h2>
+            );
+          })()}
 
           {/* Clean Assigned Classes & Subjects Badges */}
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -111,7 +120,7 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      {/* QUICK ACCESS PORTAL TILES GRID */}
+      {/* QUICK ACCESS PORTAL TILES GRID - COLORFUL & AESTHETIC */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase flex items-center gap-2">
@@ -124,15 +133,15 @@ export default function TeacherDashboard() {
           {/* Tile 1: Teaching Timetable */}
           <Link
             to="/teacher/timetable"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-indigo-50/90 to-indigo-100/50 border border-indigo-200/80 shadow-sm hover:shadow-md hover:border-indigo-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-md shadow-indigo-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition">
+            <h3 className="font-heading font-bold text-indigo-950 text-sm group-hover:text-indigo-600 transition">
               Class Routine
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-indigo-700/70 mt-0.5 line-clamp-1 font-medium">
               My daily teaching periods
             </p>
           </Link>
@@ -140,15 +149,15 @@ export default function TeacherDashboard() {
           {/* Tile 2: Take Attendance */}
           <Link
             to="/teacher/attendance"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-emerald-50/90 to-emerald-100/50 border border-emerald-200/80 shadow-sm hover:shadow-md hover:border-emerald-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:bg-emerald-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <CheckSquare className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-emerald-600 transition">
+            <h3 className="font-heading font-bold text-emerald-950 text-sm group-hover:text-emerald-600 transition">
               Mark Attendance
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-emerald-700/70 mt-0.5 line-clamp-1 font-medium">
               Daily student attendance
             </p>
           </Link>
@@ -156,15 +165,15 @@ export default function TeacherDashboard() {
           {/* Tile 3: Question Paper Creator */}
           <Link
             to="/teacher/question-papers"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-blue-50/90 to-blue-100/50 border border-blue-200/80 shadow-sm hover:shadow-md hover:border-blue-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:bg-blue-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-700 text-white shadow-md shadow-blue-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <FileText className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-blue-600 transition">
+            <h3 className="font-heading font-bold text-blue-950 text-sm group-hover:text-blue-600 transition">
               Question Papers
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-blue-700/70 mt-0.5 line-clamp-1 font-medium">
               Create & manage exam papers
             </p>
           </Link>
@@ -172,15 +181,15 @@ export default function TeacherDashboard() {
           {/* Tile 4: Post Homework */}
           <Link
             to="/teacher/assignments"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-amber-50/90 to-amber-100/50 border border-amber-200/80 shadow-sm hover:shadow-md hover:border-amber-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:bg-amber-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <ClipboardList className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-amber-600 transition">
+            <h3 className="font-heading font-bold text-amber-950 text-sm group-hover:text-amber-600 transition">
               Homework Diary
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-amber-800/70 mt-0.5 line-clamp-1 font-medium">
               Assign daily homework
             </p>
           </Link>
@@ -188,15 +197,15 @@ export default function TeacherDashboard() {
           {/* Tile 5: Upload Marks / Results */}
           <Link
             to="/teacher/results"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-purple-50/90 to-purple-100/50 border border-purple-200/80 shadow-sm hover:shadow-md hover:border-purple-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:bg-purple-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-700 text-white shadow-md shadow-purple-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <BookMarked className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-purple-600 transition">
+            <h3 className="font-heading font-bold text-purple-950 text-sm group-hover:text-purple-600 transition">
               Marks Entry
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-purple-700/70 mt-0.5 line-clamp-1 font-medium">
               Upload exam results
             </p>
           </Link>
@@ -204,15 +213,15 @@ export default function TeacherDashboard() {
           {/* Tile 6: Upload Study Materials */}
           <Link
             to="/teacher/materials"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-teal-50/90 to-teal-100/50 border border-teal-200/80 shadow-sm hover:shadow-md hover:border-teal-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3 group-hover:bg-teal-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white shadow-md shadow-teal-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-teal-600 transition">
+            <h3 className="font-heading font-bold text-teal-950 text-sm group-hover:text-teal-600 transition">
               Study Notes
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-teal-700/70 mt-0.5 line-clamp-1 font-medium">
               Share PDFs & chapter notes
             </p>
           </Link>
@@ -220,15 +229,15 @@ export default function TeacherDashboard() {
           {/* Tile 7: School Notice Board */}
           <Link
             to="/notifications"
-            className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-500 hover:-translate-y-0.5 transition-all group"
+            className="p-4 rounded-2xl bg-gradient-to-b from-rose-50/90 to-rose-100/50 border border-rose-200/80 shadow-sm hover:shadow-md hover:border-rose-400 hover:-translate-y-0.5 transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3 group-hover:bg-rose-600 group-hover:text-white transition">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-md shadow-rose-500/25 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
               <Sparkles className="w-5 h-5" />
             </div>
-            <h3 className="font-heading font-bold text-slate-900 text-sm group-hover:text-rose-600 transition">
+            <h3 className="font-heading font-bold text-rose-950 text-sm group-hover:text-rose-600 transition">
               Notice Board
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <p className="text-[11px] text-rose-700/70 mt-0.5 line-clamp-1 font-medium">
               Campus circulars & news
             </p>
           </Link>
@@ -270,69 +279,6 @@ export default function TeacherDashboard() {
           <Calendar className="w-3.5 h-3.5" />
           <span>View Exam Schedule &rarr;</span>
         </Link>
-      </div>
-
-      {/* Class & Subject Isolation Card Banner */}
-      <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-        <h3 className="font-heading font-bold text-xs uppercase tracking-wider text-slate-500 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          Your Authorized Teaching Allocation (Backend Restricted)
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Assigned Classes Pill Roster */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-              <School className="w-4 h-4 text-blue-600" />
-              Assigned Classes ({assignedClasses.length})
-            </span>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {assignedClasses.length === 0 ? (
-                <span className="text-xs text-slate-400">No classes assigned yet.</span>
-              ) : (
-                assignedClasses.map(c => {
-                  const isCT = classTeacherOf.some(ct => (ct._id || ct).toString() === (c._id || c).toString());
-                  return (
-                    <span 
-                      key={c._id || c} 
-                      className={`px-3 py-1 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 ${
-                        isCT 
-                          ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' 
-                          : 'bg-blue-600 text-white'
-                      }`}
-                    >
-                      <span>Class {c.name || c} ({c.section || 'A'})</span>
-                      {isCT && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] bg-white text-emerald-800 font-black">
-                          Class Teacher
-                        </span>
-                      )}
-                    </span>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Assigned Subjects Pill Roster */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-purple-600" />
-              Assigned Subjects ({assignedSubjects.length})
-            </span>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {assignedSubjects.length === 0 ? (
-                <span className="text-xs text-slate-400">No subjects assigned yet.</span>
-              ) : (
-                assignedSubjects.map(s => (
-                  <span key={s._id || s} className="px-3 py-1 text-xs font-bold rounded-lg bg-purple-600 text-white shadow-sm">
-                    {s.name || s} ({s.code || ''})
-                  </span>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Metrics Row */}

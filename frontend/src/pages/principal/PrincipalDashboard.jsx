@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardStatsApi, getQuestionPapersApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/common/StatCard';
 import { 
   Users, School, BookOpen, FileText, ClipboardList, CheckSquare, 
@@ -9,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [pendingPapers, setPendingPapers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,11 @@ export default function PrincipalDashboard() {
     fetchData();
   }, []);
 
+  const gLower = (user?.gender || '').toLowerCase();
+  const nLower = (user?.name || '').toLowerCase();
+  const isFemale = gLower === 'female' || gLower === 'f' || nLower.startsWith('mrs') || nLower.startsWith('ms') || nLower.startsWith('miss');
+  const honorific = isFemale ? "Ma'am" : "Sir";
+
   return (
     <div className="space-y-6 pb-12">
       {/* Principal Banner */}
@@ -42,10 +49,10 @@ export default function PrincipalDashboard() {
             Academic Governance & Operations
           </span>
           <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-tight mt-2">
-            Principal Control Center
+            Hello, {user?.name || 'Principal'} {honorific}!
           </h2>
           <p className="text-purple-200 text-xs mt-1">
-            Manage daily timetables, oversee teacher assignments, review question papers, and control live credentials.
+            Principal Control Center — Manage daily timetables, oversee teacher assignments, and review question papers.
           </p>
         </div>
 
