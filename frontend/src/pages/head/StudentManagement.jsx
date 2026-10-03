@@ -6,7 +6,7 @@ import {
 import {
   Users, UserPlus, Search, Filter, Edit, Trash2, CheckCircle2,
   Phone, MapPin, Eye, EyeOff, Printer, Shield, Calendar, Award, Bus, Heart,
-  Copy, Check, X, AlertCircle, Sparkles, KeyRound, School, Navigation, Receipt
+  Copy, Check, X, AlertCircle, Sparkles, KeyRound, School, Navigation, Receipt, RefreshCw
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 
@@ -483,171 +483,195 @@ export default function StudentManagement() {
         maxWidth="max-w-4xl"
       >
         {viewingStudent && (
-          <div className="space-y-6 text-xs text-slate-800">
-            {/* Dossier Header Card */}
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg border border-slate-800">
+          <div className="space-y-5 text-xs text-slate-800">
+            {/* Dossier Premium Top Banner */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl border border-indigo-500/20">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-heading font-black text-2xl text-white shadow-md border border-white/20">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center font-heading font-black text-2xl text-white shadow-lg border-2 border-white/20 shrink-0">
                   {viewingStudent.name[0]}
                 </div>
                 <div>
                   <h3 className="font-heading font-black text-xl text-white tracking-tight">{viewingStudent.name}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold">
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase">
                       Class {viewingStudent.class?.name || 'N/A'} - {viewingStudent.section || 'A'}
                     </span>
-                    <span className="text-amber-300 text-xs font-mono font-bold">SRN No: {viewingStudent.srnNo || viewingStudent.rollNo || viewingStudent.admissionNo}</span>
-                    <span className="text-slate-400 text-xs font-mono">Adm: {viewingStudent.admissionNo}</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold">
+                      SRN #{viewingStudent.srnNo || viewingStudent.rollNo || viewingStudent.admissionNo}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[10px] font-mono font-bold">
+                      Adm: {viewingStudent.admissionNo}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                 <button
                   onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition backdrop-blur-sm shadow-2xs"
                   title="Print Student Record"
                 >
-                  <Printer className="w-3.5 h-3.5" />
+                  <Printer className="w-4 h-4 text-indigo-300" />
                   <span>Print Dossier</span>
                 </button>
               </div>
             </div>
 
-            {/* Dossier Grid Details */}
+            {/* Dossier Cards Grid (2-Column Responsive Layout) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Card 1: Academic & Enrollment Record */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                  <School className="w-4 h-4 text-indigo-600" />
-                  Academic Enrollment
-                </h4>
-                <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                  <div>
-                    <span className="text-slate-600 block">Class & Section</span>
+              <div className="p-4.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                    <School className="w-4 h-4 text-indigo-600" />
+                    Academic Enrollment
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">Session {viewingStudent.academicYear || '2026-2027'}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Class & Section</span>
                     <p className="font-bold text-slate-900">Class {viewingStudent.class?.name} - {viewingStudent.section}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Roll Number</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Roll Number</span>
                     <p className="font-bold text-slate-900">#{viewingStudent.rollNo}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Admission Number</span>
-                    <p className="font-mono font-bold text-indigo-700">{viewingStudent.admissionNo}</p>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Admission No</span>
+                    <p className="font-mono font-extrabold text-indigo-700">{viewingStudent.admissionNo}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Admission Date</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Admission Date</span>
                     <p className="font-bold text-slate-900">
-                      {viewingStudent.admissionDate ? new Date(viewingStudent.admissionDate).toLocaleDateString('en-IN') : '2026-04-01'}
+                      {viewingStudent.admissionDate ? new Date(viewingStudent.admissionDate).toLocaleDateString('en-IN') : '03/10/2026'}
                     </p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Academic Session</span>
-                    <p className="font-bold text-slate-900">{viewingStudent.academicYear || '2026-2027'}</p>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Transfer Certificate</span>
+                    <p className="font-bold text-slate-800">{viewingStudent.tcNumber || 'Not Applicable'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Transfer Certificate (TC)</span>
-                    <p className="font-bold text-slate-900">{viewingStudent.tcNumber || 'Not Applicable'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-600 block">Previous School Attended</span>
-                    <p className="font-medium text-slate-800">{viewingStudent.previousSchool || 'Direct Admission / Fresh Admission'}</p>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Previous School</span>
+                    <p className="font-semibold text-slate-800 truncate">{viewingStudent.previousSchool || 'Direct Admission / Fresh'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Card 2: Student Personal & Identity */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                  <Award className="w-4 h-4 text-indigo-600" />
-                  Personal Identification
-                </h4>
-                <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                  <div>
-                    <span className="text-slate-600 block">Date of Birth</span>
+              <div className="p-4.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-heading font-black text-xs uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-purple-600" />
+                    Personal Identification
+                  </h4>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">Verified</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Date of Birth</span>
                     <p className="font-bold text-slate-900">
                       {viewingStudent.dob ? new Date(viewingStudent.dob).toLocaleDateString('en-IN') : '—'}
                     </p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Gender</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Gender</span>
                     <p className="font-bold text-slate-900">{viewingStudent.gender}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Blood Group</span>
-                    <p className="font-bold text-rose-600">{viewingStudent.bloodGroup || 'O+'}</p>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Blood Group</span>
+                    <p className="font-black text-rose-600">{viewingStudent.bloodGroup || 'O+'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Category</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Category</span>
                     <p className="font-bold text-slate-900">{viewingStudent.category || 'General'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Aadhaar Card No</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Aadhaar Card No</span>
                     <p className="font-mono font-bold text-slate-900">{viewingStudent.aadhaarNumber || '—'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Religion / Nationality</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Religion / Nationality</span>
                     <p className="font-bold text-slate-900">{viewingStudent.religion || 'Hindu'} • {viewingStudent.nationality || 'Indian'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Card 3: Parents & Contact Info */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                  <Phone className="w-4 h-4 text-indigo-600" />
-                  Parents & Guardian Contacts
-                </h4>
-                <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                  <div>
-                    <span className="text-slate-600 block">Father's Name</span>
+              {/* Card 3: Parents & Guardian Contacts */}
+              <div className="p-4.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3 md:col-span-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-heading font-black text-xs uppercase tracking-wider text-sky-950 flex items-center gap-1.5">
+                    <Phone className="w-4 h-4 text-sky-600" />
+                    Parents & Guardian Contacts
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">Emergency Contact Directory</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Father's Name</span>
                     <p className="font-bold text-slate-900">{viewingStudent.fatherName || viewingStudent.guardianName || '—'}</p>
+                    <a href={`tel:${viewingStudent.fatherPhone || viewingStudent.contactNumber}`} className="text-sky-600 hover:underline font-mono font-bold block text-[10px]">
+                      📞 {viewingStudent.fatherPhone || viewingStudent.contactNumber || '—'}
+                    </a>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Father's Mobile</span>
-                    <p className="font-mono font-bold text-slate-900">{viewingStudent.fatherPhone || viewingStudent.contactNumber || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-slate-600 block">Father's Occupation</span>
-                    <p className="font-medium text-slate-800">{viewingStudent.fatherOccupation || 'Business / Farming'}</p>
-                  </div>
-                  <div>
-                    <span className="text-slate-600 block">Mother's Name</span>
+
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Mother's Name</span>
                     <p className="font-bold text-slate-900">{viewingStudent.motherName || '—'}</p>
+                    <p className="text-slate-500 text-[10px]">{viewingStudent.motherOccupation || 'Homemaker'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Mother's Mobile</span>
-                    <p className="font-mono font-bold text-slate-900">{viewingStudent.motherPhone || '—'}</p>
+
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5 sm:col-span-1">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Father's Occupation</span>
+                    <p className="font-bold text-slate-800">{viewingStudent.fatherOccupation || 'Business / Farming'}</p>
                   </div>
-                  <div>
-                    <span className="text-slate-600 block">Mother's Occupation</span>
-                    <p className="font-medium text-slate-800">{viewingStudent.motherOccupation || 'Homemaker'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-600 block">Permanent Address</span>
-                    <p className="font-medium text-slate-900">
+
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 space-y-0.5 sm:col-span-3">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase block">Permanent Residential Address</span>
+                    <p className="font-bold text-slate-900">
                       {viewingStudent.address || 'Nimbi Jodhan'}, {viewingStudent.city || 'Nimbi Jodhan'}, {viewingStudent.state || 'Rajasthan'} - {viewingStudent.pincode || '341316'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Card 4: Portal Login & Security (HEAD / PRINCIPAL ONLY) */}
-              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-3">
-                <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
-                  <KeyRound className="w-4 h-4 text-indigo-600" />
-                  Student Portal Login Credentials
-                </h4>
-                <div className="space-y-2 text-[11px]">
-                  <div className="p-2.5 rounded-xl bg-white border border-indigo-200/80">
-                    <span className="text-[10px] uppercase font-bold text-slate-600 block">Login ID (Username)</span>
-                    <p className="font-mono font-bold text-slate-900 text-xs">{viewingStudent.admissionNo}</p>
+              {/* Card 4: Student Portal Credentials & Transport Setup */}
+              <div className="p-4.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/90 shadow-xs space-y-3 md:col-span-2">
+                <div className="flex items-center justify-between border-b border-indigo-200/60 pb-2">
+                  <h4 className="font-heading font-black text-xs uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                    <KeyRound className="w-4 h-4 text-indigo-600" />
+                    Student Portal Credentials & Transport Facility
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase border border-emerald-200">
+                      Portal Active
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAssignTransport(viewingStudent)}
+                      className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition flex items-center gap-1 shadow-2xs"
+                    >
+                      <Bus className="w-3 h-3" /> Assign Transport Route
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                  {/* Credentials Box 1 */}
+                  <div className="p-3 rounded-xl bg-white border border-indigo-200/80 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Login ID (Username / SRN)</span>
+                    <p className="font-mono font-black text-slate-900 text-sm">{viewingStudent.admissionNo}</p>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-white border border-indigo-200/80 flex items-center justify-between">
+                  {/* Credentials Box 2 */}
+                  <div className="p-3 rounded-xl bg-white border border-indigo-200/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block">Current / Assigned Password</span>
-                      <p className="font-mono font-bold text-indigo-700 text-sm tracking-wider">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 block">Assigned Security Password</span>
+                      <p className="font-mono font-black text-indigo-700 text-sm tracking-wider">
                         {showStudentPassword 
                           ? (portalAccount?.generatedPassword || `${viewingStudent.name.slice(0, 3)}@${viewingStudent.admissionNo}`) 
                           : '••••••••••••'}
@@ -672,68 +696,57 @@ export default function StudentManagement() {
                       </button>
                     </div>
                   </div>
+                </div>
 
-                  {/* Inline Change Password Form */}
-                  <form onSubmit={handleSaveStudentPassword} className="pt-2 border-t border-indigo-200/80">
-                    <label className="block text-[10px] font-bold text-indigo-950 mb-1">
-                      Change Student Password:
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        required
-                        minLength={6}
-                        value={studentNewPassInput}
-                        onChange={(e) => setStudentNewPassInput(e.target.value)}
-                        placeholder="New password (min 6 chars)"
-                        className="flex-1 px-3 py-1.5 text-xs font-mono font-bold bg-white border border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      />
-                      <button
-                        type="submit"
-                        disabled={savingStudentPass}
-                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap"
-                      >
-                        {savingStudentPass ? 'Saving...' : 'Save Password'}
-                      </button>
-                    </div>
-                    {passUpdateMsg && (
-                      <p className={`text-[10px] font-bold mt-1 ${passUpdateMsg.type === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>
-                        {passUpdateMsg.text}
-                      </p>
-                    )}
-                  </form>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] text-slate-600">
-                    <div>
-                      <span>Portal Status:</span>{' '}
-                      <strong className="text-emerald-700 uppercase">Active</strong>
-                    </div>
-                    <div className="flex items-center justify-between gap-1">
-                      <div>
-                        <span>Bus Route:</span>{' '}
-                        <strong className="text-indigo-900">{viewingStudent.transportOpted ? (viewingStudent.busRoute || 'Opted') : 'No Transport'}</strong>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAssignTransport(viewingStudent)}
-                        className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 hover:bg-indigo-100 text-[10px] transition inline-flex items-center gap-1 shrink-0"
-                      >
-                        <Bus className="w-3 h-3 text-indigo-600" /> Assign Route
-                      </button>
-                    </div>
+                {/* Inline Change Password Row */}
+                <form onSubmit={handleSaveStudentPassword} className="pt-2 border-t border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+                    <span className="text-[11px] font-bold text-indigo-950 shrink-0">New Password:</span>
+                    <input
+                      type="text"
+                      required
+                      minLength={6}
+                      value={studentNewPassInput}
+                      onChange={(e) => setStudentNewPassInput(e.target.value)}
+                      placeholder="Enter new password (min 6 chars)"
+                      className="w-full sm:w-64 px-3 py-1.5 text-xs font-mono font-bold bg-white border border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={savingStudentPass}
+                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm transition whitespace-nowrap cursor-pointer"
+                    >
+                      {savingStudentPass ? 'Saving...' : 'Update Password'}
+                    </button>
                   </div>
+                  {passUpdateMsg && (
+                    <span className={`text-[10px] font-bold ${passUpdateMsg.type === 'success' ? 'text-emerald-700' : 'text-rose-600'}`}>
+                      {passUpdateMsg.text}
+                    </span>
+                  )}
+                </form>
+
+                {/* Transport Route Banner */}
+                <div className="p-2.5 rounded-xl bg-white border border-indigo-200/80 flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-600 flex items-center gap-1.5">
+                    <Bus className="w-4 h-4 text-indigo-600" />
+                    School Bus Route: <strong className="text-indigo-950">{viewingStudent.transportOpted ? (viewingStudent.busRoute || 'Opted') : 'No Transport Facility'}</strong>
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {viewingStudent.transportOpted ? 'Auto Transport Fee Active' : 'Self Commute'}
+                  </span>
                 </div>
               </div>
 
-              {/* Card 5: Student Live Fee Ledger & Dues Status */}
-              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 md:col-span-2">
+              {/* Card 5: Student Live Fee Ledger & Dues Breakdown */}
+              <div className="p-4.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3 md:col-span-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <h4 className="font-heading font-black text-xs uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                     <Receipt className="w-4 h-4 text-emerald-600" />
-                    Official Fee Ledger & Dues Breakdown (2026-2027)
+                    Official Fee Ledger & Dues Breakdown (Academic Year 2026-2027)
                   </h4>
                   {studentLedger && (
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
                       studentLedger.status === 'Paid' 
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
                         : studentLedger.status === 'Partial'
@@ -749,36 +762,36 @@ export default function StudentManagement() {
                   <div className="space-y-3">
                     {/* 4 Summary Stat Pills */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                      <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                         <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Base Fee</span>
-                        <span className="font-mono font-black text-slate-900 text-sm">₹{studentLedger.totalBaseFee?.toLocaleString('en-IN')}</span>
+                        <span className="font-mono font-black text-slate-900 text-base">₹{studentLedger.totalBaseFee?.toLocaleString('en-IN')}</span>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
+                      <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80">
                         <span className="text-[10px] font-bold text-amber-700 uppercase block">Scholarship / Discount</span>
-                        <span className="font-mono font-black text-amber-800 text-sm">
+                        <span className="font-mono font-black text-amber-800 text-base">
                           {studentLedger.discountAmount > 0 ? `-₹${studentLedger.discountAmount?.toLocaleString('en-IN')}` : '₹0'}
                         </span>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
-                        <span className="text-[10px] font-bold text-emerald-700 uppercase block">Total Paid</span>
-                        <span className="font-mono font-black text-emerald-800 text-sm">₹{studentLedger.totalPaid?.toLocaleString('en-IN')}</span>
+                      <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase block">Total Paid Amount</span>
+                        <span className="font-mono font-black text-emerald-800 text-base">₹{studentLedger.totalPaid?.toLocaleString('en-IN')}</span>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-200/80">
-                        <span className="text-[10px] font-bold text-rose-700 uppercase block">Pending Dues</span>
-                        <span className="font-mono font-black text-rose-800 text-sm">₹{studentLedger.pendingAmount?.toLocaleString('en-IN')}</span>
+                      <div className="p-3 rounded-2xl bg-rose-50/70 border border-rose-200/80">
+                        <span className="text-[10px] font-bold text-rose-700 uppercase block">Pending Fee Dues</span>
+                        <span className="font-mono font-black text-rose-800 text-base">₹{studentLedger.pendingAmount?.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
 
                     {/* Fee Category Breakdown */}
                     {studentLedger.feeHeads?.length > 0 && (
-                      <div className="bg-slate-50 rounded-xl p-3 space-y-1 border border-slate-100">
-                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Fee Demand Heads</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-50/80 rounded-2xl p-3 space-y-1.5 border border-slate-100">
+                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Fee Demand Components</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
                           {studentLedger.feeHeads.map((h, i) => (
-                            <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/60">
+                            <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/70">
                               <span className="font-medium text-slate-700 text-[11px] truncate max-w-[140px]">{h.headName}</span>
                               <span className="font-mono font-extrabold text-slate-900 text-[11px]">₹{h.amount?.toLocaleString('en-IN')}</span>
                             </div>
@@ -789,11 +802,11 @@ export default function StudentManagement() {
 
                     {/* Recent Receipts List */}
                     {studentLedger.paymentHistory?.length > 0 && (
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Issued Computer Receipts ({studentLedger.paymentHistory.length})</div>
-                        <div className="divide-y divide-slate-100 rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden">
+                        <div className="divide-y divide-slate-100 rounded-2xl bg-slate-50 border border-slate-200/80 overflow-hidden">
                           {studentLedger.paymentHistory.map((rec) => (
-                            <div key={rec._id} className="p-2.5 flex items-center justify-between text-[11px]">
+                            <div key={rec._id} className="p-3 flex items-center justify-between text-xs">
                               <div className="flex items-center gap-2">
                                 <span className="font-mono font-bold text-emerald-700">{rec.receiptNo}</span>
                                 <span className="text-slate-600">• {rec.feeType}</span>
@@ -809,13 +822,16 @@ export default function StudentManagement() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-xs text-slate-400 font-medium">Loading live fee ledger...</div>
+                  <div className="text-center py-6 text-xs text-slate-400 font-semibold flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+                    Calculating live fee ledger...
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Footer Buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            {/* Footer Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => {
@@ -823,14 +839,15 @@ export default function StudentManagement() {
                   setViewingStudent(null);
                   handleOpenEditModal(toEdit);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition"
               >
                 Edit Student Information
               </button>
+
               <button
                 type="button"
                 onClick={() => setViewingStudent(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition"
               >
                 Close Dossier
               </button>
