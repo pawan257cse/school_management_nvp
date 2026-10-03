@@ -894,7 +894,7 @@ export default function StudentManagement() {
               onClick={() => setFormTab('transport')}
               className={`px-3 py-2 rounded-lg transition shrink-0 ${formTab === 'transport' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
             >
-              4. Transport & Medical
+              4. Transport & Fee
             </button>
           </div>
 
@@ -1263,38 +1263,102 @@ export default function StudentManagement() {
               </div>
             )}
 
-            {/* TAB 4: TRANSPORT & MEDICAL */}
+            {/* TAB 4: TRANSPORT & FEE */}
             {formTab === 'transport' && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div>
-                    <p className="font-bold text-slate-900">School Bus Transport Facility</p>
-                    <p className="text-[11px] text-slate-500">Opt for school bus transportation pickup and drop</p>
+                    <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <Bus className="w-4 h-4 text-indigo-600" />
+                      School Bus Transport Facility & Fare Link
+                    </p>
+                    <p className="text-[11px] text-slate-500">Opt for school bus transportation pickup, drop & automatic fee link</p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.transportOpted}
-                    onChange={(e) => setFormData({ ...formData, transportOpted: e.target.checked })}
-                    className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                      {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).length} Routes Active
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={formData.transportOpted}
+                      onChange={(e) => {
+                        const isOpted = e.target.checked;
+                        const defaultR = (transportRoutes.length > 0 ? transportRoutes : defaultRoutes)[0]?.routeTitle || 'Nimbi Local';
+                        setFormData({
+                          ...formData,
+                          transportOpted: isOpted,
+                          busRoute: isOpted ? (formData.busRoute || defaultR) : ''
+                        });
+                      }}
+                      className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </div>
                 </div>
 
                 {formData.transportOpted && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Official Transport Route *</label>
-                    <select
-                      required={formData.transportOpted}
-                      value={formData.busRoute}
-                      onChange={(e) => setFormData({ ...formData, busRoute: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white focus:ring-2 focus:ring-indigo-500 text-slate-900"
-                    >
-                      <option value="">Select Transport Route</option>
-                      {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => (
-                        <option key={i} value={r.routeTitle}>
-                          {r.routeTitle} — Annual Fare: ₹{(r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500)).toLocaleString('en-IN')}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[11px] font-bold text-slate-700">
+                        Available Official Bus Routes & Fares (Click to Select) *
+                      </label>
+                      <span className="text-[10px] text-indigo-600 font-bold">
+                        Selected: <strong className="text-indigo-950 font-mono">{formData.busRoute || 'None'}</strong>
+                      </span>
+                    </div>
+
+                    {/* Visual Route Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-1">
+                      {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => {
+                        const isSelected = formData.busRoute === r.routeTitle;
+                        const totalFare = r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500);
+                        return (
+                          <button
+                            type="button"
+                            key={i}
+                            onClick={() => setFormData({ ...formData, transportOpted: true, busRoute: r.routeTitle })}
+                            className={`p-3 rounded-2xl border text-left transition-all relative ${
+                              isSelected
+                                ? 'bg-indigo-50/90 border-indigo-600 shadow-md ring-2 ring-indigo-500/30'
+                                : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-slate-900 text-xs flex items-center gap-1">
+                                <Bus className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                {r.routeTitle}
+                              </span>
+                              {isSelected && (
+                                <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-extrabold">
+                                  Selected ✓
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-baseline justify-between pt-1 border-t border-slate-100 mt-1">
+                              <span className="text-[10px] font-medium text-slate-500">Annual Fare:</span>
+                              <span className="font-mono font-black text-xs text-indigo-700">₹{totalFare.toLocaleString('en-IN')}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Dropdown Select Option */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Or Select Route from Dropdown List:</label>
+                      <select
+                        required={formData.transportOpted}
+                        value={formData.busRoute}
+                        onChange={(e) => setFormData({ ...formData, busRoute: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                      >
+                        <option value="">Select Transport Route</option>
+                        {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => (
+                          <option key={i} value={r.routeTitle}>
+                            {r.routeTitle} — Annual Fare: ₹{(r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500)).toLocaleString('en-IN')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
 
@@ -1311,7 +1375,7 @@ export default function StudentManagement() {
 
                 <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-[11px] flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                  <span>Submitting admission will automatically provision a Student Portal account with auto-generated secure credentials.</span>
+                  <span>Submitting admission will automatically provision a Student Portal account with auto-generated secure credentials & assign transport fee to official ledger.</span>
                 </div>
 
                 <div className="flex justify-between pt-3 border-t border-slate-200">
