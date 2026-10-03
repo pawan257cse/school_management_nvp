@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+﻿const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Class = require('../models/Class');
 const Subject = require('../models/Subject');
@@ -20,21 +20,27 @@ const periodTimes = [
 ];
 
 /**
- * Reliable System Initializer:
- * - Ensures 10 Active Classes (PG to Class 7), Subjects, Teachers, Principal, and Timetables are ALWAYS seeded in MongoDB Atlas.
- * - Non-Destructive: Never deletes live custom entries created by Head Admin or Principal.
+ * Bulletproof System Initializer:
+ * Ensures 10 Active Classes (PG to Class 7), 14 Subjects, 10 Real Teachers, Principal, Head Admin,
+ * 10 Class Timetables, and 93 Official Real Students are ALWAYS preserved and seeded in MongoDB Atlas.
  */
 const seedInitialData = async () => {
   try {
+    const studentCountCheck = await Student.countDocuments();
+    const teacherCountCheck = await User.countDocuments({ role: { $in: ['TEACHER', 'PRINCIPAL'] } });
+    if (studentCountCheck >= 93 && teacherCountCheck >= 10) {
+      console.log('[System Init] NVP School Database is already fully populated (' + studentCountCheck + ' students, ' + teacherCountCheck + ' teachers). Skipping re-seed.');
+      return;
+    }
+
     console.log('[System Init] Synchronizing NVP School Database State...');
 
     const salt = await bcrypt.genSalt(10);
 
-    // 1. Standard Subjects
-    const subjectsConfig = [
+    // 1. Standard Subjects Setup
+    const standardSubjectsDef = [
       { name: 'English', code: 'ENG' },
       { name: 'Hindi', code: 'HIN' },
-      { name: 'Hindi Grammar', code: 'HING' },
       { name: 'Mathematics', code: 'MATH' },
       { name: 'Science', code: 'SCI' },
       { name: 'Social Science', code: 'SST' },
@@ -45,62 +51,47 @@ const seedInitialData = async () => {
       { name: 'Oral', code: 'ORAL' },
       { name: 'Games & Activity', code: 'GAME' },
       { name: 'Diary & Rhymes', code: 'DIARY' },
-      { name: 'Activity / Self Study', code: 'ACT' }
+      { name: 'Activity / Self Study', code: 'ACT' },
+      { name: 'Hindi Grammar', code: 'HING' }
     ];
 
-    const subjectMap = {};
-    for (const s of subjectsConfig) {
-      let subDoc = await Subject.findOne({ name: s.name });
-      if (!subDoc) {
-        subDoc = await Subject.create({ name: s.name, code: s.code, status: 'active' });
-      }
-      subjectMap[s.name.toUpperCase()] = subDoc;
-      subjectMap[s.code.toUpperCase()] = subDoc;
+    const subMap = {};
+    for (const s of standardSubjectsDef) {
+      const doc = await Subject.findOneAndUpdate(
+        { name: s.name },
+        { name: s.name, code: s.code, status: 'active' },
+        { upsert: true, new: true }
+      );
+      subMap[s.name.toUpperCase()] = doc;
+      subMap[s.code.toUpperCase()] = doc;
     }
-    const allSubjectIds = Object.values(subjectMap).map(s => s._id);
 
-    // 2. Class-Specific Subjects Mapping (Strictly per official NVP Timetable)
-    const classSpecificSubjectsMap = {
-      PG: ['English', 'Hindi', 'Mathematics', 'Oral', 'Games & Activity', 'Diary & Rhymes'],
-      LKG: ['Hindi', 'Mathematics', 'English', 'General Knowledge', 'Diary & Rhymes', 'Oral'],
-      UKG: ['Mathematics', 'General Knowledge', 'Hindi', 'English', 'Oral', 'Diary & Rhymes'],
-      '1': ['EVS', 'Hindi', 'English', 'Mathematics', 'Computer', 'General Knowledge', 'Games & Activity', 'Activity / Self Study'],
-      '2': ['Hindi', 'EVS', 'Computer', 'English', 'Mathematics', 'Games & Activity', 'General Knowledge', 'Activity / Self Study'],
-      '3': ['Computer', 'Activity / Self Study', 'EVS', 'Hindi', 'Mathematics', 'English', 'General Knowledge'],
-      '4': ['EVS', 'Mathematics', 'English', 'Computer', 'Hindi', 'General Knowledge', 'Activity / Self Study'],
-      '5': ['Hindi Grammar', 'EVS', 'Mathematics', 'Hindi', 'English', 'Computer', 'Sanskrit', 'Activity / Self Study'],
-      '6': ['English', 'Computer', 'Hindi', 'Mathematics', 'Social Science', 'Sanskrit', 'Science', 'General Knowledge'],
-      '7': ['Mathematics', 'English', 'Social Science', 'General Knowledge', 'Hindi', 'Science', 'Computer', 'Sanskrit']
-    };
+    const allSubjectDocs = await Subject.find({ status: 'active' });
+    const allSubjectIds = allSubjectDocs.map(s => s._id);
 
+    // 2. Standard Classes Setup (PG to 7)
     const classNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
     const classMap = {};
 
     for (const name of classNames) {
-      const allowedSubjectNames = classSpecificSubjectsMap[name] || ['English', 'Hindi', 'Mathematics'];
-      const classSubjectIds = allowedSubjectNames.map(sName => {
-        const found = Object.values(subjectMap).find(s => s.name.toUpperCase() === sName.toUpperCase());
-        return found?._id;
-      }).filter(Boolean);
-
       let cls = await Class.findOne({ name, section: 'A' });
       if (!cls) {
         cls = await Class.create({
           name,
           section: 'A',
-          subjects: classSubjectIds,
+          subjects: allSubjectIds,
           studentCount: 0,
           status: 'active'
         });
       } else {
-        cls.subjects = classSubjectIds;
+        cls.subjects = allSubjectIds;
         cls.status = 'active';
         await cls.save();
       }
       classMap[name] = cls;
     }
 
-    // 3. Default School Settings
+    // 3. School Settings
     const existingSetting = await Setting.findOne();
     if (!existingSetting) {
       await Setting.create({
@@ -138,118 +129,196 @@ const seedInitialData = async () => {
       });
     }
 
-    // 5. Principal User (Megha, pk621913@gmail.com)
-    let principalUser = await User.findOne({ email: 'pk621913@gmail.com' });
-    const princPass = 'Megha@123';
-    const princHash = await bcrypt.hash(princPass, salt);
-    if (!principalUser) {
-      principalUser = await User.create({
+    // 5. Faculty / Teachers Setup (10 Real Teachers + Head Admin)
+    const realFaculty = [
+      {
+        name: 'Priti',
+        email: 'priti@school.local',
+        empId: 'EMP-T001',
+        mobile: '+91 98000 00001',
+        qual: 'B.A., D.El.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'PG',
+        pass: 'Priti@123',
+        teachingClasses: ['PG'],
+        teachingSubjects: ['English', 'Hindi', 'Mathematics', 'General Knowledge', 'Oral']
+      },
+      {
+        name: 'Lalita',
+        email: 'lalita@school.local',
+        empId: 'EMP-T002',
+        mobile: '+91 98000 00002',
+        qual: 'B.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'LKG',
+        pass: 'Lalita@123',
+        teachingClasses: ['LKG'],
+        teachingSubjects: ['Hindi', 'Mathematics', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Priya',
+        email: 'priya@school.local',
+        empId: 'EMP-T003',
+        mobile: '+91 98000 00003',
+        qual: 'B.Sc., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: 'UKG',
+        pass: 'Priya@123',
+        teachingClasses: ['UKG'],
+        teachingSubjects: ['Mathematics', 'Hindi', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Sarita',
+        email: 'sarita@school.local',
+        empId: 'EMP-T004',
+        mobile: '+91 98000 00004',
+        qual: 'M.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '1',
+        pass: 'Sarita@C#',
+        teachingClasses: ['1', '2', '3', '4', '5'],
+        teachingSubjects: ['EVS', 'Mathematics', 'Hindi', 'English', 'General Knowledge']
+      },
+      {
+        name: 'Durga',
+        email: 'durga@school.local',
+        empId: 'EMP-T005',
+        mobile: '+91 98000 00005',
+        qual: 'M.A., B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '2',
+        pass: 'Durga@123',
+        teachingClasses: ['1', '2', '3', '4', '6', '7'],
+        teachingSubjects: ['Hindi', 'General Knowledge']
+      },
+      {
+        name: 'Pawan',
+        email: 'pawan@school.local',
+        empId: 'EMP-T006',
+        mobile: '+91 98000 00006',
+        qual: 'B.Tech (CS), MCA',
+        gender: 'Male',
+        role: 'TEACHER',
+        ctClass: '3',
+        pass: 'Pawan@123',
+        teachingClasses: ['1', '2', '3', '4', '5', '6', '7'],
+        teachingSubjects: ['Computer', 'Science']
+      },
+      {
+        name: 'Vanshika',
+        email: 'vanshika@school.local',
+        empId: 'EMP-T007',
+        mobile: '+91 98000 00007',
+        qual: 'B.sc., M.Sc.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '4',
+        pass: 'Vanshika@C#',
+        teachingClasses: ['3', '4', '5', '6', '7'],
+        teachingSubjects: ['English', 'EVS', 'Social Science', 'General Knowledge']
+      },
+      {
+        name: 'Chanchal',
+        email: 'chanchal@school.local',
+        empId: 'EMP-T008',
+        mobile: '+91 98000 00008',
+        qual: 'M.Sc. (Math), B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '5',
+        pass: 'Chanchal@123',
+        teachingClasses: ['3', '4', '5', '6', '7'],
+        teachingSubjects: ['Mathematics', 'Sanskrit', 'General Knowledge']
+      },
+      {
+        name: 'Kavita',
+        email: 'kavita@school.local',
+        empId: 'EMP-T009',
+        mobile: '+91 98000 00009',
+        qual: 'M.A. (English), B.Ed.',
+        gender: 'Female',
+        role: 'TEACHER',
+        ctClass: '6',
+        pass: 'Kavita@123',
+        teachingClasses: ['4', '6', '7'],
+        teachingSubjects: ['English', 'Science']
+      },
+      {
         name: 'Megha',
         email: 'pk621913@gmail.com',
-        passwordHash: princHash,
-        generatedPassword: princPass,
-        role: 'PRINCIPAL',
+        empId: 'EMP-P001',
         mobile: '+91 82270 31017',
-        employeeId: 'EMP-P001',
+        qual: 'M.A., B.Ed., M.Ed.',
         gender: 'Female',
-        qualification: 'M.A., B.Ed., M.Ed.',
-        status: 'active',
-        mustChangePassword: false
-      });
-    }
-
-    // 6. 10 Official Teachers
-    const teacherDefs = [
-      { name: 'Priti', email: 'priti@nvpschool.edu.in', phone: '+91 98290 11001', empId: 'EMP-T101', classTeacherOf: ['PG'], classesTaught: ['PG'], subjectsTaught: ['English', 'Hindi', 'Mathematics', 'Oral', 'Games & Activity', 'Diary & Rhymes'] },
-      { name: 'Lalita', email: 'lalita@nvpschool.edu.in', phone: '+91 98290 11002', empId: 'EMP-T102', classTeacherOf: ['LKG'], classesTaught: ['LKG'], subjectsTaught: ['Hindi', 'Mathematics', 'English', 'General Knowledge', 'Diary & Rhymes', 'Oral'] },
-      { name: 'Priya', email: 'priya@nvpschool.edu.in', phone: '+91 98290 11003', empId: 'EMP-T103', classTeacherOf: ['UKG'], classesTaught: ['UKG'], subjectsTaught: ['Mathematics', 'General Knowledge', 'Hindi', 'English', 'Oral', 'Diary & Rhymes'] },
-      { name: 'Sarita', email: 'sarita@nvpschool.edu.in', phone: '+91 98290 11004', empId: 'EMP-T104', classTeacherOf: ['1'], classesTaught: ['1', '2', '3', '4', '5'], subjectsTaught: ['EVS', 'Mathematics', 'Hindi', 'General Knowledge', 'Games & Activity'] },
-      { name: 'Durga', email: 'durga@nvpschool.edu.in', phone: '+91 98290 11005', empId: 'EMP-T105', classTeacherOf: ['2'], classesTaught: ['1', '2', '3', '4', '6', '7'], subjectsTaught: ['Hindi', 'General Knowledge'] },
-      { name: 'Pawan', email: 'pawan@nvpschool.edu.in', phone: '+91 98290 11006', empId: 'EMP-T106', classTeacherOf: ['3'], classesTaught: ['1', '2', '3', '4', '5', '6', '7'], subjectsTaught: ['Computer', 'Games & Activity', 'Science'] },
-      { name: 'Vanshika', email: 'vanshika@nvpschool.edu.in', phone: '+91 98290 11007', empId: 'EMP-T107', classTeacherOf: ['4'], classesTaught: ['3', '4', '5', '6', '7'], subjectsTaught: ['EVS', 'English', 'Social Science', 'General Knowledge'] },
-      { name: 'Megha', email: 'megha.teacher@nvpschool.edu.in', phone: '+91 98290 11008', empId: 'EMP-T108', classTeacherOf: ['5'], classesTaught: ['1', '2', '5', '6'], subjectsTaught: ['English', 'Hindi Grammar', 'Sanskrit'] },
-      { name: 'Kavita', email: 'kavita@nvpschool.edu.in', phone: '+91 98290 11009', empId: 'EMP-T109', classTeacherOf: ['6'], classesTaught: ['4', '6', '7'], subjectsTaught: ['English', 'Science'] },
-      { name: 'Chanchal', email: 'chanchal@nvpschool.edu.in', phone: '+91 98290 11010', empId: 'EMP-T110', classTeacherOf: ['7'], classesTaught: ['3', '4', '5', '6', '7'], subjectsTaught: ['Mathematics', 'General Knowledge'] }
+        role: 'PRINCIPAL',
+        ctClass: '7',
+        pass: 'Megha@C#',
+        teachingClasses: ['1', '2', '5', '6', '7'],
+        teachingSubjects: ['English', 'Hindi', 'Sanskrit']
+      }
     ];
 
     const teacherMap = {};
-    for (const t of teacherDefs) {
-      const defaultPassword = `${t.name}@12345`;
-      const passHash = await bcrypt.hash(defaultPassword, salt);
-      const assignedClassIds = t.classesTaught.map(cName => classMap[cName]?._id).filter(Boolean);
-      const assignedSubjectIds = t.subjectsTaught.map(sName => {
-        const found = Object.values(subjectMap).find(s => s.name.toUpperCase() === sName.toUpperCase());
-        return found?._id;
+
+    for (const f of realFaculty) {
+      let userDoc = await User.findOne({
+        $or: [ { email: f.email.toLowerCase() }, { name: { $regex: new RegExp('^' + f.name + '$', 'i') } } ]
+      });
+
+      const passHash = await bcrypt.hash(f.pass, salt);
+
+      const classIds = (f.teachingClasses || []).map(cName => classMap[cName]?._id).filter(Boolean);
+      const subjectIds = (f.teachingSubjects || []).map(sName => {
+        return subMap[sName.toUpperCase()]?._id;
       }).filter(Boolean);
 
-      let userDoc = await User.findOne({ email: t.email.toLowerCase() });
       if (!userDoc) {
         userDoc = await User.create({
-          name: t.name,
-          email: t.email.toLowerCase(),
+          name: f.name,
+          email: f.email.toLowerCase(),
           passwordHash: passHash,
-          generatedPassword: defaultPassword,
-          role: 'TEACHER',
-          mobile: t.phone,
-          employeeId: t.empId,
-          gender: t.name === 'Pawan' ? 'Male' : 'Female',
-          qualification: 'B.Ed / Trained Faculty',
-          assignedClasses: assignedClassIds,
-          assignedSubjects: assignedSubjectIds,
-          mustChangePassword: false,
-          status: 'active'
+          generatedPassword: f.pass,
+          role: f.role,
+          employeeId: f.empId,
+          mobile: f.mobile,
+          gender: f.gender,
+          qualification: f.qual,
+          joiningDate: new Date('2024-04-01'),
+          classes: classIds,
+          subjects: subjectIds,
+          assignedClasses: classIds,
+          assignedSubjects: subjectIds,
+          status: 'active',
+          mustChangePassword: false
         });
       } else {
-        userDoc.name = t.name;
-        userDoc.role = 'TEACHER';
-        if (!userDoc.assignedClasses || userDoc.assignedClasses.length === 0) {
-          userDoc.assignedClasses = assignedClassIds;
-        }
-        if (!userDoc.assignedSubjects || userDoc.assignedSubjects.length === 0) {
-          userDoc.assignedSubjects = assignedSubjectIds;
-        }
+        userDoc.role = f.role;
+        userDoc.employeeId = f.empId;
+        userDoc.classes = classIds;
+        userDoc.subjects = subjectIds;
+        userDoc.assignedClasses = classIds;
+        userDoc.assignedSubjects = subjectIds;
         userDoc.status = 'active';
         await userDoc.save();
       }
 
-      teacherMap[t.name.toUpperCase()] = userDoc;
+      teacherMap[f.name.toUpperCase()] = userDoc;
 
-      for (const cName of t.classTeacherOf) {
-        const cls = classMap[cName];
-        if (cls) {
-          cls.classTeacher = userDoc._id;
-          cls.attendanceTeacher = userDoc._id;
-          await cls.save();
-        }
+      if (f.ctClass && classMap[f.ctClass]) {
+        const targetClass = classMap[f.ctClass];
+        targetClass.classTeacher = userDoc._id;
+        targetClass.attendanceTeacher = userDoc._id;
+        await targetClass.save();
       }
     }
 
-    // 7. Official Timetables Synchronization
-    const findSubjectDoc = (str) => {
-      if (!str || str === '-') return subjectMap['ACTIVITY / SELF STUDY'] || subjectMap['EVS'];
-      const upper = str.toUpperCase();
-      if (upper.includes('HINDI GRAM')) return subjectMap['HINDI GRAMMAR'] || subjectMap['HIN'];
-      if (upper.includes('HINDI')) return subjectMap['HINDI'] || subjectMap['HIN'];
-      if (upper.includes('MATH')) return subjectMap['MATHEMATICS'] || subjectMap['MATH'];
-      if (upper.includes('ENG')) return subjectMap['ENGLISH'] || subjectMap['ENG'];
-      if (upper.includes('EVS')) return subjectMap['EVS'];
-      if (upper.includes('S.S.T') || upper.includes('SST') || upper.includes('SOCIAL')) return subjectMap['SOCIAL SCIENCE'] || subjectMap['SST'];
-      if (upper.includes('SCI')) return subjectMap['SCIENCE'] || subjectMap['SCI'];
-      if (upper.includes('COM')) return subjectMap['COMPUTER'] || subjectMap['CS'];
-      if (upper.includes('SAN') || upper.includes('SANSKRIT')) return subjectMap['SANSKRIT'] || subjectMap['SKT'];
-      if (upper.includes('GK') || upper.includes('G.K')) return subjectMap['GENERAL KNOWLEDGE'] || subjectMap['GK'];
-      if (upper.includes('ORAL')) return subjectMap['ORAL'] || subjectMap['ENG'];
-      if (upper.includes('GAME')) return subjectMap['GAMES & ACTIVITY'] || subjectMap['GAME'];
-      if (upper.includes('DIARY')) return subjectMap['DIARY & RHYMES'] || subjectMap['DIARY'];
-      return subjectMap['GENERAL KNOWLEDGE'] || allSubjectIds[0];
-    };
-
-    const findTeacherDoc = (name) => {
-      if (!name || name === '-') return null;
-      return teacherMap[name.toUpperCase()] || null;
-    };
-
-    const classSchedulesFromPdf = {
+    // 6. Timetables (Official NVP Timetable)
+    const classSchedulesRaw = {
       PG: [
         { pNum: 1, sub: 'Oral', teacher: 'Priti' },
         { pNum: 2, sub: 'English', teacher: 'Priti' },
@@ -272,7 +341,7 @@ const seedInitialData = async () => {
         { pNum: 8, sub: 'Diary & Rhymes', teacher: 'Lalita' },
         { pNum: 9, sub: 'Oral', teacher: 'Lalita' }
       ],
-      UKG: [
+      UKG: [ 
         { pNum: 1, sub: 'Mathematics', teacher: 'Priya' },
         { pNum: 2, sub: 'Mathematics', teacher: 'Priya' },
         { pNum: 3, sub: 'General Knowledge', teacher: 'Priya' },
@@ -291,8 +360,8 @@ const seedInitialData = async () => {
         { pNum: 5, isBreak: true },
         { pNum: 6, sub: 'Computer', teacher: 'Pawan' },
         { pNum: 7, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 8, sub: 'Activity / Self Study', teacher: null },
-        { pNum: 9, sub: 'General Knowledge', teacher: 'Durga' }
+        { pNum: 8, sub: 'General Knowledge', teacher: 'Durga' },
+        { pNum: 9, sub: 'Hindi', teacher: 'Durga' }
       ],
       '2': [
         { pNum: 1, sub: 'Hindi', teacher: 'Durga' },
@@ -300,16 +369,16 @@ const seedInitialData = async () => {
         { pNum: 3, sub: 'Computer', teacher: 'Pawan' },
         { pNum: 4, sub: 'English', teacher: 'Megha' },
         { pNum: 5, isBreak: true },
-        { pNum: 6, sub: 'Activity / Self Study', teacher: null },
-        { pNum: 7, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 8, sub: 'Mathematics', teacher: 'Sarita' },
-        { pNum: 9, sub: 'Games & Activity', teacher: 'Sarita' }
+        { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
+        { pNum: 7, sub: 'Mathematics', teacher: 'Sarita' },
+        { pNum: 8, sub: 'EVS', teacher: 'Sarita' },
+        { pNum: 9, sub: 'EVS', teacher: 'Sarita' }
       ],
       '3': [
         { pNum: 1, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 2, sub: 'Activity / Self Study', teacher: null },
-        { pNum: 3, sub: 'EVS', teacher: 'Sarita' },
-        { pNum: 4, sub: 'Hindi', teacher: 'Durga' },
+        { pNum: 2, sub: 'EVS', teacher: 'Sarita' },
+        { pNum: 3, sub: 'Hindi', teacher: 'Durga' },
+        { pNum: 4, sub: 'English', teacher: 'Vanshika' },
         { pNum: 5, isBreak: true },
         { pNum: 6, sub: 'EVS', teacher: 'Sarita' },
         { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
@@ -323,12 +392,12 @@ const seedInitialData = async () => {
         { pNum: 4, sub: 'Computer', teacher: 'Pawan' },
         { pNum: 5, isBreak: true },
         { pNum: 6, sub: 'English', teacher: 'Sarita' },
-        { pNum: 7, sub: 'Activity / Self Study', teacher: null },
+        { pNum: 7, sub: 'Mathematics', teacher: 'Chanchal' },
         { pNum: 8, sub: 'Hindi', teacher: 'Durga' },
-        { pNum: 9, sub: 'Activity / Self Study', teacher: null }
+        { pNum: 9, sub: 'General Knowledge', teacher: 'Sarita' }
       ],
       '5': [
-        { pNum: 1, sub: 'Hindi Grammar', teacher: 'Megha' },
+        { pNum: 1, sub: 'Hindi', teacher: 'Megha' },
         { pNum: 2, sub: 'EVS', teacher: 'Vanshika' },
         { pNum: 3, sub: 'Mathematics', teacher: 'Chanchal' },
         { pNum: 4, sub: 'EVS', teacher: 'Sarita' },
@@ -336,7 +405,7 @@ const seedInitialData = async () => {
         { pNum: 6, sub: 'Mathematics', teacher: 'Chanchal' },
         { pNum: 7, sub: 'Hindi', teacher: 'Sarita' },
         { pNum: 8, sub: 'Computer', teacher: 'Pawan' },
-        { pNum: 9, sub: 'Activity / Self Study', teacher: null }
+        { pNum: 9, sub: 'English', teacher: 'Megha' }
       ],
       '6': [
         { pNum: 1, sub: 'English', teacher: 'Kavita' },
@@ -357,19 +426,19 @@ const seedInitialData = async () => {
         { pNum: 5, isBreak: true },
         { pNum: 6, sub: 'Hindi', teacher: 'Durga' },
         { pNum: 7, sub: 'Science', teacher: 'Kavita' },
-        { pNum: 8, sub: 'Mathematics', teacher: 'Chanchal' },
+        { pNum: 8, sub: 'Sanskrit', teacher: 'Chanchal' },
         { pNum: 9, sub: 'Computer', teacher: 'Pawan' }
       ]
     };
 
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const daysOfweek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    for (const [cName, rawPeriods] of Object.entries(classSchedulesFromPdf)) {
+    for (const [cName, rawPeriods] of Object.entries(classSchedulesRaw)) {
       const cls = classMap[cName];
       if (!cls) continue;
 
       const formattedPeriods = rawPeriods.map((item, idx) => {
-        const pTime = periodTimes[idx];
+        const pTime = periodTimes[idx] || periodTimes[periodTimes.length - 1];
         if (item.isBreak) {
           return {
             periodNumber: pTime.periodNumber,
@@ -377,24 +446,24 @@ const seedInitialData = async () => {
             isBreak: true,
             startTime: pTime.startTime,
             endTime: pTime.endTime,
-            roomNo: `Class ${cName}`
+            roomNo: 'Class ' + cName
           };
         }
 
-        const subDoc = findSubjectDoc(item.sub);
-        const teachDoc = findTeacherDoc(item.teacher);
+        const subDoc = subMap[item.sub.toUpperCase()] || subMap['GK'];
+        const teachDoc = teacherMap[item.teacher.toUpperCase()];
 
-        return {
+        return{
           periodNumber: pTime.periodNumber,
           periodTitle: pTime.periodTitle,
           isBreak: false,
           startTime: pTime.startTime,
           endTime: pTime.endTime,
-          subject: subDoc?._id || null,
-          subjectName: subDoc?.name || item.sub,
-          teacher: teachDoc?._id || null,
-          teacherName: teachDoc?.name || (item.teacher === null ? 'Self Study' : item.teacher),
-          roomNo: `Class ${cName}`
+          subject: subDoc?._id,
+          subjectName: item.sub,
+          teacher: teachDoc?._id,
+          teacherName: teachDoc?.name || item.teacher,
+          roomNo: 'Class ' + cName
         };
       });
 
@@ -403,22 +472,23 @@ const seedInitialData = async () => {
         periods: formattedPeriods
       }));
 
-      const existingTimetable = await Timetable.findOne({ class: cls._id, academicYear: '2026-2027' });
-      if (!existingTimetable) {
-        await Timetable.create({
+      await Timetable.findOneAndUpdate(
+        { class: cls._id, academicYear: '2026-2027' },
+        {
           class: cls._id,
-          className: `Class ${cls.name}`,
+          className: 'Class ' + cls.name,
           section: cls.section || 'A',
           academicYear: '2026-2027',
           schedule: weeklySchedule
-        });
-      }
+        },
+        { upsert: true, new: true }
+      );
     }
 
-    // 8. Import Official Real Students (93 records from original data)
+    // 7. Import 93 Official Real Students
     await importOfficialStudents();
 
-    // 9. Synchronize Class Student Counts
+    // 8. Synchronize Class Student Counts
     for (const cName of classNames) {
       const cls = classMap[cName];
       if (cls) {
@@ -428,7 +498,7 @@ const seedInitialData = async () => {
       }
     }
 
-    console.log('[System Init] NVP School Database State Synchronized Successfully (10 Classes, 10 Teachers, 10 Timetables).');
+    console.log('[System Init] NVP School Database State Synchronized Successfully (10 Classes, 10 Teachers, 10 Timetables, 93 Students).');
   } catch (error) {
     console.error('[System Init Error]:', error.message);
   }
