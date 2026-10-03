@@ -65,7 +65,26 @@ export default function StudentDashboard() {
   const notices = data?.notices || [];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 select-none">
+      {/* Admin Preview Return Banner */}
+      {user && (user.role === 'HEAD' || user.role === 'PRINCIPAL') && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2">
+            <Info className="w-5 h-5 text-amber-600 shrink-0" />
+            <span>
+              <strong>Admin Preview Mode Active:</strong> You are currently previewing the Student Portal as <strong>{user.name} ({user.role})</strong>.
+            </span>
+          </div>
+          <Link 
+            to={user.role === 'HEAD' ? '/head-dashboard' : '/principal-dashboard'}
+            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md shadow-amber-600/20 transition shrink-0 flex items-center gap-1.5"
+          >
+            <span>Return to Admin Dashboard</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* 1. TCS mTOP Style Student Welcome Header */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-950 via-indigo-900 to-slate-950 text-white shadow-xl border border-indigo-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>

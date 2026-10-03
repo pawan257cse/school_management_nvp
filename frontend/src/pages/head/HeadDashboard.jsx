@@ -188,14 +188,6 @@ export default function HeadDashboard() {
 
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => navigate('/student-dashboard')}
-            className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Preview Student Portal View"
-          >
-            <Eye className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Student Portal Preview</span>
-          </button>
-          <button
             onClick={() => navigate('/academic/timetable')}
             className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5"
           >

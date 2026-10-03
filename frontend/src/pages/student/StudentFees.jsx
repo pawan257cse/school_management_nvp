@@ -4,11 +4,19 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getMyFeesApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudentFees() {
+  const { user } = useAuth();
   const [ledger, setLedger] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+
+  const backTarget = user?.role === 'HEAD' 
+    ? '/head-fee-management' 
+    : user?.role === 'PRINCIPAL' 
+    ? '/principal-dashboard' 
+    : '/student-dashboard';
 
   useEffect(() => {
     const fetchFees = async () => {
@@ -30,8 +38,8 @@ export default function StudentFees() {
       {/* Header */}
       <div className="flex items-center justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
         <div>
-          <Link to="/student-dashboard" className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold mb-1">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+          <Link to={backTarget} className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold mb-1">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to {user?.role === 'HEAD' || user?.role === 'PRINCIPAL' ? 'Head Admin Portal' : 'Dashboard'}
           </Link>
           <h1 className="text-2xl font-heading font-black text-slate-900 flex items-center gap-2.5">
             <Receipt className="w-7 h-7 text-emerald-600" />

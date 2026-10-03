@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getMyTimetableApi, getHolidaysApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -86,11 +87,18 @@ const findHolidayForDay = (dayName, holidays = [], todayHoliday = null) => {
 };
 
 export default function StudentTimetable() {
+  const { user } = useAuth();
   const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayIndex = new Date().getDay();
   const isSunday = todayIndex === 0;
   const currentDayName = isSunday ? 'Sunday' : daysMap[todayIndex];
   const defaultSelectedDay = isSunday ? 'Monday' : daysMap[todayIndex];
+
+  const backTarget = user?.role === 'HEAD' 
+    ? '/head-dashboard' 
+    : user?.role === 'PRINCIPAL' 
+    ? '/principal-dashboard' 
+    : '/student-dashboard';
 
   const [viewMode, setViewMode] = useState('weekly'); // 'weekly' | 'day'
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
@@ -140,8 +148,8 @@ export default function StudentTimetable() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link to="/student-dashboard" className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold">
-              <ArrowLeft className="w-4 h-4" /> Student Portal
+            <Link to={backTarget} className="text-slate-500 hover:text-slate-800 text-xs flex items-center gap-1 font-bold">
+              <ArrowLeft className="w-4 h-4" /> {user?.role === 'HEAD' || user?.role === 'PRINCIPAL' ? 'Back to Admin Portal' : 'Student Portal'}
             </Link>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

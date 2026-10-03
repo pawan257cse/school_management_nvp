@@ -96,7 +96,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       hasSubmenu: true,
       submenu: [
         { name: 'Student Directory', path: '/students' },
-        { name: 'Student Portal Preview 👁️', path: '/student-dashboard' },
         { name: 'Parent Management', path: '/head/parents' },
         { name: 'Student Promotions', path: '/head/promotions' },
       ]
