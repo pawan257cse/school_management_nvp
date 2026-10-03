@@ -215,8 +215,34 @@ export default function StudentManagement() {
         setViewingStudent(res.data.student);
         setPortalAccount(res.data.portalAccount);
       }
-      if (ledgerRes.data?.success) {
+
+      if (ledgerRes.data?.success && ledgerRes.data?.ledger) {
         setStudentLedger(ledgerRes.data.ledger);
+      } else {
+        const studentObj = res.data?.student || st;
+        const selClass = classes.find(c => c._id === (studentObj.class?._id || studentObj.class));
+        const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 12000;
+        const transFee = studentObj.transportOpted ? (studentObj.busRoute?.includes('Hudas') ? 6600 : studentObj.busRoute?.includes('Nimbi') ? 2200 : 5500) : 0;
+        const totalBase = baseFee + transFee;
+        const feeHeads = [
+          { headName: 'Tuition Fee', amount: Math.round(baseFee * 0.6) },
+          { headName: 'Exam Fee', amount: Math.round(baseFee * 0.15) },
+          { headName: 'Computer & Lab Fee', amount: Math.round(baseFee * 0.15) },
+          { headName: 'Development Fee', amount: Math.round(baseFee * 0.1) }
+        ];
+        if (studentObj.transportOpted) {
+          feeHeads.push({ headName: `Transport Fee (${studentObj.busRoute || 'Commute'})`, amount: transFee });
+        }
+        setStudentLedger({
+          totalBaseFee: totalBase,
+          discountAmount: 0,
+          netPayableFee: totalBase,
+          totalPaid: 0,
+          pendingAmount: totalBase,
+          status: 'Pending',
+          feeHeads: feeHeads,
+          paymentHistory: []
+        });
       }
     } catch (err) {
       console.error('Failed to fetch full student profile:', err);
