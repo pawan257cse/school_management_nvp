@@ -18,9 +18,6 @@ export default function StudentManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Full Profile Dossier Modal State
-  const [studentLedger, setStudentLedger] = useState(null);
-
   // Default NVP Transport routes fallback chart
   const defaultRoutes = [
     { routeTitle: 'Koyal', totalFare: 5500, monthlyFee: 550 },
@@ -39,6 +36,7 @@ export default function StudentManagement() {
 
   // Full Profile Dossier Modal
   const [viewingStudent, setViewingStudent] = useState(null);
+  const [studentLedger, setStudentLedger] = useState(null);
   const [portalAccount, setPortalAccount] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [copiedPass, setCopiedPass] = useState(false);
