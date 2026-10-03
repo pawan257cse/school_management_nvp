@@ -42,4 +42,4 @@ function generatePassword(name, role, id = '') {
   }
 }
 
-module.exports = { generatePassword };
+module.exports = { generatePassword, generateAutoPassword: generatePassword };
