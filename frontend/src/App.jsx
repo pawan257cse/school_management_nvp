@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { WifiOff } from 'lucide-react';
 
 // Common Components
 import Sidebar from './components/common/Sidebar';
 import Topbar from './components/common/Topbar';
-import SplashScreen from './components/common/SplashScreen';
 import OfflineStatusBanner from './components/common/OfflineStatusBanner';
 
 // Pages
@@ -23,7 +21,7 @@ import ActivityLogs from './pages/head/ActivityLogs';
 import LoginHistory from './pages/head/LoginHistory';
 import SystemSettings from './pages/head/SystemSettings';
 
-// New Core School Management Pages
+// Core School Management Pages
 import StudentManagement from './pages/head/StudentManagement';
 import ParentManagement from './pages/head/ParentManagement';
 import StaffManagement from './pages/head/StaffManagement';
@@ -36,9 +34,11 @@ import FacultyAttendance from './pages/head/TeacherAttendance';
 import TransportManagement from './pages/head/TransportManagement';
 import HeadAssignmentManagement from './pages/head/HeadAssignmentManagement';
 import CredentialsManagement from './pages/head/CredentialsManagement';
-import HeadControlCenter from './pages/head/HeadControlCenter';
 import InventoryManagement from './pages/head/InventoryManagement';
 import LibraryManagement from './pages/head/LibraryManagement';
+import CommunicationHub from './pages/head/CommunicationHub';
+import AccountsManagement from './pages/head/AccountsManagement';
+import HostelManagement from './pages/head/HostelManagement';
 
 // Timetable & Student Portal Pages
 import TimetableManagement from './pages/principal/TimetableManagement';
@@ -95,9 +95,9 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex w-full max-w-full overflow-x-hidden">
       {!isPortalUser && <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />}
-      <div className={`flex-1 ${!isPortalUser ? 'lg:pl-72' : ''} flex flex-col min-w-0 w-full max-w-full overflow-x-hidden`}>
+      <div className={`flex-1 ${!isPortalUser ? 'lg:pl-64' : ''} flex flex-col min-w-0 w-full max-w-full overflow-x-hidden`}>
         <Topbar setMobileOpen={setMobileOpen} />
-        <main className="p-2.5 sm:p-5 lg:p-8 flex-1 max-w-7xl w-full mx-auto min-w-0">
+        <main className="p-3 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full mx-auto min-w-0">
           {children}
         </main>
       </div>
@@ -105,7 +105,7 @@ const ProtectedLayout = ({ allowedRoles, children }) => {
   );
 };
 
-// Root Index Gate: Automatically routes active logged-in user to their respective dashboard
+// Root Index Gate
 const IndexGate = () => {
   const { user, loading, getDefaultRouteForRole } = useAuth();
   if (loading) {
@@ -121,89 +121,16 @@ const IndexGate = () => {
   return <Navigate to="/login" replace />;
 };
 
-// Dedicated Admin Gate: renders Head Dashboard if logged in as HEAD, otherwise renders private Admin Console login
-const AdminGate = () => {
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-bold">Loading...</div>;
-  }
-  if (user && user.role === 'HEAD') {
-    return (
-      <ProtectedLayout allowedRoles={['HEAD']}>
-        <HeadDashboard />
-      </ProtectedLayout>
-    );
-  }
-  return <Login isAdminMode={true} />;
-};
-
 export default function App() {
-  const [showSplash, setShowSplash] = useState(false);
-
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  const handleSplashFinish = () => {
-    try {
-      sessionStorage.setItem('nvp_app_splash_shown', 'true');
-    } catch (e) {}
-    setShowSplash(false);
-  };
-
   return (
     <AuthProvider>
-      {!isOnline && (
-        <div className="no-print bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white text-[11px] font-bold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-md z-[100000] relative">
-          <WifiOff className="w-3.5 h-3.5 animate-pulse" />
-          <span>Offline Mode — Displaying cached school timetables & offline records</span>
-        </div>
-      )}
-      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <BrowserRouter>
         <Routes>
-          {/* Root App Entry - Instant Dashboard Redirection for logged in users */}
           <Route path="/" element={<IndexGate />} />
-          <Route path="/login" element={<Login isAdminMode={false} />} />
-
-          {/* Dedicated /admin and /head Gateway (Hidden from standard /login) */}
-          <Route path="/admin" element={<AdminGate />} />
-          <Route path="/head" element={<AdminGate />} />
-
-          {/* Core School Management Routes (Head & Principal Access) */}
-          <Route path="/students" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />
-          <Route path="/students/create" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />
-          <Route path="/parents" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ParentManagement /></ProtectedLayout>} />
-          <Route path="/staff" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StaffManagement /></ProtectedLayout>} />
-          <Route path="/exams" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><ExamManagement /></ProtectedLayout>} />
-          <Route path="/exams/create" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
-          <Route path="/fees" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FeeManagement /></ProtectedLayout>} />
-          <Route path="/fees/structure" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FeeManagement /></ProtectedLayout>} />
-          <Route path="/promotions" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><PromotionManagement /></ProtectedLayout>} />
-          <Route path="/config/school-info" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SchoolInfo /></ProtectedLayout>} />
-          <Route path="/notifications/notices" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><NoticeBoard /></ProtectedLayout>} />
-          <Route path="/results" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherResults /></ProtectedLayout>} />
-          <Route path="/attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><TeacherAttendance /></ProtectedLayout>} />
-          <Route path="/head/teacher-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><FacultyAttendance /></ProtectedLayout>} />
-          <Route path="/teacher/my-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><FacultyAttendance /></ProtectedLayout>} />
-          <Route path="/transport" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TransportManagement /></ProtectedLayout>} />
-          <Route path="/academic/timetable" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TimetableManagement /></ProtectedLayout>} />
+          <Route path="/login" element={<Login />} />
 
           {/* Student Portal Routes */}
           <Route path="/student-dashboard" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentDashboard /></ProtectedLayout>} />
-          <Route path="/student/assignments" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentAssignments /></ProtectedLayout>} />
-          <Route path="/student/homework" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentAssignments /></ProtectedLayout>} />
           <Route path="/student/timetable" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentTimetable /></ProtectedLayout>} />
           <Route path="/student/attendance" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentAttendance /></ProtectedLayout>} />
           <Route path="/student/results" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentResults /></ProtectedLayout>} />
@@ -212,23 +139,40 @@ export default function App() {
           {/* HEAD Super Admin Routes */}
           <Route path="/head-dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
           <Route path="/dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
-          <Route path="/head/control-center" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
-          <Route path="/control-center" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />
-          <Route path="/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
-          <Route path="/head/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
-          <Route path="/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
-          <Route path="/head/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
-          <Route path="/head/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/accounts/users" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/head/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
-          <Route path="/head/principal" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><PrincipalManagement /></ProtectedLayout>} />
+          
+          <Route path="/students" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StudentManagement /></ProtectedLayout>} />
+          <Route path="/attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FacultyAttendance /></ProtectedLayout>} />
+          <Route path="/head/teacher-attendance" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FacultyAttendance /></ProtectedLayout>} />
+          <Route path="/fees" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><FeeManagement /></ProtectedLayout>} />
+          <Route path="/exams" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
+          
           <Route path="/head/classes" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ClassManagement /></ProtectedLayout>} />
           <Route path="/classes" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ClassManagement /></ProtectedLayout>} />
-          <Route path="/classes/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
           <Route path="/head/subjects" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><SubjectManagement /></ProtectedLayout>} />
+          <Route path="/academic/timetable" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TimetableManagement /></ProtectedLayout>} />
+          
+          <Route path="/head/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
+          <Route path="/staff" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><StaffManagement /></ProtectedLayout>} />
+          <Route path="/teachers" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TeacherManagement /></ProtectedLayout>} />
+          
+          <Route path="/accounts" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><AccountsManagement /></ProtectedLayout>} />
+          <Route path="/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
+          <Route path="/head/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
+          <Route path="/transport" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TransportManagement /></ProtectedLayout>} />
+          <Route path="/hostel" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><HostelManagement /></ProtectedLayout>} />
+          <Route path="/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
+          <Route path="/head/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
+          
+          {/* Communication Routes */}
+          <Route path="/communication" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="whatsapp" /></ProtectedLayout>} />
+          <Route path="/communication/whatsapp" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="whatsapp" /></ProtectedLayout>} />
+          <Route path="/communication/sms" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="sms" /></ProtectedLayout>} />
+          <Route path="/communication/voice" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="voice" /></ProtectedLayout>} />
+          <Route path="/communication/bell" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="bell" /></ProtectedLayout>} />
+          <Route path="/communication/calendar" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="calendar" /></ProtectedLayout>} />
+          <Route path="/communication/certificates" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="certificates" /></ProtectedLayout>} />
+
           <Route path="/head/security" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><RolePermissions /></ProtectedLayout>} />
-          <Route path="/principal/security" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><RolePermissions /></ProtectedLayout>} />
           <Route path="/head/activity" element={<ProtectedLayout allowedRoles={['HEAD']}><ActivityLogs /></ProtectedLayout>} />
           <Route path="/head/login-history" element={<ProtectedLayout allowedRoles={['HEAD']}><LoginHistory /></ProtectedLayout>} />
           <Route path="/head/settings" element={<ProtectedLayout allowedRoles={['HEAD']}><SystemSettings /></ProtectedLayout>} />
@@ -252,18 +196,7 @@ export default function App() {
           <Route path="/teacher/timetable" element={<ProtectedLayout allowedRoles={['TEACHER', 'HEAD', 'PRINCIPAL']}><TeacherTimetable /></ProtectedLayout>} />
           <Route path="/teacher/exams" element={<ProtectedLayout allowedRoles={['TEACHER', 'HEAD', 'PRINCIPAL']}><ExamManagement /></ProtectedLayout>} />
           <Route path="/teacher/profile" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherProfile /></ProtectedLayout>} />
-          <Route path="/teacher/classes" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherDashboard /></ProtectedLayout>} />
-          <Route path="/teacher/subjects" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherDashboard /></ProtectedLayout>} />
-          <Route path="/teacher/question-papers" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherQuestionPapers /></ProtectedLayout>} />
-          <Route path="/teacher/question-papers/create" element={<ProtectedLayout allowedRoles={['TEACHER']}><CreateQuestionPaper /></ProtectedLayout>} />
-          <Route path="/teacher/question-papers/edit/:id" element={<ProtectedLayout allowedRoles={['TEACHER']}><CreateQuestionPaper /></ProtectedLayout>} />
-          <Route path="/teacher/assignments" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherAssignments /></ProtectedLayout>} />
-          <Route path="/teacher/attendance" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherAttendance /></ProtectedLayout>} />
-          <Route path="/teacher/results" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherResults /></ProtectedLayout>} />
-          <Route path="/teacher/materials" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherMaterials /></ProtectedLayout>} />
-          <Route path="/teacher/notifications" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherNotifications /></ProtectedLayout>} />
           <Route path="/notifications" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL', 'TEACHER']}><NoticeBoard /></ProtectedLayout>} />
-          <Route path="/teacher/analytics" element={<ProtectedLayout allowedRoles={['TEACHER']}><TeacherAnalytics /></ProtectedLayout>} />
 
           {/* Default Fallback Redirect */}
           <Route path="*" element={<Navigate to="/login" replace />} />
