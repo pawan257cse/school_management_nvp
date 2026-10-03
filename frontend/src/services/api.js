@@ -259,18 +259,26 @@ export const updateExamApi = (id, data) => API.put(`/exams/${id}`, data);
 export const deleteExamApi = (id) => API.delete(`/exams/${id}`);
 
 // Fee Services
-export const getFeeStructuresApi = () => API.get('/fees/structures');
+export const getFeeStructuresApi = (params) => API.get('/fees/structures', { params });
 export const createFeeStructureApi = (data) => API.post('/fees/structures', data);
 export const deleteFeeStructureApi = (id) => API.delete(`/fees/structures/${id}`);
-export const getFeePaymentsApi = (params) => API.get('/fees/payments', { params });
+export const getFeeClassOverviewApi = (params) => API.get('/fees/class-overview', { params });
+export const getStudentFeeLedgerApi = (studentId, params) => API.get(`/fees/student-ledger/${studentId}`, { params });
+export const applyFeeDiscountApi = (data) => API.post('/fees/discount', data);
+export const getFeePaymentsApi = (params) => API.get('/fees/receipts', { params });
 export const recordFeePaymentApi = (data) => API.post('/fees/payments', data);
+export const getFeeReportsApi = (params) => API.get('/fees/reports', { params });
+export const getMyFeesApi = () => API.get('/fees/my-fees');
+export const deleteFeeReceiptApi = (id) => API.delete(`/fees/receipt/${id}`);
+export const updateFeeReceiptApi = (id, data) => API.put(`/fees/receipt/${id}`, data);
 
 // Promotion Services
 export const getPromotionsApi = () => API.get('/promotions');
 export const executePromotionApi = (data) => API.post('/promotions/execute', data);
 
-// Class-wise Overview (Strength, Capacity, Fees, Dues)
+// Class-wise Overview & Comprehensive ERP Reports Engine
 export const getClassWiseOverviewApi = () => API.get('/reports/class-wise-overview');
+export const getReportsDataApi = (params) => API.get('/reports/data', { params });
 
 // Teacher Attendance Services
 export const getTeacherAttendanceApi = (params) => API.get('/teacher-attendance', { params });

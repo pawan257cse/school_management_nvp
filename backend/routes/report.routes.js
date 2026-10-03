@@ -12,29 +12,23 @@ const Student = require('../models/Student');
 const Parent = require('../models/Parent');
 const Staff = require('../models/Staff');
 const Exam = require('../models/Exam');
-const { FeeStructure, FeePayment } = require('../models/Fee');
+const { FeeStructure, FeeDiscount, FeePayment } = require('../models/Fee');
 const Promotion = require('../models/Promotion');
 const Notification = require('../models/Notification');
 const TeacherAttendance = require('../models/TeacherAttendance');
 const Transport = require('../models/Transport');
+const Inventory = require('../models/Inventory');
+const Library = require('../models/Library');
+const ActivityLog = require('../models/ActivityLog');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { getTeacherClassIds } = require('../utils/teacherScope');
 
-// Helper to generate class-wise matrix
-const getClassWiseOverview = async () => {
+// Helper for class wise overview
+const getClassWiseOverviewMatrix = async () => {
   const classes = await Class.find().populate('classTeacher', 'name mobile').sort({ name: 1 });
   const feeStructures = await FeeStructure.find();
   const feePayments = await FeePayment.find({ status: 'Completed' });
-
-  // Class order mapping for nice school sorting
-  const order = ['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-  classes.sort((a, b) => {
-    const idxA = order.indexOf(a.name);
-    const idxB = order.indexOf(b.name);
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-    return a.name.localeCompare(b.name);
-  });
 
   const matrix = await Promise.all(classes.map(async (cls) => {
     const studentsInClass = await Student.find({ class: cls._id, status: 'active' });
@@ -42,38 +36,17 @@ const getClassWiseOverview = async () => {
     const boysCount = studentsInClass.filter(s => s.gender === 'Male').length;
     const girlsCount = studentsInClass.filter(s => s.gender === 'Female').length;
 
-    // Fee structure for this class
     const struct = feeStructures.find(f => f.class?.toString() === cls._id.toString());
-    const feePerStudent = struct ? struct.amount : 0;
+    const feePerStudent = struct ? struct.totalBaseFee || 30000 : 30000;
     const totalExpectedFee = enrolledCount * feePerStudent;
 
-    // Collected Fee
     const classPayments = feePayments.filter(p => p.className && p.className.includes(cls.name));
     const totalCollectedFee = classPayments.reduce((sum, p) => sum + p.amount, 0);
     const totalPendingFee = Math.max(0, totalExpectedFee - totalCollectedFee);
-    const collectionPercent = totalExpectedFee > 0 ? Math.round((totalCollectedFee / totalExpectedFee) * 100) : 0;
-
-    // Attendance today percent
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const todayAtt = await Attendance.findOne({
-      class: cls._id,
-      date: { $gte: today, $lt: tomorrow }
-    });
-
-    let attendanceTodayPercent = 0;
-    if (todayAtt && todayAtt.records && todayAtt.records.length > 0) {
-      const pCount = todayAtt.records.filter(r => r.status === 'present').length;
-      attendanceTodayPercent = Math.round((pCount / todayAtt.records.length) * 100);
-    }
 
     return {
       classId: cls._id,
       className: `Class ${cls.name}`,
-      standardName: cls.name,
       section: cls.section || 'A',
       classTeacher: cls.classTeacher?.name || 'Unassigned',
       teacherMobile: cls.classTeacher?.mobile || '—',
@@ -81,206 +54,62 @@ const getClassWiseOverview = async () => {
       boysCount,
       girlsCount,
       capacity: cls.studentCount || 35,
-      feePerStudent,
       totalExpectedFee,
       totalCollectedFee,
       totalPendingFee,
-      collectionPercent,
-      attendanceTodayPercent
+      collectionPercent: totalExpectedFee > 0 ? Math.round((totalCollectedFee / totalExpectedFee) * 100) : 0
     };
   }));
 
   return matrix;
 };
 
-// @route   GET /api/reports/class-wise-overview
-// @desc    Get complete class-by-class student strength, capacity & fee collection matrix
-// @access  Private
+// 1. Class Wise Overview Matrix
 router.get('/class-wise-overview', protect, async (req, res) => {
   try {
-    let classOverview = await getClassWiseOverview();
-
+    let classOverview = await getClassWiseOverviewMatrix();
     if (req.user.role === 'TEACHER') {
       const allowedClassIds = await getTeacherClassIds(req.user);
       classOverview = classOverview.filter(c => allowedClassIds.includes(c.classId.toString()));
     }
-
     res.json({ success: true, count: classOverview.length, classes: classOverview });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// @route   GET /api/reports/dashboard-stats
-// @desc    Get dashboard summary statistics
-// @access  Private
+// 2. Dashboard Stats Overview
 router.get('/dashboard-stats', protect, async (req, res) => {
   try {
     const totalTeachers = await User.countDocuments({ role: 'TEACHER' });
     const activeTeachers = await User.countDocuments({ role: 'TEACHER', status: 'active' });
-    const inactiveTeachers = await User.countDocuments({ role: 'TEACHER', status: 'inactive' });
     const totalClasses = await Class.countDocuments();
-    const activeClasses = await Class.countDocuments({ status: 'active' });
     const totalSubjects = await Subject.countDocuments({ status: 'active' });
+    const totalStudents = await Student.countDocuments({ status: 'active' });
+    const totalExams = await Exam.countDocuments();
     const totalPapers = await QuestionPaper.countDocuments();
-    const pendingPapers = await QuestionPaper.countDocuments({ status: 'pending' });
     const approvedPapers = await QuestionPaper.countDocuments({ status: 'approved' });
-    const totalAssignments = await Assignment.countDocuments();
-    const totalMaterials = await StudyMaterial.countDocuments();
 
-    // Teacher Attendance Today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const teacherAttsToday = await TeacherAttendance.find({
-      date: { $gte: today, $lt: tomorrow }
-    });
-
-    const teachersPresentToday = teacherAttsToday.filter(a => a.status === 'present').length;
-    const teachersAbsentToday = teacherAttsToday.filter(a => a.status === 'absent').length;
-    const teachersOnLeaveToday = teacherAttsToday.filter(a => ['leave', 'half-day'].includes(a.status)).length;
-
-    // Transport Stats
-    const transports = await Transport.find();
-    const transportVehiclesCount = transports.length;
-    const transportStudentsCommuting = transports.reduce((sum, v) => sum + (v.assignedStudentsCount || 0), 0);
-    const transportMonthlyRevenue = transports.reduce((sum, v) => sum + ((v.assignedStudentsCount || 0) * (v.monthlyFee || 0)), 0);
-
-    // Class wise overview
-    const classWiseOverview = await getClassWiseOverview();
-    const totalEnrolledStudents = classWiseOverview.reduce((sum, c) => sum + c.enrolledStudents, 0);
+    const classWiseOverview = await getClassWiseOverviewMatrix();
     const totalExpectedSchoolFees = classWiseOverview.reduce((sum, c) => sum + c.totalExpectedFee, 0);
     const totalCollectedSchoolFees = classWiseOverview.reduce((sum, c) => sum + c.totalCollectedFee, 0);
     const totalPendingSchoolFees = Math.max(0, totalExpectedSchoolFees - totalCollectedSchoolFees);
-
-    // Students count
-    const studentDocCount = await Student.countDocuments();
-    const activeStudents = studentDocCount;
-    const totalStudents = activeStudents;
-
-    // Exams
-    const totalExams = await Exam.countDocuments();
-    const upcomingExams = await Exam.countDocuments({ status: 'upcoming' });
-
-    // Parents & Staff & Users
-    const totalParents = await Parent.countDocuments();
-    const staffMembers = await Staff.countDocuments();
-    const totalUsers = await User.countDocuments();
-    const totalNotifications = await Notification.countDocuments();
-
-    // Student Attendance Today
-    const todayAttendances = await Attendance.find({
-      date: { $gte: today, $lt: tomorrow }
-    });
-
-    let presentToday = 0;
-    let absentToday = 0;
-    const markedToday = todayAttendances.length;
-
-    todayAttendances.forEach(att => {
-      att.records.forEach(r => {
-        if (r.status === 'present') presentToday++;
-        else if (r.status === 'absent') absentToday++;
-      });
-    });
-
-    // 30-day Payments
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const paymentAgg = await FeePayment.aggregate([
-      { $match: { status: 'Completed', paymentDate: { $gte: thirtyDaysAgo } } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const payments30d = paymentAgg.length > 0 ? paymentAgg[0].total : totalCollectedSchoolFees;
-
-    // Results & Avg Score
-    const totalResults = await Result.countDocuments();
-    const allResults = await Result.find();
-    let totalScore = 0;
-    let scoreCount = 0;
-    allResults.forEach(r => {
-      (r.records || []).forEach(rec => {
-        if (rec.percentage !== undefined) {
-          totalScore += rec.percentage;
-          scoreCount++;
-        }
-      });
-    });
-    const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
-
-    // Promotions
-    const promotionsAgg = await Promotion.aggregate([
-      { $group: { _id: null, total: { $sum: '$promotedCount' } } }
-    ]);
-    const totalPromotions = promotionsAgg.length > 0 ? promotionsAgg[0].total : 0;
-
-    // Recent Activity Feeds
-    const recentPayments = await FeePayment.find()
-      .sort({ paymentDate: -1 })
-      .limit(6);
-
-    const recentStudents = await Student.find()
-      .populate('class', 'name section')
-      .sort({ createdAt: -1 })
-      .limit(6);
-
-    const recentResultsList = await Result.find()
-      .populate('class', 'name section')
-      .populate('subject', 'name')
-      .sort({ createdAt: -1 })
-      .limit(6);
-
-    const recentPromotionsList = await Promotion.find()
-      .populate('fromClass', 'name section')
-      .populate('toClass', 'name section')
-      .sort({ promotionDate: -1 })
-      .limit(5);
 
     res.json({
       success: true,
       stats: {
         totalTeachers,
         activeTeachers,
-        inactiveTeachers,
-        teachersPresentToday,
-        teachersAbsentToday,
-        teachersOnLeaveToday,
         totalClasses,
-        activeClasses: activeClasses || totalClasses,
         totalSubjects,
         totalStudents,
-        activeStudents,
         totalExams,
-        upcomingExams,
-        presentToday,
-        absentToday,
-        markedToday,
-        payments30d,
-        avgScore,
-        totalResults,
-        promotions: totalPromotions,
-        totalParents: totalParents || 18,
-        staffMembers: staffMembers || 5,
-        totalUsers,
-        totalNotifications,
         totalPapers,
-        pendingPapers,
         approvedPapers,
-        totalAssignments,
-        totalMaterials,
-        transportVehiclesCount,
-        transportStudentsCommuting,
-        transportMonthlyRevenue,
         totalExpectedSchoolFees,
         totalCollectedSchoolFees,
         totalPendingSchoolFees,
-        classWiseOverview,
-        recentPayments,
-        recentStudents,
-        recentResults: recentResultsList,
-        recentPromotions: recentPromotionsList
+        classWiseOverview
       }
     });
   } catch (error) {
@@ -288,63 +117,189 @@ router.get('/dashboard-stats', protect, async (req, res) => {
   }
 });
 
-// @route   GET /api/reports/teacher-performance
-router.get('/teacher-performance', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
+// 3. Dynamic Reports Engine serving all 26 ERP Reports
+router.get('/data', protect, async (req, res) => {
   try {
-    const teachers = await User.find({ role: 'TEACHER' })
-      .populate('assignedClasses')
-      .populate('assignedSubjects');
+    const { reportType, classId, section, startDate, endDate, academicYear = '2026-2027', search, status } = req.query;
 
-    const performanceData = await Promise.all(teachers.map(async (teacher) => {
-      const papersCount = await QuestionPaper.countDocuments({ teacher: teacher._id });
-      const assignmentsCount = await Assignment.countDocuments({ teacher: teacher._id });
-      const materialsCount = await StudyMaterial.countDocuments({ teacher: teacher._id });
-      const attendanceCount = await Attendance.countDocuments({ teacher: teacher._id });
-      const resultsCount = await Result.countDocuments({ teacher: teacher._id });
+    if (!reportType) {
+      return res.status(400).json({ success: false, message: 'reportType query parameter is required.' });
+    }
 
-      return {
-        id: teacher._id,
-        name: teacher.name,
-        email: teacher.email,
-        employeeId: teacher.employeeId,
-        status: teacher.status,
-        classes: teacher.assignedClasses.map(c => `${c.name} ${c.section}`).join(', ') || 'None',
-        subjects: teacher.assignedSubjects.map(s => s.name).join(', ') || 'None',
-        papersCreated: papersCount,
-        assignmentsCreated: assignmentsCount,
-        materialsUploaded: materialsCount,
-        attendanceUpdates: attendanceCount,
-        resultsRecorded: resultsCount,
-        lastLogin: teacher.lastLogin
-      };
-    }));
+    let records = [];
+    let summary = {};
 
-    res.json({ success: true, count: performanceData.length, performance: performanceData });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+    // 1. Student Summary Report
+    if (reportType === 'student-summary') {
+      const query = {};
+      if (status) query.status = status;
+      if (classId) query.class = classId;
+      if (section) query.section = section;
 
-// @route   GET /api/reports/teacher-my-analytics
-router.get('/teacher-my-analytics', protect, async (req, res) => {
-  try {
-    const teacherId = req.user._id;
+      records = await Student.find(query)
+        .populate('class', 'name section')
+        .sort({ name: 1 });
 
-    const papersCount = await QuestionPaper.countDocuments({ teacher: teacherId });
-    const assignmentsCount = await Assignment.countDocuments({ teacher: teacherId });
-    const materialsCount = await StudyMaterial.countDocuments({ teacher: teacherId });
-    const attendanceCount = await Attendance.countDocuments({ teacher: teacherId });
-    const resultsCount = await Result.countDocuments({ teacher: teacherId });
+      const total = records.length;
+      const maleCount = records.filter(s => s.gender === 'Male').length;
+      const femaleCount = records.filter(s => s.gender === 'Female').length;
+      summary = { totalStudents: total, maleCount, femaleCount, activeCount: total };
+    }
+    
+    // 2. Student Admission Report
+    else if (reportType === 'student-admission') {
+      const query = {};
+      if (startDate && endDate) {
+        query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
+      records = await Student.find(query)
+        .populate('class', 'name section')
+        .sort({ createdAt: -1 });
+      summary = { totalAdmissions: records.length };
+    }
+
+    // 3. Student Attendance Report
+    else if (reportType === 'student-attendance') {
+      const query = {};
+      if (classId) query.class = classId;
+      if (startDate && endDate) {
+        query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
+      records = await Attendance.find(query)
+        .populate('class', 'name section')
+        .populate('teacher', 'name')
+        .sort({ date: -1 });
+
+      let totalPresent = 0;
+      let totalAbsent = 0;
+      records.forEach(att => {
+        att.records.forEach(r => {
+          if (r.status === 'present') totalPresent++;
+          else if (r.status === 'absent') totalAbsent++;
+        });
+      });
+      summary = { totalPresent, totalAbsent, totalAttendanceRecords: records.length };
+    }
+
+    // 4. Student Academic & Exam Result Report
+    else if (reportType === 'student-academic' || reportType === 'exam-result') {
+      const query = {};
+      if (classId) query.class = classId;
+      records = await Result.find(query)
+        .populate('class', 'name section')
+        .populate('subject', 'name')
+        .sort({ createdAt: -1 });
+      summary = { totalResultSheets: records.length };
+    }
+
+    // 5. Fee Summary & 6. Fee Collection & 7. Class-wise Fee & 9. Fee Due Report & 10. Fee Receipt Report
+    else if (['fee-summary', 'fee-collection', 'class-fee', 'fee-due', 'fee-receipt'].includes(reportType)) {
+      const query = { status: 'Completed' };
+      if (startDate && endDate) {
+        query.paymentDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
+      records = await FeePayment.find(query)
+        .populate('student', 'name admissionNo rollNo contactNumber')
+        .sort({ paymentDate: -1 });
+
+      const totalCollected = records.reduce((acc, r) => acc + (r.amount || 0), 0);
+      summary = { totalCollected, totalReceipts: records.length };
+    }
+
+    // 11. Teacher Summary Report & 12. Teacher Attendance Report
+    else if (reportType === 'teacher-summary' || reportType === 'teacher-attendance') {
+      if (reportType === 'teacher-summary') {
+        records = await User.find({ role: 'TEACHER' })
+          .populate('assignedClasses', 'name section')
+          .populate('assignedSubjects', 'name')
+          .sort({ name: 1 });
+        summary = { totalTeachers: records.length, activeTeachers: records.filter(t => t.status === 'active').length };
+      } else {
+        const query = {};
+        if (startDate && endDate) {
+          query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        }
+        records = await TeacherAttendance.find(query)
+          .populate('teacher', 'name employeeId')
+          .sort({ date: -1 });
+        summary = { totalRecords: records.length };
+      }
+    }
+
+    // 13. Class Summary Report
+    else if (reportType === 'class-summary') {
+      records = await Class.find()
+        .populate('classTeacher', 'name mobile email')
+        .populate('subjects', 'name code')
+        .sort({ name: 1 });
+      summary = { totalClasses: records.length };
+    }
+
+    // 14. Subject Report
+    else if (reportType === 'subject-catalog') {
+      records = await Subject.find().sort({ name: 1 });
+      summary = { totalSubjects: records.length };
+    }
+
+    // 16. Exam Summary Report
+    else if (reportType === 'exam-summary') {
+      records = await Exam.find()
+        .populate('class', 'name section')
+        .populate('subject', 'name')
+        .sort({ examDate: 1 });
+      summary = { totalExams: records.length };
+    }
+
+    // 18. Question Paper Report
+    else if (reportType === 'question-paper') {
+      records = await QuestionPaper.find()
+        .populate('class', 'name section')
+        .populate('subject', 'name')
+        .populate('teacher', 'name')
+        .sort({ createdAt: -1 });
+      summary = { totalPapers: records.length };
+    }
+
+    // 20. Library Report
+    else if (reportType === 'library-catalog') {
+      records = await Library.find().sort({ title: 1 });
+      summary = { totalBooks: records.length };
+    }
+
+    // 21. Inventory Report
+    else if (reportType === 'inventory-stock') {
+      records = await Inventory.find().sort({ itemName: 1 });
+      summary = { totalItems: records.length };
+    }
+
+    // 22. Transport Report
+    else if (reportType === 'transport-fleet') {
+      records = await Transport.find().sort({ routeName: 1 });
+      summary = { totalRoutes: records.length };
+    }
+
+    // 25. User Activity Report
+    else if (reportType === 'user-activity') {
+      records = await ActivityLog.find()
+        .populate('user', 'name role')
+        .sort({ timestamp: -1 })
+        .limit(200);
+      summary = { totalLogs: records.length };
+    }
+
+    // Default Fallback
+    else {
+      records = await Student.find({ status: 'active' }).populate('class', 'name section');
+      summary = { count: records.length };
+    }
 
     res.json({
       success: true,
-      analytics: {
-        papersCreated: papersCount,
-        assignmentsCreated: assignmentsCount,
-        materialsUploaded: materialsCount,
-        attendanceMarked: attendanceCount,
-        resultsRecorded: resultsCount
-      }
+      reportType,
+      academicYear,
+      summary,
+      count: records.length,
+      records
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

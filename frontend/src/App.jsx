@@ -173,6 +173,9 @@ export default function App() {
           <Route path="/communication/certificates" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><CommunicationHub initialTab="certificates" /></ProtectedLayout>} />
 
           <Route path="/head/security" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><RolePermissions /></ProtectedLayout>} />
+          <Route path="/head/parents" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><ParentManagement /></ProtectedLayout>} />
+          <Route path="/head/promotions" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><PromotionManagement /></ProtectedLayout>} />
+          <Route path="/head/principals" element={<ProtectedLayout allowedRoles={['HEAD']}><PrincipalManagement /></ProtectedLayout>} />
           <Route path="/head/activity" element={<ProtectedLayout allowedRoles={['HEAD']}><ActivityLogs /></ProtectedLayout>} />
           <Route path="/head/login-history" element={<ProtectedLayout allowedRoles={['HEAD']}><LoginHistory /></ProtectedLayout>} />
           <Route path="/head/settings" element={<ProtectedLayout allowedRoles={['HEAD']}><SystemSettings /></ProtectedLayout>} />

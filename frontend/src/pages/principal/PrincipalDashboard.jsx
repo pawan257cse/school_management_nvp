@@ -102,8 +102,8 @@ export default function PrincipalDashboard() {
         />
         <StatCard
           title="Class Timetable"
-          value="9 Periods"
-          subtitle="All 10 Scheduled"
+          value="8 Periods"
+          subtitle="8 Teaching + Lunch"
           icon={Clock}
           color="indigo"
         />

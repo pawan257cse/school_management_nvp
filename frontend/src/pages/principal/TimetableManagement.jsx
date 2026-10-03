@@ -1047,7 +1047,7 @@ export default function TimetableManagement() {
                 </p>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-200 self-start sm:self-auto">
-                9 Periods / Day
+                8 Teaching Periods + Lunch Break
               </span>
             </div>
 

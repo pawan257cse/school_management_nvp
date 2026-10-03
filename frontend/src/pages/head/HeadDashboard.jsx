@@ -93,22 +93,14 @@ export default function HeadDashboard() {
     day: 'numeric'
   });
 
-  const liveStudentCount = (stats?.totalStudents && stats.totalStudents > 0)
-    ? stats.totalStudents
-    : (students.length > 0 ? students.length : 93);
+  const liveStudentCount = stats?.totalStudents !== undefined ? stats.totalStudents : students.length;
+  const liveTeacherCount = stats?.totalTeachers !== undefined ? stats.totalTeachers : teachers.length;
+  const liveClassCount = stats?.totalClasses !== undefined ? stats.totalClasses : classes.length;
 
-  const liveTeacherCount = (teachers && teachers.length > 0)
-    ? teachers.length
-    : (stats?.totalTeachers || 10);
-
-  const liveClassCount = (classes && classes.length > 0)
-    ? classes.length
-    : (stats?.totalClasses || 10);
-
-  const totalExpected = stats?.totalExpectedSchoolFees || 1480000;
-  const totalCollected = stats?.totalCollectedSchoolFees || 1025000;
-  const totalPending = stats?.totalPendingSchoolFees || 455000;
-  const collectionPercent = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 69;
+  const totalExpected = stats?.totalExpectedSchoolFees || 0;
+  const totalCollected = stats?.totalCollectedSchoolFees || 0;
+  const totalPending = stats?.totalPendingSchoolFees || 0;
+  const collectionPercent = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
   // Class wise student count distribution
   const classCounts = [
@@ -137,7 +129,7 @@ export default function HeadDashboard() {
     { time: '08:00 – 08:40', className: 'Class 3', subject: 'Computer', teacher: 'Pawan', status: 'Completed' },
     { time: '08:40 – 09:10', className: 'Class 6', subject: 'Computer', teacher: 'Pawan', status: 'Current' },
     { time: '09:10 – 09:45', className: 'Class 4', subject: 'Computer', teacher: 'Megha', status: 'Upcoming' },
-    { time: '09:45 – 10:25', className: 'Class 5', subject: 'Mathematics', teacher: 'Rajesh', status: 'Upcoming' }
+    { time: '09:45 – 10:25', className: 'Class 5', subject: 'Mathematics', teacher: 'Surendra', status: 'Upcoming' }
   ];
 
   // Recently Active Teachers
