@@ -21,11 +21,9 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
 
   // Base Academic Fee calculation
   let academicBaseFee = feeStructure ? feeStructure.totalBaseFee : (student.class?.annualFee || 12000);
-  let feeHeads = feeStructure && feeStructure.feeHeads && feeStructure.feeHeads.length > 0 
-    ? feeStructure.feeHeads.map(h => ({ headName: h.headName, amount: h.amount, frequency: h.frequency || 'Annual' }))
-    : [
-        { headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`, amount: academicBaseFee, frequency: 'Annual' }
-      ];
+  let feeHeads = [
+    { headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`, amount: academicBaseFee, frequency: 'Annual' }
+  ];
 
   let transportFeeAmount = 0;
   // Automatic Transport Fee Calculation if student has opted for School Bus Transport
