@@ -19,20 +19,17 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
     feeStructure = await FeeStructure.findOne({ class: student.class._id, academicYear });
   }
 
-  // Base Fee calculation
-  let totalBaseFee = feeStructure ? feeStructure.totalBaseFee : 30000;
+  // Base Academic Fee calculation
+  let academicBaseFee = feeStructure ? feeStructure.totalBaseFee : (student.class?.annualFee || 12000);
   let feeHeads = feeStructure && feeStructure.feeHeads && feeStructure.feeHeads.length > 0 
     ? feeStructure.feeHeads.map(h => ({ headName: h.headName, amount: h.amount, frequency: h.frequency || 'Annual' }))
     : [
-        { headName: 'Tuition Fee', amount: Math.round(totalBaseFee * 0.6), frequency: 'Annual' },
-        { headName: 'Exam Fee', amount: Math.round(totalBaseFee * 0.1), frequency: 'Annual' },
-        { headName: 'Computer & Lab Fee', amount: Math.round(totalBaseFee * 0.15), frequency: 'Annual' },
-        { headName: 'Development & Activity Fee', amount: Math.round(totalBaseFee * 0.15), frequency: 'Annual' }
+        { headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`, amount: academicBaseFee, frequency: 'Annual' }
       ];
 
+  let transportFeeAmount = 0;
   // Automatic Transport Fee Calculation if student has opted for School Bus Transport
   if (student.transportOpted && student.busRoute) {
-    let transportFeeAmount = 0;
     const cleanRouteName = student.busRoute.trim();
     
     // Search for matching transport route in database
@@ -51,13 +48,13 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
     }
 
     feeHeads.push({
-      headName: `Transport Fee (${cleanRouteName})`,
+      headName: `School Bus Transport Fare (${cleanRouteName})`,
       amount: transportFeeAmount,
       frequency: 'Annual'
     });
-
-    totalBaseFee += transportFeeAmount;
   }
+
+  let totalBaseFee = academicBaseFee + transportFeeAmount;
 
   // Check discount
   const discountDoc = await FeeDiscount.findOne({ student: student._id, academicYear });

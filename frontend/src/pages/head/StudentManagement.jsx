@@ -817,14 +817,18 @@ export default function StudentManagement() {
                     {/* 4 Summary Stat Pills */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                       <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Base Fee</span>
-                        <span className="font-mono font-black text-slate-900 text-base">₹{studentLedger.totalBaseFee?.toLocaleString('en-IN')}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">Academic Class Fee</span>
+                        <span className="font-mono font-black text-slate-900 text-base">
+                          ₹{(studentLedger.academicBaseFee || (studentLedger.totalBaseFee - (viewingStudent.transportOpted ? 5500 : 0)) || 12000)?.toLocaleString('en-IN')}
+                        </span>
                       </div>
 
-                      <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80">
-                        <span className="text-[10px] font-bold text-amber-700 uppercase block">Scholarship / Discount</span>
-                        <span className="font-mono font-black text-amber-800 text-base">
-                          {studentLedger.discountAmount > 0 ? `-₹${studentLedger.discountAmount?.toLocaleString('en-IN')}` : '₹0'}
+                      <div className="p-3 rounded-2xl bg-sky-50/80 border border-sky-200/80">
+                        <span className="text-[10px] font-bold text-sky-700 uppercase block">Transport Route Fare</span>
+                        <span className="font-mono font-black text-sky-800 text-base">
+                          {viewingStudent.transportOpted 
+                            ? `+₹${(studentLedger.transportFeeAmount || 5500)?.toLocaleString('en-IN')}` 
+                            : '₹0'}
                         </span>
                       </div>
 
@@ -843,11 +847,14 @@ export default function StudentManagement() {
                     {studentLedger.feeHeads?.length > 0 && (
                       <div className="bg-slate-50/80 rounded-2xl p-3 space-y-1.5 border border-slate-100">
                         <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Fee Demand Components</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                           {studentLedger.feeHeads.map((h, i) => (
-                            <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/70">
-                              <span className="font-medium text-slate-700 text-[11px] truncate max-w-[140px]">{h.headName}</span>
-                              <span className="font-mono font-extrabold text-slate-900 text-[11px]">₹{h.amount?.toLocaleString('en-IN')}</span>
+                            <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+                              <span className="font-bold text-slate-800 text-[11px] truncate max-w-[200px] flex items-center gap-1.5">
+                                {h.headName.includes('Transport') ? <Bus className="w-3.5 h-3.5 text-indigo-600 shrink-0" /> : <School className="w-3.5 h-3.5 text-slate-600 shrink-0" />}
+                                {h.headName}
+                              </span>
+                              <span className="font-mono font-black text-slate-900 text-[11px]">₹{h.amount?.toLocaleString('en-IN')}</span>
                             </div>
                           ))}
                         </div>
