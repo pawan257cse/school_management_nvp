@@ -1350,69 +1350,21 @@ export default function StudentManagement() {
                 </div>
 
                 {formData.transportOpted && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-[11px] font-bold text-slate-700">
-                        Available Official Bus Routes & Fares (Click to Select) *
-                      </label>
-                      <span className="text-[10px] text-indigo-600 font-bold">
-                        Selected: <strong className="text-indigo-950 font-mono">{formData.busRoute || 'None'}</strong>
-                      </span>
-                    </div>
-
-                    {/* Visual Route Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-1">
-                      {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => {
-                        const isSelected = formData.busRoute === r.routeTitle;
-                        const totalFare = r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500);
-                        return (
-                          <button
-                            type="button"
-                            key={i}
-                            onClick={() => setFormData({ ...formData, transportOpted: true, busRoute: r.routeTitle })}
-                            className={`p-3 rounded-2xl border text-left transition-all relative ${
-                              isSelected
-                                ? 'bg-indigo-50/90 border-indigo-600 shadow-md ring-2 ring-indigo-500/30'
-                                : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-slate-900 text-xs flex items-center gap-1">
-                                <Bus className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
-                                {r.routeTitle}
-                              </span>
-                              {isSelected && (
-                                <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-extrabold">
-                                  Selected ✓
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-baseline justify-between pt-1 border-t border-slate-100 mt-1">
-                              <span className="text-[10px] font-medium text-slate-500">Annual Fare:</span>
-                              <span className="font-mono font-black text-xs text-indigo-700">₹{totalFare.toLocaleString('en-IN')}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Dropdown Select Option */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Or Select Route from Dropdown List:</label>
-                      <select
-                        required={formData.transportOpted}
-                        value={formData.busRoute}
-                        onChange={(e) => setFormData({ ...formData, busRoute: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-xs bg-white focus:ring-2 focus:ring-indigo-500 text-slate-900"
-                      >
-                        <option value="">Select Transport Route</option>
-                        {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => (
-                          <option key={i} value={r.routeTitle}>
-                            {r.routeTitle} — Annual Fare: ₹{(r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500)).toLocaleString('en-IN')}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Select Official Transport Route *</label>
+                    <select
+                      required={formData.transportOpted}
+                      value={formData.busRoute}
+                      onChange={(e) => setFormData({ ...formData, busRoute: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-bold text-xs bg-white focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                    >
+                      <option value="">Select Transport Route</option>
+                      {(transportRoutes.length > 0 ? transportRoutes : defaultRoutes).map((r, i) => (
+                        <option key={i} value={r.routeTitle}>
+                          {r.routeTitle} — Annual Fare: ₹{(r.totalFare || (r.monthlyFee ? r.monthlyFee * 10 : 5500)).toLocaleString('en-IN')}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
