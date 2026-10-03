@@ -235,7 +235,41 @@ const TransportManagement = () => {
         </div>
       </div>
 
-      {/* Fleet Cards Grid */}
+      {/* Official Transport Fare Chart */}
+      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+        <h3 className="font-heading font-bold text-sm text-slate-900 flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Bus className="w-4 h-4 text-indigo-600" />
+            Official NVP Transport / Fare Chart (2026-2027)
+          </span>
+          <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+            7 Active Routes
+          </span>
+        </h3>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse min-w-[500px]">
+            <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
+              <tr>
+                <th className="py-2.5 px-3">Route / Area</th>
+                <th className="py-2.5 px-3 text-right">Total Fare</th>
+                <th className="py-2.5 px-3 text-right">1st Installment (Adm. Time)</th>
+                <th className="py-2.5 px-3 text-right">2nd Installment</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+              {vehicles.map((v) => (
+                <tr key={v._id || v.routeTitle} className="hover:bg-slate-50 transition">
+                  <td className="py-2.5 px-3 font-bold text-slate-900">{v.routeTitle}</td>
+                  <td className="py-2.5 px-3 text-right font-extrabold text-indigo-900 font-mono">₹{(v.totalFare || v.monthlyFee * 10).toLocaleString('en-IN')}</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-emerald-700 font-mono">₹{(v.firstInstallment || Math.round((v.totalFare || v.monthlyFee * 10) * 0.55)).toLocaleString('en-IN')}</td>
+                  <td className="py-2.5 px-3 text-right font-bold text-amber-700 font-mono">₹{(v.secondInstallment || Math.round((v.totalFare || v.monthlyFee * 10) * 0.45)).toLocaleString('en-IN')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {loading ? (
           <div className="col-span-2 p-12 text-center text-slate-500 font-medium bg-white rounded-xl border border-slate-200">

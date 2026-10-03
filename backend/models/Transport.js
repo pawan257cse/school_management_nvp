@@ -49,6 +49,18 @@ const transportSchema = new mongoose.Schema({
     required: true,
     default: 1000
   },
+  totalFare: {
+    type: Number,
+    default: 0
+  },
+  firstInstallment: {
+    type: Number,
+    default: 0
+  },
+  secondInstallment: {
+    type: Number,
+    default: 0
+  },
   pickupPoints: [{
     type: String,
     trim: true
