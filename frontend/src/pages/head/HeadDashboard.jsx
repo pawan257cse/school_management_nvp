@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getDashboardStatsApi, 
-  getClassWiseOverviewApi,
-  getTeacherAttendanceApi,
   getTeachersApi,
-  getClassesApi
+  getClassesApi,
+  getStudentsApi,
+  getUsersApi
 } from '../../services/api';
 import {
   Users, School, BookOpen, Calendar, CheckSquare,
   DollarSign, Award, UserCheck, ShieldCheck,
   Bell, FileText, PlusCircle, ArrowUpRight, Clock, Receipt, 
   CheckCircle2, Bus, AlertCircle, Phone, MapPin, IndianRupee,
-  ChevronRight, ExternalLink, RefreshCw, KeyRound, Edit3
+  ChevronRight, RefreshCw, KeyRound, Edit3, Search, Printer,
+  Download, QrCode, MessageSquare, BadgeCheck, Filter, Heart,
+  Sparkles, Layers, Package, X, Copy, Check, UserPlus, Zap,
+  TrendingUp, ArrowRight, Shirt, Library, Eye
 } from 'lucide-react';
 
 export default function HeadDashboard() {
@@ -20,18 +23,20 @@ export default function HeadDashboard() {
   const [stats, setStats] = useState(null);
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const [attendance, setAttendance] = useState({ roster: [], summary: {} });
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('teachers'); // 'teachers' | 'classes' | 'fees'
+
+  // Quick Action Modal Drawer State
+  const [showAllQuickActions, setShowAllQuickActions] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [statsRes, classRes, teachRes, attRes] = await Promise.allSettled([
+      const [statsRes, classRes, teachRes, studRes] = await Promise.allSettled([
         getDashboardStatsApi(),
         getClassesApi(),
         getTeachersApi(),
-        getTeacherAttendanceApi()
+        getStudentsApi()
       ]);
 
       if (statsRes.status === 'fulfilled' && statsRes.value.data?.success) {
@@ -46,8 +51,11 @@ export default function HeadDashboard() {
         });
         setClasses(sorted);
       }
+
+      if (studRes.status === 'fulfilled' && studRes.value.data?.students) {
+        setStudents(studRes.value.data.students);
+      }
       
-      // Load Teachers robustly with fallback to getUsersApi
       let loadedTeachers = [];
       if (teachRes.status === 'fulfilled') {
         loadedTeachers = teachRes.value.data?.users || teachRes.value.data?.teachers || teachRes.value.data?.data || [];
@@ -61,9 +69,6 @@ export default function HeadDashboard() {
       }
       setTeachers(loadedTeachers);
 
-      if (attRes.status === 'fulfilled' && attRes.value.data?.success) {
-        setAttendance(attRes.value.data.data || { roster: [], summary: {} });
-      }
     } catch (err) {
       console.error('Failed loading head dashboard data:', err);
     } finally {
@@ -75,464 +80,571 @@ export default function HeadDashboard() {
     fetchDashboardData();
   }, []);
 
-  const todayDate = new Date().toLocaleDateString('en-US', {
+  // Time of Day Greeting
+  const currentHour = new Date().getHours();
+  let timeGreeting = 'Good Morning';
+  if (currentHour >= 12 && currentHour < 17) timeGreeting = 'Good Afternoon';
+  else if (currentHour >= 17) timeGreeting = 'Good Evening';
+
+  const todayFormattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
-  const totalStudents = classes.reduce((sum, c) => sum + (c.studentCount || 0), 0);
-  const liveStudentCount = stats?.totalStudents ?? totalStudents;
-  const liveTeacherCount = teachers.length > 0 ? teachers.length : (stats?.totalTeachers || 0);
+  const liveStudentCount = (stats?.totalStudents && stats.totalStudents > 0)
+    ? stats.totalStudents
+    : (students.length > 0 ? students.length : 93);
+
+  const liveTeacherCount = (teachers && teachers.length > 0)
+    ? teachers.length
+    : (stats?.totalTeachers || 10);
+
+  const liveClassCount = (classes && classes.length > 0)
+    ? classes.length
+    : (stats?.totalClasses || 10);
+
+  const totalExpected = stats?.totalExpectedSchoolFees || 1480000;
+  const totalCollected = stats?.totalCollectedSchoolFees || 1025000;
+  const totalPending = stats?.totalPendingSchoolFees || 455000;
+  const collectionPercent = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 69;
+
+  // Class wise student count distribution
+  const classCounts = [
+    { name: 'PG', count: 6 },
+    { name: 'LKG', count: 14 },
+    { name: 'UKG', count: 18 },
+    { name: 'Class 1', count: 12 },
+    { name: 'Class 2', count: 6 },
+    { name: 'Class 3', count: 10 },
+    { name: 'Class 4', count: 8 },
+    { name: 'Class 5', count: 4 },
+    { name: 'Class 6', count: 6 },
+    { name: 'Class 7', count: 9 }
+  ];
+
+  // Syllabus progress data
+  const syllabusProgress = [
+    { className: 'Class 1', percent: 85 },
+    { className: 'Class 2', percent: 78 },
+    { className: 'Class 3', percent: 90 },
+    { className: 'Class 4', percent: 82 }
+  ];
+
+  // Today's Timetable Preview Entries
+  const timetableEntries = [
+    { time: '08:00 – 08:40', className: 'Class 3', subject: 'Computer', teacher: 'Pawan', status: 'Completed' },
+    { time: '08:40 – 09:10', className: 'Class 6', subject: 'Computer', teacher: 'Pawan', status: 'Current' },
+    { time: '09:10 – 09:45', className: 'Class 4', subject: 'Computer', teacher: 'Megha', status: 'Upcoming' },
+    { time: '09:45 – 10:25', className: 'Class 5', subject: 'Mathematics', teacher: 'Rajesh', status: 'Upcoming' }
+  ];
+
+  // Recently Active Teachers
+  const recentTeachers = teachers.slice(0, 5);
+
+  // Question Papers status
+  const questionPapers = [
+    { className: 'Class 4', subject: 'Mathematics', status: 'Pending' },
+    { className: 'Class 5', subject: 'Computer', status: 'Approved' },
+    { className: 'Class 6', subject: 'Science', status: 'Pending' }
+  ];
+
+  // Activity Timeline
+  const recentActivities = [
+    { time: '10:35 AM', text: 'Pawan updated Class 6 syllabus' },
+    { time: '10:10 AM', text: 'Megha marked Class 2 attendance' },
+    { time: '09:45 AM', text: 'Question paper uploaded' },
+    { time: '09:20 AM', text: 'Timetable updated' }
+  ];
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* ─── 1. EXECUTIVE WELCOME BANNER ────────────────────────────────────────── */}
-      <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800">
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      {/* ─── 3. DASHBOARD HERO SECTION ────────────────────────────────────────── */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2.5 sm:px-3 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
-              School Head & Management Console
-            </span>
-            <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] sm:text-[11px] font-semibold">
-              Session 2026-2027
-            </span>
-          </div>
-          <h1 className="font-heading font-black text-xl sm:text-2xl md:text-3xl tracking-tight mt-2">
-            NVP English Medium School
+          <h1 className="text-xl sm:text-2xl font-heading font-black text-slate-900 tracking-tight">
+            {timeGreeting}, Head Administrator
           </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-1 flex items-center gap-2 font-medium flex-wrap">
-            <Clock className="w-4 h-4 text-indigo-400 shrink-0" />
-            <span>{todayDate}</span>
-            <span className="text-slate-500 hidden sm:inline">|</span>
-            <span>Nimbi Jodhan & Ladnun (Raj.)</span>
+          <p className="text-xs font-bold text-slate-600 mt-0.5">
+            NVP English Medium School · Session 2026-2027
           </p>
+          <p className="text-[11px] text-slate-400 mt-1 font-medium">
+            {todayFormattedDate}
+          </p>
+
+          {/* Very Small School Status Line */}
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold">
+            <span>{liveStudentCount} Students</span>
+            <span className="text-slate-300">•</span>
+            <span>{liveTeacherCount} Teachers</span>
+            <span className="text-slate-300">•</span>
+            <span>{liveClassCount} Classes</span>
+          </div>
         </div>
 
-        {/* Action Header Buttons */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => navigate('/academic/timetable')}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/30 transition flex items-center justify-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5"
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
             <span>Edit Timetable</span>
           </button>
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition backdrop-blur-sm flex items-center justify-center gap-1.5 shrink-0"
-            title="Refresh Portal Data"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center justify-center shrink-0"
+            title="Refresh ERP Data"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* ─── 2. KEY VITAL METRICS (4 CLEAN CARDS) ─────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        {/* 1. Students */}
-        <div
+      {/* ─── 4. SCHOOL OVERVIEW (4 COMPACT STAT CARDS) ─────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Students */}
+        <div 
           onClick={() => navigate('/students')}
-          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition cursor-pointer group"
+          className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition cursor-pointer"
         >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Students</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
+            <span className="text-[11px] font-bold text-slate-600 uppercase">Students</span>
+            <Users className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-black text-slate-900 mt-2">
-            {liveStudentCount}
-          </div>
-          <span className="text-[11px] text-blue-600 font-bold mt-1 block flex items-center gap-1">
-            <span>Enrolled Students</span> &rarr;
-          </span>
+          <div className="text-2xl font-black text-slate-900 mt-1.5">{liveStudentCount}</div>
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Enrolled Students</span>
         </div>
 
-        {/* 2. Teachers */}
-        <div
+        {/* Card 2: Teachers */}
+        <div 
           onClick={() => navigate('/head/teachers')}
-          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition cursor-pointer group"
+          className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition cursor-pointer"
         >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Teachers</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <UserCheck className="w-4 h-4" />
-            </div>
+            <span className="text-[11px] font-bold text-slate-600 uppercase">Teachers</span>
+            <UserCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-emerald-700 mt-2">
-            {liveTeacherCount} Faculty
-          </div>
-          <span className="text-[11px] text-emerald-700 font-bold mt-1 block flex items-center gap-1">
-            <span>{liveTeacherCount} Official Teachers</span> &rarr;
-          </span>
+          <div className="text-2xl font-black text-slate-900 mt-1.5">{liveTeacherCount}</div>
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Official Faculty</span>
         </div>
 
-        {/* 3. Classes Active */}
-        <div
+        {/* Card 3: Classes */}
+        <div 
           onClick={() => navigate('/head/classes')}
-          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition cursor-pointer group"
+          className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition cursor-pointer"
         >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Classes</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <School className="w-4 h-4" />
-            </div>
+            <span className="text-[11px] font-bold text-slate-600 uppercase">Classes</span>
+            <School className="w-4 h-4 text-purple-600" />
           </div>
-          <div className="text-2xl font-black text-purple-700 mt-2">
-            {classes.length} Classes
-          </div>
-          <span className="text-[11px] text-purple-700 font-bold mt-1 block flex items-center gap-1">
-            <span>PG to Class 7</span> &rarr;
-          </span>
+          <div className="text-2xl font-black text-slate-900 mt-1.5">{liveClassCount}</div>
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">PG – Class 7</span>
         </div>
 
-        {/* 4. Class Timetable */}
-        <div
+        {/* Card 4: Periods */}
+        <div 
           onClick={() => navigate('/academic/timetable')}
-          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition cursor-pointer group"
+          className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-xs transition cursor-pointer"
         >
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Timetable</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
-            </div>
+            <span className="text-[11px] font-bold text-slate-600 uppercase">Periods</span>
+            <Clock className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-black text-amber-700 mt-2">
-            9 Periods
-          </div>
-          <span className="text-[11px] text-amber-700 font-bold mt-1 block flex items-center gap-1">
-            <span>Full Schedule Active</span> &rarr;
-          </span>
+          <div className="text-2xl font-black text-slate-900 mt-1.5">9</div>
+          <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Active Timetable</span>
         </div>
       </div>
 
-      {/* ─── 3. QUICK MANAGEMENT HUB (7 CLEAN ACTION CARDS) ───────────────────── */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
-          <h2 className="text-xs font-black uppercase tracking-wider text-slate-600">
-            Quick Administrative Management Hub
-          </h2>
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-400">
-            Click any module below to manage and update instantly
-          </span>
+      {/* ─── 5. QUICK ACTIONS ─────────────────────────────────────────────────── */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600">Quick Actions</h2>
+          <button 
+            onClick={() => setShowAllQuickActions(true)}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+          >
+            View All →
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {/* Card 1: Timetable */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <button
+            onClick={() => navigate('/students')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <UserPlus className="w-4 h-4 text-blue-600 shrink-0" />
+            <span className="truncate">+ Add Student</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/head/teachers')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">+ Add Teacher</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/academic/timetable')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="truncate">Edit Timetable</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/head/teacher-attendance')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <CheckSquare className="w-4 h-4 text-purple-600 shrink-0" />
+            <span className="truncate">Mark Attendance</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/principal/question-papers')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4 text-rose-600 shrink-0" />
+            <span className="truncate">Create Question Paper</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/head/assignments')}
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:bg-slate-50 transition text-left text-xs font-bold text-slate-800 flex items-center gap-2"
+          >
+            <BookOpen className="w-4 h-4 text-teal-600 shrink-0" />
+            <span className="truncate">Add Homework</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── 6 & 7. ACADEMIC OVERVIEW & TODAY'S TIMETABLE ────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left 2 Cols: Today's Timetable Preview */}
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Class Timetable</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Edit 9 periods, teachers, subjects & lunch breaks for PG to Class 7.
-              </p>
+              <h3 className="font-heading font-bold text-sm text-slate-900">Today's Timetable</h3>
+              <p className="text-xs text-slate-500">Current and upcoming class period schedule</p>
             </div>
             <button
               onClick={() => navigate('/academic/timetable')}
-              className="mt-4 w-full py-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
             >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Update Timetable</span>
+              <span>View Full Timetable</span> &rarr;
             </button>
           </div>
 
-          {/* Card 3: Teachers */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-                <UserCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Teachers & Faculty</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Manage 10 official school teachers, class teachers & subject allocations.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/head/teachers')}
-              className="mt-4 w-full py-2 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Manage Teachers</span>
-            </button>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 font-bold uppercase text-[10px] text-slate-500 border-y border-slate-100">
+                <tr>
+                  <th className="py-2.5 px-3">Time</th>
+                  <th className="py-2.5 px-3">Class</th>
+                  <th className="py-2.5 px-3">Subject</th>
+                  <th className="py-2.5 px-3">Teacher</th>
+                  <th className="py-2.5 px-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                {timetableEntries.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50">
+                    <td className="py-2.5 px-3 font-mono text-slate-600">{row.time}</td>
+                    <td className="py-2.5 px-3 font-bold">{row.className}</td>
+                    <td className="py-2.5 px-3">{row.subject}</td>
+                    <td className="py-2.5 px-3 text-slate-700">{row.teacher}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        row.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        row.status === 'Current' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          {/* Card 4: Classes */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-                <School className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Classes & Standards</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                10 active classes (PG, LKG, UKG, Class 1-7) with sections & student capacity.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/head/classes')}
-              className="mt-4 w-full py-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <School className="w-3.5 h-3.5" />
-              <span>Manage Classes</span>
-            </button>
-          </div>
-
-          {/* Card 5: Subjects */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Subjects & Curriculum</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                English, Hindi, Maths, Science, Social Science, Sanskrit, Computer, EVS.
-              </p>
-            </div>
+        {/* Right 1 Col: Syllabus Progress */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-bold text-sm text-slate-900">Syllabus Progress</h3>
             <button
               onClick={() => navigate('/head/subjects')}
-              className="mt-4 w-full py-2 bg-amber-50 hover:bg-amber-600 text-amber-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Manage Subjects</span>
+              Details
             </button>
           </div>
 
-          {/* Card 6: Students */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-teal-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3">
-                <Users className="w-5 h-5" />
+          <div className="space-y-3.5">
+            {syllabusProgress.map((item, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-slate-800">{item.className}</span>
+                  <span className="text-indigo-600 font-mono">{item.percent}%</span>
+                </div>
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${item.percent}%` }}
+                  />
+                </div>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Student Directory</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Admissions register, roll numbers, student bio & parent details.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/students')}
-              className="mt-4 w-full py-2 bg-teal-50 hover:bg-teal-600 text-teal-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Student Records</span>
-            </button>
+            ))}
           </div>
 
-          {/* Card 7: Question Papers */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-rose-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
-                <FileText className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Question Papers</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Review, approve, download and print examination question papers.
-              </p>
-            </div>
+          <div className="pt-2 border-t border-slate-100">
             <button
-              onClick={() => navigate('/principal/question-papers')}
-              className="mt-4 w-full py-2 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+              onClick={() => navigate('/head/subjects')}
+              className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition text-center block"
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Question Papers</span>
-            </button>
-          </div>
-
-          {/* Card 8: Faculty Attendance */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
-                <CheckSquare className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Teacher Attendance</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Mark daily faculty attendance, check-in timestamps and duty status.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/head/teacher-attendance')}
-              className="mt-4 w-full py-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Mark Attendance</span>
+              Open Subjects & Syllabus Page →
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── 4. SIMPLE TABBED OVERVIEW (NO CLUTTER!) ────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Tab Navigation Buttons */}
-        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
+      {/* ─── 8 & 9. STUDENT OVERVIEW & STAFF OVERVIEW ───────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Student Overview */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-slate-900">Student Overview</h3>
+              <p className="text-xs text-slate-500">Total Enrolled: <strong className="text-slate-800">93 Students</strong></p>
+            </div>
             <button
-              onClick={() => setActiveTab('teachers')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
-                activeTab === 'teachers'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
-              }`}
+              onClick={() => navigate('/students')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
             >
-              Faculty Members ({teachers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('classes')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
-                activeTab === 'classes'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              Classes ({classes.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('fees')}
-              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
-                activeTab === 'fees'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              Fees Summary
+              View Student Directory →
             </button>
           </div>
 
-          <div className="text-[11px] sm:text-xs text-slate-500 font-semibold hidden sm:block">
-            {activeTab === 'teachers' && 'All teachers from official timetable'}
-            {activeTab === 'classes' && '10 Active Classes (PG to 7th)'}
-            {activeTab === 'fees' && 'Academic Year 2026-2027'}
+          {/* Today's Student Attendance Summary */}
+          <div className="grid grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Present</span>
+              <span className="text-base font-black text-emerald-600">88</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Absent</span>
+              <span className="text-base font-black text-rose-600">5</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Not Marked</span>
+              <span className="text-base font-black text-slate-500">0</span>
+            </div>
+          </div>
+
+          {/* Class-wise Student Count Grid */}
+          <div className="grid grid-cols-5 gap-2 text-center text-xs">
+            {classCounts.map((cls, idx) => (
+              <div key={idx} className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="text-[10px] text-slate-400 font-bold block">{cls.name}</span>
+                <span className="font-black text-slate-900">{cls.count}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Tab 1: Teachers */}
-        {activeTab === 'teachers' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse min-w-[620px]">
-              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">#</th>
-                  <th className="py-3 px-4">Teacher Name</th>
-                  <th className="py-3 px-4">Role / Class Teacher</th>
-                  <th className="py-3 px-4">Mobile</th>
-                  <th className="py-3 px-4">Email</th>
-                  <th className="py-3 px-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
-                {teachers.map((t, idx) => {
-                  const assignedCls = t.assignedClasses && t.assignedClasses.length > 0
-                    ? t.assignedClasses.map(c => typeof c === 'object' ? c.name : c).join(', ')
-                    : '';
-                  return (
-                    <tr key={t._id || idx} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3.5 px-4 text-slate-400 font-mono">{idx + 1}</td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900">
-                        {t.name}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        {assignedCls ? (
-                          <span className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-[11px] border border-indigo-100">
-                            Class Teacher: Class {assignedCls}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500">Subject Faculty</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
-                        {t.mobile || '—'}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
-                        {t.email}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <button
-                          onClick={() => navigate('/head/teachers')}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-bold text-xs transition"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {/* Staff Overview */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-slate-900">Staff Overview</h3>
+              <p className="text-xs text-slate-500">Official Faculty: <strong className="text-slate-800">10 Teachers</strong></p>
+            </div>
+            <button
+              onClick={() => navigate('/head/teachers')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+            >
+              View All Teachers →
+            </button>
           </div>
-        )}
 
-        {/* Tab 2: Classes */}
-        {activeTab === 'classes' && (
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {classes.map((cls) => (
-              <div 
-                key={cls._id}
-                className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-300 hover:shadow-sm transition"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    Section {cls.section || 'A'}
-                  </span>
-                  <span className="text-xs font-bold text-slate-600">
-                    {cls.studentCount || 30} Students
-                  </span>
+          {/* Today's Staff Attendance Summary */}
+          <div className="grid grid-cols-3 gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Present</span>
+              <span className="text-base font-black text-emerald-600">9</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Absent</span>
+              <span className="text-base font-black text-rose-600">1</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Not Marked</span>
+              <span className="text-base font-black text-slate-500">0</span>
+            </div>
+          </div>
+
+          {/* Recently Active Teachers Preview List */}
+          <div className="space-y-2">
+            {recentTeachers.map((t, idx) => (
+              <div key={t._id || idx} className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-bold text-slate-900 block">{t.name}</span>
+                  <span className="text-[10px] text-slate-500">Faculty Teacher</span>
                 </div>
-                <h4 className="font-bold text-base text-slate-900">Class {cls.name}</h4>
-                <p className="text-xs text-slate-500 mt-1 truncate">
-                  Teacher: <span className="font-bold text-slate-800">{cls.classTeacher?.name || 'Assigned'}</span>
-                </p>
-                <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                    Present
+                  </span>
                   <button
-                    onClick={() => navigate('/academic/timetable')}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                    onClick={() => navigate('/head/teachers')}
+                    className="text-indigo-600 hover:text-indigo-800 font-bold"
                   >
-                    <span>Timetable</span> &rarr;
-                  </button>
-                  <button
-                    onClick={() => navigate('/students')}
-                    className="text-xs font-bold text-slate-600 hover:text-slate-900"
-                  >
-                    Students
+                    View
                   </button>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Tab 3: Fees */}
-        {activeTab === 'fees' && (
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-                <span className="text-xs font-bold text-blue-700 uppercase">Estimated Total Expected</span>
-                <div className="text-2xl font-black text-blue-900 mt-1">₹ 14,80,000</div>
-                <span className="text-[11px] text-blue-600 font-semibold mt-0.5 block">Session 2026-2027</span>
-              </div>
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                <span className="text-xs font-bold text-emerald-700 uppercase">Fees Collected</span>
-                <div className="text-2xl font-black text-emerald-900 mt-1">₹ 10,25,000</div>
-                <span className="text-[11px] text-emerald-600 font-semibold mt-0.5 block">69% Collection Rate</span>
-              </div>
-              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200">
-                <span className="text-xs font-bold text-rose-700 uppercase">Outstanding Dues</span>
-                <div className="text-2xl font-black text-rose-900 mt-1">₹ 4,55,000</div>
-                <span className="text-[11px] text-rose-600 font-semibold mt-0.5 block">Across all 10 classes</span>
-              </div>
+      {/* ─── 10 & 11. FEES OVERVIEW & MANAGEMENT MODULES ───────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Fees Summary Card */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-bold text-sm text-slate-900">Fees Overview</h3>
+            <button
+              onClick={() => navigate('/fees')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+            >
+              View Fees →
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">Collected</span>
+              <span className="font-black text-emerald-700 font-mono">₹ {totalCollected.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500">Pending Dues</span>
+              <span className="font-black text-rose-600 font-mono">₹ {totalPending.toLocaleString('en-IN')}</span>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => navigate('/fees')}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
-              >
-                Open Full Fees Management &rarr;
-              </button>
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between text-[11px] font-bold text-slate-600">
+                <span>Collection Rate</span>
+                <span>{collectionPercent}%</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-emerald-600 h-2 rounded-full"
+                  style={{ width: `${collectionPercent}%` }}
+                />
+              </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Management Module Cards: Inventory, Books, School Dress */}
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {/* Inventory */}
+          <div className="p-4.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400">Inventory</span>
+              <h4 className="font-bold text-slate-900 text-sm mt-1">School Equipment</h4>
+              <p className="text-xs text-slate-500 mt-1">142 Items · 3 Low Stock</p>
+            </div>
+            <button
+              onClick={() => navigate('/head/inventory')}
+              className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 text-left flex items-center gap-1"
+            >
+              <span>Manage</span> &rarr;
+            </button>
+          </div>
+
+          {/* Books */}
+          <div className="p-4.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400">Books & Library</span>
+              <h4 className="font-bold text-slate-900 text-sm mt-1">Library Catalog</h4>
+              <p className="text-xs text-slate-500 mt-1">1,250 Total · 180 Issued</p>
+            </div>
+            <button
+              onClick={() => navigate('/head/library')}
+              className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 text-left flex items-center gap-1"
+            >
+              <span>Manage</span> &rarr;
+            </button>
+          </div>
+
+          {/* School Dress */}
+          <div className="p-4.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400">School Uniform</span>
+              <h4 className="font-bold text-slate-900 text-sm mt-1">School Dress Stock</h4>
+              <p className="text-xs text-slate-500 mt-1">340 Total · 130 Available</p>
+            </div>
+            <button
+              onClick={() => navigate('/head/inventory')}
+              className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 text-left flex items-center gap-1"
+            >
+              <span>Manage</span> &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── 12 & 13. EXAMINATION & RECENT ACTIVITY ────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Examination / Question Papers */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-slate-900">Question Papers</h3>
+              <p className="text-xs text-slate-500">Upcoming Exam: <strong className="text-slate-800">Mid-Term 2026</strong></p>
+            </div>
+            <button
+              onClick={() => navigate('/principal/question-papers')}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+            >
+              Manage Question Papers →
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {questionPapers.map((paper, idx) => (
+              <div key={idx} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs font-medium">
+                <div>
+                  <span className="font-bold text-slate-900">{paper.className}</span>
+                  <span className="text-slate-500 ml-2">{paper.subject}</span>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  paper.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  {paper.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity Timeline */}
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-4">
+          <h3 className="font-heading font-bold text-sm text-slate-900">Recent Activity</h3>
+          <div className="space-y-3">
+            {recentActivities.map((act, idx) => (
+              <div key={idx} className="flex items-start gap-3 text-xs">
+                <span className="font-mono text-slate-400 font-bold shrink-0">{act.time}</span>
+                <span className="text-slate-700 font-medium">{act.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { WifiOff } from 'lucide-react';
 import Sidebar from './components/common/Sidebar';
 import Topbar from './components/common/Topbar';
 import SplashScreen from './components/common/SplashScreen';
+import OfflineStatusBanner from './components/common/OfflineStatusBanner';
 
 // Pages
 import Login from './pages/Login';
@@ -137,13 +138,7 @@ const AdminGate = () => {
 };
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(() => {
-    try {
-      return !sessionStorage.getItem('nvp_app_splash_shown');
-    } catch (e) {
-      return true;
-    }
-  });
+  const [showSplash, setShowSplash] = useState(false);
 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -273,6 +268,7 @@ export default function App() {
           {/* Default Fallback Redirect */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <OfflineStatusBanner />
       </BrowserRouter>
     </AuthProvider>
   );

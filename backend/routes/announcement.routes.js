@@ -9,11 +9,14 @@ const checkRole = require('../middleware/checkRole');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     const announcements = await Announcement.find({
       $or: [
         { endDate: { $exists: false } },
         { endDate: null },
-        { endDate: { $gte: new Date() } }
+        { endDate: { $gte: startOfToday } }
       ]
     }).sort({ priority: -1, createdAt: -1 });
 

@@ -1,18 +1,10 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
-
-// Configure public DNS fallback for MongoDB Atlas SRV resolution
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {
-  // Ignore in environments where setting DNS servers is restricted
-}
+const { Resolver } = require('dns').promises;
 
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI;
 
-    // 1. If MONGODB_URI is provided, attempt connection
     if (mongoUri) {
       try {
         console.log('[MongoDB] Connecting to Cloud Database (MONGODB_URI)...');
@@ -22,15 +14,41 @@ const connectDB = async () => {
         console.log(`[MongoDB] Connected successfully to live database: ${conn.connection.host}`);
         return;
       } catch (cloudErr) {
-        console.error(`[MongoDB Error] Cloud Atlas connection failed: ${cloudErr.message}`);
+        console.warn(`[MongoDB Warning] Standard SRV connection failed (${cloudErr.message}). Attempting custom DNS resolution...`);
+        
+        try {
+          if (mongoUri.startsWith('mongodb+srv://')) {
+            const urlObj = new URL(mongoUri.replace('mongodb+srv://', 'http://'));
+            const srvHost = urlObj.hostname;
+            const authPart = urlObj.username ? `${urlObj.username}:${urlObj.password}@` : '';
+            const dbName = urlObj.pathname.replace(/^\//, '') || 'nvp_school';
+
+            const resolver = new Resolver();
+            resolver.setServers(['8.8.8.8', '1.1.1.1']);
+            const srvs = await resolver.resolveSrv(`_mongodb._tcp.${srvHost}`);
+
+            if (srvs && srvs.length > 0) {
+              const directHosts = srvs.map(s => `${s.name}:${s.port}`).join(',');
+              const directUri = `mongodb://${authPart}${directHosts}/${dbName}?ssl=true&authSource=admin&retryWrites=true&w=majority`;
+
+              console.log('[MongoDB] Connecting to Cloud Database via direct DNS resolved hosts...');
+              const conn = await mongoose.connect(directUri, {
+                serverSelectionTimeoutMS: 15000
+              });
+              console.log(`[MongoDB] Connected successfully to live persistent database: ${conn.connection.host}`);
+              return;
+            }
+          }
+        } catch (directDnsErr) {
+          console.error(`[MongoDB Error] Direct DNS fallback failed: ${directDnsErr.message}`);
+        }
+
         if (process.env.NODE_ENV === 'production' || process.env.STRICT_DB === 'true') {
           throw cloudErr;
         }
-        console.warn('[MongoDB Warning] Could not connect to Atlas. To prevent data loss, please verify your internet or MONGODB_URI in backend/.env.');
       }
     }
 
-    // 2. Fallback to MongoMemoryServer only if explicitly allowed for local unit tests
     if (process.env.ALLOW_MEMORY_DB === 'true') {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       const mongod = await MongoMemoryServer.create();

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { addPendingMutation, syncPendingMutations } from '../utils/offlineSync';
 
 const rawApiBase = import.meta.env.VITE_API_URL || '';
 const cleanApiBase = () => {
@@ -7,7 +8,7 @@ const cleanApiBase = () => {
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
   }
   if (typeof window !== 'undefined' && window.location.origin.includes('localhost')) {
-    return 'https://nvp-school-backend.onrender.com/api';
+    return 'http://localhost:5000/api';
   }
   return '/api';
 };
@@ -30,7 +31,7 @@ API.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Response Interceptor: Offline Caching & Session Handling
+// Response Interceptor: Offline Caching, Mutation Queueing & Session Handling
 const buildCacheKey = (config) => {
   if (!config) return 'nvp_cache_default';
   const url = config.url || '';
@@ -38,20 +39,38 @@ const buildCacheKey = (config) => {
   return `nvp_offline_cache_${url}_${paramsStr}`;
 };
 
+const clearOfflineCache = () => {
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('nvp_offline_cache_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+};
+
 API.interceptors.response.use(
   (response) => {
-    // Automatically cache successful GET API responses in localStorage for offline viewing
-    if (response.config && response.config.method === 'get' && response.data?.success) {
+    const method = (response.config?.method || '').toLowerCase();
+    if (method === 'get' && response.data?.success) {
       try {
         const cacheKey = buildCacheKey(response.config);
         localStorage.setItem(cacheKey, JSON.stringify(response.data));
       } catch (e) {}
+    } else if (['post', 'put', 'delete', 'patch'].includes(method)) {
+      clearOfflineCache();
     }
     return response;
   },
   (error) => {
-    // Fallback to offline cached data if network is disconnected or server is unreachable
-    if (error.config && error.config.method === 'get' && (!error.response || error.code === 'ERR_NETWORK')) {
+    const isNetworkError = !error.response || error.code === 'ERR_NETWORK' || (error.message && error.message.includes('Network Error'));
+    const method = (error.config?.method || 'get').toLowerCase();
+
+    // 1. GET requests: Serve offline cached response
+    if (isNetworkError && method === 'get') {
       try {
         const cacheKey = buildCacheKey(error.config);
         const cached = localStorage.getItem(cacheKey);
@@ -66,6 +85,38 @@ API.interceptors.response.use(
             isOfflineCached: true
           });
         }
+      } catch (e) {}
+    }
+
+    // 2. Mutating requests (POST, PUT, DELETE, PATCH): Queue offline and return optimistic success
+    if (isNetworkError && ['post', 'put', 'delete', 'patch'].includes(method) && !error.config?.headers?.['x-offline-replayed']) {
+      try {
+        let payload = error.config.data;
+        if (typeof payload === 'string') {
+          try { payload = JSON.parse(payload); } catch (e) {}
+        }
+
+        const pendingItem = addPendingMutation({
+          url: error.config.url,
+          method: method,
+          data: payload,
+          title: `Offline ${method.toUpperCase()} ${error.config.url}`
+        });
+
+        console.log('[Offline Queue] Action queued offline:', pendingItem);
+
+        return Promise.resolve({
+          data: {
+            success: true,
+            isOfflineQueued: true,
+            message: 'Saved offline! Your changes will sync automatically when back online.',
+            queuedItem: pendingItem
+          },
+          status: 200,
+          statusText: 'OK (Queued Offline)',
+          headers: {},
+          config: error.config
+        });
       } catch (e) {}
     }
 
@@ -84,6 +135,14 @@ API.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Auto Sync Listener when reconnected
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    console.log('[Offline Engine] Internet restored! Syncing pending offline changes...');
+    syncPendingMutations(API);
+  });
+}
 
 // Auth Services
 export const loginApi = (email, password) => API.post('/auth/login', { email, password });

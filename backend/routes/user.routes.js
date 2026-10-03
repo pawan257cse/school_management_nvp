@@ -270,9 +270,15 @@ router.post('/bulk-create-students', protect, checkRole('HEAD', 'PRINCIPAL'), as
 router.get('/attendance-assignments', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
   try {
     const classSortOrder = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    const classes = await Class.find({ status: 'active' })
+    let classes = await Class.find({ status: { $ne: 'inactive' } })
       .populate('attendanceTeacher', 'name email employeeId mobile')
       .populate('classTeacher', 'name email employeeId mobile');
+
+    if (!classes || classes.length === 0) {
+      classes = await Class.find()
+        .populate('attendanceTeacher', 'name email employeeId mobile')
+        .populate('classTeacher', 'name email employeeId mobile');
+    }
 
     classes.sort((a, b) => {
       const idxA = classSortOrder.indexOf(a.name);
@@ -281,9 +287,15 @@ router.get('/attendance-assignments', protect, checkRole('HEAD', 'PRINCIPAL'), a
       return a.name.localeCompare(b.name);
     });
 
-    const teachers = await User.find({ role: 'TEACHER', status: 'active' })
+    let teachers = await User.find({ role: 'TEACHER', status: { $ne: 'inactive' } })
       .select('name email employeeId mobile assignedClasses attendanceClasses')
       .sort({ name: 1 });
+
+    if (!teachers || teachers.length === 0) {
+      teachers = await User.find({ role: 'TEACHER' })
+        .select('name email employeeId mobile assignedClasses attendanceClasses')
+        .sort({ name: 1 });
+    }
 
     res.json({
       success: true,

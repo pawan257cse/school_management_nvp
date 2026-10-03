@@ -5,6 +5,7 @@ const Subject = require('../models/Subject');
 const Setting = require('../models/Setting');
 const Timetable = require('../models/Timetable');
 const Student = require('../models/Student');
+const importOfficialStudents = require('./importOfficialStudents');
 
 const periodTimes = [
   { periodNumber: 1, startTime: '08:00 AM', endTime: '08:40 AM', periodTitle: 'Period 1' },
@@ -58,22 +59,41 @@ const seedInitialData = async () => {
     }
     const allSubjectIds = Object.values(subjectMap).map(s => s._id);
 
-    // 2. 10 Active Classes (PG, LKG, UKG, 1, 2, 3, 4, 5, 6, 7)
+    // 2. Class-Specific Subjects Mapping (Strictly per official NVP Timetable)
+    const classSpecificSubjectsMap = {
+      PG: ['English', 'Hindi', 'Mathematics', 'Oral', 'Games & Activity', 'Diary & Rhymes'],
+      LKG: ['Hindi', 'Mathematics', 'English', 'General Knowledge', 'Diary & Rhymes', 'Oral'],
+      UKG: ['Mathematics', 'General Knowledge', 'Hindi', 'English', 'Oral', 'Diary & Rhymes'],
+      '1': ['EVS', 'Hindi', 'English', 'Mathematics', 'Computer', 'General Knowledge', 'Games & Activity', 'Activity / Self Study'],
+      '2': ['Hindi', 'EVS', 'Computer', 'English', 'Mathematics', 'Games & Activity', 'General Knowledge', 'Activity / Self Study'],
+      '3': ['Computer', 'Activity / Self Study', 'EVS', 'Hindi', 'Mathematics', 'English', 'General Knowledge'],
+      '4': ['EVS', 'Mathematics', 'English', 'Computer', 'Hindi', 'General Knowledge', 'Activity / Self Study'],
+      '5': ['Hindi Grammar', 'EVS', 'Mathematics', 'Hindi', 'English', 'Computer', 'Sanskrit', 'Activity / Self Study'],
+      '6': ['English', 'Computer', 'Hindi', 'Mathematics', 'Social Science', 'Sanskrit', 'Science', 'General Knowledge'],
+      '7': ['Mathematics', 'English', 'Social Science', 'General Knowledge', 'Hindi', 'Science', 'Computer', 'Sanskrit']
+    };
+
     const classNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
     const classMap = {};
 
     for (const name of classNames) {
+      const allowedSubjectNames = classSpecificSubjectsMap[name] || ['English', 'Hindi', 'Mathematics'];
+      const classSubjectIds = allowedSubjectNames.map(sName => {
+        const found = Object.values(subjectMap).find(s => s.name.toUpperCase() === sName.toUpperCase());
+        return found?._id;
+      }).filter(Boolean);
+
       let cls = await Class.findOne({ name, section: 'A' });
       if (!cls) {
         cls = await Class.create({
           name,
           section: 'A',
-          subjects: allSubjectIds,
+          subjects: classSubjectIds,
           studentCount: 0,
           status: 'active'
         });
       } else {
-        cls.subjects = allSubjectIds;
+        cls.subjects = classSubjectIds;
         cls.status = 'active';
         await cls.save();
       }
@@ -182,8 +202,12 @@ const seedInitialData = async () => {
       } else {
         userDoc.name = t.name;
         userDoc.role = 'TEACHER';
-        userDoc.assignedClasses = assignedClassIds;
-        userDoc.assignedSubjects = assignedSubjectIds;
+        if (!userDoc.assignedClasses || userDoc.assignedClasses.length === 0) {
+          userDoc.assignedClasses = assignedClassIds;
+        }
+        if (!userDoc.assignedSubjects || userDoc.assignedSubjects.length === 0) {
+          userDoc.assignedSubjects = assignedSubjectIds;
+        }
         userDoc.status = 'active';
         await userDoc.save();
       }
@@ -379,20 +403,22 @@ const seedInitialData = async () => {
         periods: formattedPeriods
       }));
 
-      await Timetable.findOneAndUpdate(
-        { class: cls._id, academicYear: '2026-2027' },
-        {
+      const existingTimetable = await Timetable.findOne({ class: cls._id, academicYear: '2026-2027' });
+      if (!existingTimetable) {
+        await Timetable.create({
           class: cls._id,
           className: `Class ${cls.name}`,
           section: cls.section || 'A',
           academicYear: '2026-2027',
           schedule: weeklySchedule
-        },
-        { upsert: true, new: true }
-      );
+        });
+      }
     }
 
-    // 8. Synchronize Class Student Counts
+    // 8. Import Official Real Students (93 records from original data)
+    await importOfficialStudents();
+
+    // 9. Synchronize Class Student Counts
     for (const cName of classNames) {
       const cls = classMap[cName];
       if (cls) {

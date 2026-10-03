@@ -39,9 +39,10 @@ router.get('/', protect, async (req, res) => {
     }
     if (search) {
       query.$or = [
+        { srnNo: { $regex: search, $options: 'i' } },
         { name: { $regex: search, $options: 'i' } },
-        { rollNo: { $regex: search, $options: 'i' } },
         { admissionNo: { $regex: search, $options: 'i' } },
+        { rollNo: { $regex: search, $options: 'i' } },
         { guardianName: { $regex: search, $options: 'i' } },
         { fatherName: { $regex: search, $options: 'i' } },
         { contactNumber: { $regex: search, $options: 'i' } }
@@ -145,27 +146,33 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
       return res.status(400).json({ success: false, message: 'Student Name and Class are required.' });
     }
 
-    // Auto-generate admissionNo if missing
-    let finalAdmNo = admissionNo ? admissionNo.trim() : '';
-    if (!finalAdmNo) {
-      const count = await Student.countDocuments();
-      finalAdmNo = `NVP-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    // Handle SRN Number (Unique identifier for every student)
+    const srnInput = (req.body.srnNo || req.body.rollNo || req.body.admissionNo || '').toString().trim();
+    let finalSrnNo = srnInput;
+    if (!finalSrnNo) {
+      const totalCount = await Student.countDocuments();
+      finalSrnNo = String(1000 + totalCount + 1);
     }
 
-    // Auto-assign roll number in class if missing
-    let finalRollNo = rollNo ? String(rollNo).trim() : '';
-    if (!finalRollNo) {
-      const classStudentCount = await Student.countDocuments({ class: classId });
-      finalRollNo = String(classStudentCount + 1);
-    }
+    let finalAdmNo = admissionNo ? admissionNo.trim() : `NVP-${finalSrnNo}`;
+    let finalRollNo = rollNo ? String(rollNo).trim() : finalSrnNo;
 
-    // Check admissionNo uniqueness
-    const existing = await Student.findOne({ admissionNo: finalAdmNo });
-    if (existing) {
-      return res.status(400).json({ success: false, message: `Admission Number ${finalAdmNo} is already registered.` });
+    // Check SRN uniqueness
+    const existingSrn = await Student.findOne({
+      $or: [
+        { srnNo: finalSrnNo },
+        { admissionNo: finalAdmNo }
+      ]
+    });
+    if (existingSrn) {
+      return res.status(400).json({
+        success: false,
+        message: `SRN Number '${finalSrnNo}' is already assigned to student '${existingSrn.name}'. Every student must have a unique SRN Number!`
+      });
     }
 
     const student = await Student.create({
+      srnNo: finalSrnNo,
       admissionNo: finalAdmNo,
       rollNo: finalRollNo,
       name: name.trim(),
@@ -205,12 +212,15 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
     });
 
     // Auto-provision Student Portal Login Account
-    const studentLoginEmail = (email && email.includes('@'))
-      ? email.toLowerCase().trim()
-      : `${finalAdmNo.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.school.local`;
+    const firstNameRaw = name.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+    const firstName = firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase();
 
-    const plainPassword = generateAutoPassword({ name, admissionNo: finalAdmNo, role: 'STUDENT' });
+    // Username = firstName + srnNo (e.g. bhavya370)
+    const username = `${firstName.toLowerCase()}${finalSrnNo}`;
+    // Password = FirstName@SRN (e.g. Bhavya@370)
+    const plainPassword = `${firstName}@${finalSrnNo}`;
     const passwordHash = await bcrypt.hash(plainPassword, 10);
+    const studentLoginEmail = `${username}@student.school.local`;
 
     const userAccount = await User.findOneAndUpdate(
       { admissionNo: finalAdmNo },
@@ -225,7 +235,7 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
         studentRef: student._id,
         mobile: student.contactNumber,
         status: 'active',
-        mustChangePassword: true
+        mustChangePassword: false
       },
       { upsert: true, new: true }
     );
@@ -245,8 +255,10 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
       success: true,
       message: 'Student enrolled successfully and portal account created.',
       student: populatedStudent,
+      username: username,
+      srnNo: finalSrnNo,
       generatedPassword: plainPassword,
-      loginId: finalAdmNo
+      loginId: username
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

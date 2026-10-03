@@ -9,7 +9,7 @@ export default function SplashScreen({ onFinish }) {
       if (window.Capacitor?.Plugins?.SplashScreen?.hide) {
         window.Capacitor.Plugins.SplashScreen.hide();
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Start fade-out at 1750ms
     const fadeTimer = setTimeout(() => {
@@ -29,9 +29,8 @@ export default function SplashScreen({ onFinish }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white select-none transition-opacity duration-300 ${
-        fading ? 'opacity-0 pointer-events-none' : 'opacity-100'
-      }`}
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white select-none transition-opacity duration-300 ${fading ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
     >
       {/* Background ambient glow */}
       <div className="absolute w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none animate-pulse" />
@@ -54,7 +53,7 @@ export default function SplashScreen({ onFinish }) {
           NVP ENGLISH MEDIUM SCHOOL
         </h1>
 
-        {/* Text Line 2: NIMBI JODHAN */}
+        {/* Text Line 2: NIMBI JODHAN   */}
         <p className="mt-2 text-xs sm:text-sm md:text-base font-extrabold uppercase tracking-[0.25em] text-amber-400 drop-shadow">
           NIMBI JODHAN
         </p>

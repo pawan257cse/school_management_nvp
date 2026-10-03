@@ -38,6 +38,7 @@ export default function StudentManagement() {
   // Comprehensive Form State
   const initialFormState = {
     // Academic
+    srnNo: '',
     admissionNo: '',
     rollNo: '',
     class: '',
@@ -114,11 +115,13 @@ export default function StudentManagement() {
   const handleOpenAddModal = () => {
     setEditingStudent(null);
     setFormTab('academic');
-    const autoAdm = `NVP-${new Date().getFullYear()}-${String(students.length + 1).padStart(4, '0')}`;
+    const autoSrn = String(students.length + 101);
+    const autoAdm = `NVP-${autoSrn}`;
     setFormData({
       ...initialFormState,
+      srnNo: autoSrn,
       admissionNo: autoAdm,
-      rollNo: String(students.length + 1),
+      rollNo: autoSrn,
       class: classes.length > 0 ? classes[0]._id : '',
       section: 'A'
     });
@@ -263,7 +266,7 @@ export default function StudentManagement() {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search student, roll no, admission no..."
+              placeholder="Search student by Name, Unique SRN Number, Father's Name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"
@@ -314,7 +317,7 @@ export default function StudentManagement() {
             <table className="w-full text-left text-xs text-slate-800 min-w-[660px]">
               <thead className="bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3.5 whitespace-nowrap">Adm No / Roll</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">SRN Number</th>
                   <th className="px-4 py-3.5 whitespace-nowrap">Student Details</th>
                   <th className="px-4 py-3.5 whitespace-nowrap">Class & Section</th>
                   <th className="px-4 py-3.5 whitespace-nowrap">Father / Guardian</th>
@@ -327,8 +330,8 @@ export default function StudentManagement() {
                 {students.map((st) => (
                   <tr key={st._id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-4 py-3.5">
-                      <span className="font-mono font-bold text-slate-900 block">{st.admissionNo}</span>
-                      <span className="text-[11px] text-indigo-600 font-semibold">Roll #{st.rollNo}</span>
+                      <span className="font-mono font-bold text-indigo-950 block text-xs">SRN #{st.srnNo || st.rollNo || st.admissionNo}</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Adm: {st.admissionNo}</span>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2.5">
@@ -419,8 +422,8 @@ export default function StudentManagement() {
                     <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold">
                       Class {viewingStudent.class?.name || 'N/A'} - {viewingStudent.section || 'A'}
                     </span>
-                    <span className="text-slate-400 text-xs font-mono">Adm No: <strong>{viewingStudent.admissionNo}</strong></span>
-                    <span className="text-slate-400 text-xs font-mono">Roll: <strong>#{viewingStudent.rollNo}</strong></span>
+                    <span className="text-amber-300 text-xs font-mono font-bold">SRN No: {viewingStudent.srnNo || viewingStudent.rollNo || viewingStudent.admissionNo}</span>
+                    <span className="text-slate-400 text-xs font-mono">Adm: {viewingStudent.admissionNo}</span>
                   </div>
                 </div>
               </div>
@@ -713,23 +716,28 @@ export default function StudentManagement() {
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Admission Number *</label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      SRN Number (Unique Identification No) *
+                    </label>
                     <input
                       type="text"
                       required
+                      placeholder="e.g. 370"
+                      value={formData.srnNo || formData.rollNo || ''}
+                      onChange={(e) => setFormData({ ...formData, srnNo: e.target.value, rollNo: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-indigo-300 font-mono font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500 bg-indigo-50/40"
+                    />
+                    <span className="text-[10px] text-indigo-600 font-semibold block mt-1">
+                      Unique per student. Auto password format: <strong className="font-mono bg-indigo-100 px-1 py-0.5 rounded text-indigo-900">&lt;FirstName&gt;@&lt;SRN&gt;</strong> (e.g. Bhavya@370)
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Admission Number</label>
+                    <input
+                      type="text"
                       value={formData.admissionNo}
                       onChange={(e) => setFormData({ ...formData, admissionNo: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Roll Number *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.rollNo}
-                      onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
@@ -1161,17 +1169,22 @@ export default function StudentManagement() {
               </div>
 
               <div>
-                <span className="text-[10px] text-slate-500 block">Login ID (Admission No)</span>
-                <p className="font-mono font-bold text-slate-900 text-sm">{newAdmissionSuccess.admissionNo}</p>
+                <span className="text-[10px] text-slate-500 block">Student SRN Number</span>
+                <p className="font-mono font-bold text-indigo-900 text-sm">{newAdmissionSuccess.srnNo || newAdmissionSuccess.admissionNo}</p>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-500 block">Student Portal Username</span>
+                <p className="font-mono font-bold text-slate-900 text-sm">{newAdmissionSuccess.username || newAdmissionSuccess.loginId}</p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-500 block">Assigned Temporary Password</span>
-                  <p className="font-mono font-bold text-indigo-700 text-sm">{newAdmissionSuccess.password}</p>
+                  <span className="text-[10px] text-slate-500 block">Assigned Password (FirstName@SRN)</span>
+                  <p className="font-mono font-bold text-indigo-700 text-sm">{newAdmissionSuccess.generatedPassword || newAdmissionSuccess.password}</p>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(`ID: ${newAdmissionSuccess.admissionNo}\nPassword: ${newAdmissionSuccess.password}`)}
+                  onClick={() => copyToClipboard(`Username: ${newAdmissionSuccess.username || newAdmissionSuccess.loginId}\nPassword: ${newAdmissionSuccess.generatedPassword || newAdmissionSuccess.password}`)}
                   className="px-2.5 py-1 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg border border-indigo-200 flex items-center gap-1"
                 >
                   {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}

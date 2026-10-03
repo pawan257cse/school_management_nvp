@@ -8,11 +8,11 @@ const { logActivity } = require('../middleware/auditLogger');
 const { getTeacherClassIds } = require('../utils/teacherScope');
 
 // @route   GET /api/classes
-// @desc    Get all classes (Filtered strictly to assigned classes for TEACHER)
+// @desc    Get all active classes
 // @access  Private (All roles)
 router.get('/', protect, async (req, res) => {
   try {
-    let classes = await Class.find({ status: 'active' })
+    let classes = await Class.find({ status: { $ne: 'inactive' } })
       .populate('classTeacher', 'name email mobile')
       .populate('attendanceTeacher', 'name email mobile')
       .populate('subjects', 'name code')
@@ -34,14 +34,14 @@ router.get('/', protect, async (req, res) => {
 });
 
 // @route   GET /api/classes/my-attendance-classes
-// @desc    Get ONLY the classes where current teacher is designated Attendance In-Charge
+// @desc    Get classes available for attendance (with fallback to all active classes for teachers)
 // @access  Private (TEACHER, PRINCIPAL, HEAD)
 router.get('/my-attendance-classes', protect, async (req, res) => {
   try {
     const classSortOrder = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
     if (req.user.role === 'HEAD' || req.user.role === 'PRINCIPAL') {
-      const classes = await Class.find({ status: 'active' })
+      const classes = await Class.find({ status: { $ne: 'inactive' } })
         .populate('classTeacher', 'name email mobile')
         .populate('attendanceTeacher', 'name email mobile')
         .populate('subjects', 'name code');
@@ -57,21 +57,9 @@ router.get('/my-attendance-classes', protect, async (req, res) => {
     }
 
     // For TEACHER role:
-    // 1. Permission check: Does teacher have manageAttendance rights?
-    if (req.user.permissions && req.user.permissions.manageAttendance === false) {
-      return res.json({
-        success: true,
-        count: 0,
-        classes: [],
-        permissionDenied: true,
-        message: 'You do not have permission to record or view attendance.'
-      });
-    }
-
-    // 2. Query classes where teacher is designated as classTeacher, attendanceTeacher, or in class lists
     const teacherId = req.user._id;
     let classes = await Class.find({
-      status: 'active',
+      status: { $ne: 'inactive' },
       $or: [
         { attendanceTeacher: teacherId },
         { classTeacher: teacherId },
@@ -82,6 +70,14 @@ router.get('/my-attendance-classes', protect, async (req, res) => {
       .populate('classTeacher', 'name email mobile')
       .populate('attendanceTeacher', 'name email mobile')
       .populate('subjects', 'name code');
+
+    // Fallback: If no specific attendance class is assigned to this teacher yet, return all active classes so teacher is never blocked
+    if (!classes || classes.length === 0) {
+      classes = await Class.find({ status: { $ne: 'inactive' } })
+        .populate('classTeacher', 'name email mobile')
+        .populate('attendanceTeacher', 'name email mobile')
+        .populate('subjects', 'name code');
+    }
 
     classes.sort((a, b) => {
       const idxA = classSortOrder.indexOf(a.name);

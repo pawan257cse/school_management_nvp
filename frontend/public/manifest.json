@@ -1,0 +1,23 @@
+{
+  "short_name": "NVP School",
+  "name": "NVP English Medium School Management Portal",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "description": "Offline-capable School Teacher & Academic Management Portal for NVP English Medium School Nimbi Jodhan."
+}

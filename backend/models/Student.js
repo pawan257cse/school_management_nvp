@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 
 const studentSchema = new mongoose.Schema({
   // Academic & Enrollment
+  srnNo: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    index: true
+  },
   admissionNo: {
     type: String,
     required: true,
@@ -10,8 +17,8 @@ const studentSchema = new mongoose.Schema({
   },
   rollNo: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   class: {
     type: mongoose.Schema.Types.ObjectId,
