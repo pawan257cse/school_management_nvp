@@ -238,6 +238,22 @@ export default function FeeManagement() {
       alert(err.response?.data?.message || 'Failed to update receipt');
     }
   };
+  // Open Edit Structure Modal pre-filled
+  const handleOpenEditStructure = (struct) => {
+    setStructureForm({
+      classId: struct.class?._id || struct.class,
+      feeHeads: struct.feeHeads?.length > 0 ? struct.feeHeads.map(h => ({ headName: h.headName, amount: h.amount, frequency: h.frequency || 'Annual' })) : [
+        { headName: 'Admission Fee (New Only)', amount: 500, frequency: 'One-Time' },
+        { headName: 'Exam Fee', amount: 1500, frequency: 'Annual' },
+        { headName: 'Tuition Fee', amount: 15500, frequency: 'Annual' }
+      ],
+      installments: struct.installments?.length > 0 ? struct.installments.map(inst => ({ installmentNo: inst.installmentNo, title: inst.title, amount: inst.amount, dueDate: inst.dueDate })) : [
+        { installmentNo: 1, title: 'FIRST TERM (APRIL-AUG)', amount: 9000, dueDate: new Date('2026-08-31') },
+        { installmentNo: 2, title: 'SECOND TERM (OCT-FEB)', amount: 8500, dueDate: new Date('2026-02-28') }
+      ]
+    });
+    setIsStructureModalOpen(true);
+  };
 
   // Open collect modal pre-filled for a specific student with interactive item checkboxes
   const handleOpenCollectModalForStudent = async (studentId, pendingAmt = 0) => {
@@ -754,15 +770,24 @@ export default function FeeManagement() {
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
                       Class {s.class?.name || s.className}
                     </span>
-                    <h3 className="font-bold text-slate-900 mt-2 text-sm">{s.className} Base Fee Structure</h3>
+                    <h3 className="font-bold text-slate-900 mt-2 text-sm">{s.className} Standard Fee Structure</h3>
                   </div>
-                  <button
-                    onClick={() => handleDeleteStructure(s._id)}
-                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                    title="Delete Fee Structure"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEditStructure(s)}
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition border border-slate-200"
+                      title="Edit Fee Structure"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteStructure(s._id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-slate-200"
+                      title="Delete Fee Structure"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Fee Heads Breakdown */}
@@ -776,9 +801,22 @@ export default function FeeManagement() {
                   ))}
                 </div>
 
+                {/* Term Installments Breakdown */}
+                {s.installments?.length > 0 && (
+                  <div className="space-y-1 pt-2 border-t border-slate-100">
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Term Installments:</div>
+                    {s.installments.map((inst, i) => (
+                      <div key={i} className="flex items-center justify-between text-[11px] text-slate-600">
+                        <span className="font-semibold">{inst.title}</span>
+                        <span className="font-bold font-mono text-indigo-700">₹{inst.amount?.toLocaleString('en-IN')}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Total */}
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                  <span className="font-bold text-slate-700 text-xs">Total Base Demanded Fee:</span>
+                  <span className="font-bold text-slate-700 text-xs">Total Standard Annual Fee:</span>
                   <span className="text-lg font-heading font-black text-emerald-600">
                     ₹{s.totalBaseFee?.toLocaleString('en-IN')}
                   </span>
