@@ -4,6 +4,7 @@ const { FeeStructure, FeeDiscount, FeePayment } = require('../models/Fee');
 const Student = require('../models/Student');
 const Class = require('../models/Class');
 const User = require('../models/User');
+const Transport = require('../models/Transport');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 
@@ -21,13 +22,42 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
   // Base Fee calculation
   let totalBaseFee = feeStructure ? feeStructure.totalBaseFee : 30000;
   let feeHeads = feeStructure && feeStructure.feeHeads && feeStructure.feeHeads.length > 0 
-    ? feeStructure.feeHeads 
+    ? feeStructure.feeHeads.map(h => ({ headName: h.headName, amount: h.amount, frequency: h.frequency || 'Annual' }))
     : [
         { headName: 'Tuition Fee', amount: Math.round(totalBaseFee * 0.6), frequency: 'Annual' },
         { headName: 'Exam Fee', amount: Math.round(totalBaseFee * 0.1), frequency: 'Annual' },
         { headName: 'Computer & Lab Fee', amount: Math.round(totalBaseFee * 0.15), frequency: 'Annual' },
         { headName: 'Development & Activity Fee', amount: Math.round(totalBaseFee * 0.15), frequency: 'Annual' }
       ];
+
+  // Automatic Transport Fee Calculation if student has opted for School Bus Transport
+  if (student.transportOpted && student.busRoute) {
+    let transportFeeAmount = 0;
+    const cleanRouteName = student.busRoute.trim();
+    
+    // Search for matching transport route in database
+    const routeDoc = await Transport.findOne({
+      $or: [
+        { routeTitle: new RegExp(cleanRouteName, 'i') },
+        { pickupPoints: new RegExp(cleanRouteName, 'i') }
+      ]
+    });
+
+    if (routeDoc) {
+      transportFeeAmount = routeDoc.totalFare || (routeDoc.monthlyFee ? routeDoc.monthlyFee * 10 : 5500);
+    } else {
+      // Default standard route fee if custom string
+      transportFeeAmount = 5500;
+    }
+
+    feeHeads.push({
+      headName: `Transport Fee (${cleanRouteName})`,
+      amount: transportFeeAmount,
+      frequency: 'Annual'
+    });
+
+    totalBaseFee += transportFeeAmount;
+  }
 
   // Check discount
   const discountDoc = await FeeDiscount.findOne({ student: student._id, academicYear });

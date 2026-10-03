@@ -5,10 +5,30 @@ const Student = require('../models/Student');
 const Class = require('../models/Class');
 const Parent = require('../models/Parent');
 const User = require('../models/User');
+const Transport = require('../models/Transport');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { generateAutoPassword } = require('../utils/passwordGenerator');
 const { getTeacherClassIds } = require('../utils/teacherScope');
+
+// Helper to update assigned student counts on transport routes
+const syncTransportOccupancy = async () => {
+  try {
+    const transports = await Transport.find();
+    for (const tr of transports) {
+      const count = await Student.countDocuments({
+        transportOpted: true,
+        $or: [
+          { busRoute: new RegExp(tr.routeTitle, 'i') },
+          { busRoute: new RegExp(tr.vehicleNo, 'i') }
+        ]
+      });
+      await Transport.findByIdAndUpdate(tr._id, { assignedStudentsCount: count });
+    }
+  } catch (e) {
+    console.error('Error syncing transport occupancy:', e);
+  }
+};
 
 // Get all students with filter & search
 router.get('/', protect, async (req, res) => {
@@ -249,6 +269,9 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
     const totalInClass = await Student.countDocuments({ class: classId, status: 'active' });
     await Class.findByIdAndUpdate(classId, { studentCount: totalInClass });
 
+    // Sync transport occupancy
+    await syncTransportOccupancy();
+
     const populatedStudent = await Student.findById(student._id).populate('class', 'name section').populate('parent');
 
     res.status(201).json({
@@ -287,6 +310,9 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
       }
     );
 
+    // Sync transport occupancy
+    await syncTransportOccupancy();
+
     res.json({ success: true, message: 'Student record updated successfully.', student });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -309,6 +335,9 @@ router.delete('/:id', protect, checkRole('HEAD'), async (req, res) => {
     // Update class student count
     const totalInClass = await Student.countDocuments({ class: student.class, status: 'active' });
     await Class.findByIdAndUpdate(student.class, { studentCount: totalInClass });
+
+    // Sync transport occupancy
+    await syncTransportOccupancy();
 
     res.json({ success: true, message: 'Student and portal account deleted successfully.' });
   } catch (error) {
