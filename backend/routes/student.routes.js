@@ -6,6 +6,7 @@ const Class = require('../models/Class');
 const Parent = require('../models/Parent');
 const User = require('../models/User');
 const Transport = require('../models/Transport');
+const { FeeDiscount } = require('../models/Fee');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const { generateAutoPassword } = require('../utils/passwordGenerator');
@@ -269,6 +270,19 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
     const totalInClass = await Student.countDocuments({ class: classId, status: 'active' });
     await Class.findByIdAndUpdate(classId, { studentCount: totalInClass });
 
+    // Save Fee Discount / Scholarship if specified during admission
+    if (req.body.discountAmount && Number(req.body.discountAmount) > 0) {
+      await FeeDiscount.findOneAndUpdate(
+        { student: student._id, academicYear: student.academicYear || '2026-2027' },
+        {
+          discountAmount: Number(req.body.discountAmount),
+          reason: req.body.discountReason || 'Admission Concession',
+          authorizedBy: req.user?.name || 'Head Admin'
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     // Sync transport occupancy
     await syncTransportOccupancy();
 
@@ -297,6 +311,23 @@ router.put('/:id', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => 
 
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found.' });
+    }
+
+    // Handle Fee Discount updates
+    if (req.body.discountAmount !== undefined) {
+      if (Number(req.body.discountAmount) > 0) {
+        await FeeDiscount.findOneAndUpdate(
+          { student: student._id, academicYear: student.academicYear || '2026-2027' },
+          {
+            discountAmount: Number(req.body.discountAmount),
+            reason: req.body.discountReason || 'Admission Concession',
+            authorizedBy: req.user?.name || 'Head Admin'
+          },
+          { upsert: true, new: true }
+        );
+      } else {
+        await FeeDiscount.findOneAndDelete({ student: student._id, academicYear: student.academicYear || '2026-2027' });
+      }
     }
 
     // Sync student portal account if exists

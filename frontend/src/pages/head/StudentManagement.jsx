@@ -95,9 +95,11 @@ export default function StudentManagement() {
     state: 'Rajasthan',
     pincode: '341316',
 
-    // Transport & Health
+    // Transport & Health & Fee
     transportOpted: false,
     busRoute: '',
+    discountAmount: 0,
+    discountReason: 'Sibling Concession',
     medicalNotes: 'Normal Health',
     status: 'active'
   };
@@ -1362,6 +1364,95 @@ export default function StudentManagement() {
                   </div>
                 )}
 
+                {/* Fee Concession & Scholarship Discount Section */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-950 text-xs flex items-center gap-1.5">
+                      <Receipt className="w-4 h-4 text-amber-600" />
+                      Admission Fee Concession & Scholarship Discount
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                      Optional Adjustment
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Scholarship / Concession Amount (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 1000"
+                        value={formData.discountAmount || ''}
+                        onChange={(e) => setFormData({ ...formData, discountAmount: e.target.value ? Number(e.target.value) : 0 })}
+                        className="w-full px-3 py-2 rounded-xl border border-amber-300 font-mono font-bold text-amber-900 bg-white focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Concession Category / Reason</label>
+                      <select
+                        value={formData.discountReason}
+                        onChange={(e) => setFormData({ ...formData, discountReason: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-amber-300 font-bold text-xs bg-white text-slate-900 focus:ring-2 focus:ring-amber-500"
+                      >
+                        <option value="Sibling Concession">Sibling Concession</option>
+                        <option value="Staff Child Concession">Staff Child Concession</option>
+                        <option value="Merit Scholarship">Merit Scholarship</option>
+                        <option value="Single Parent Concession">Single Parent Concession</option>
+                        <option value="Financial Hardship">Financial Hardship</option>
+                        <option value="General Concession">General Concession</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Estimated Fee Breakdown Card */}
+                {(() => {
+                  const selClass = classes.find(c => c._id === formData.class);
+                  const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 10000;
+                  const selRoute = (transportRoutes.length > 0 ? transportRoutes : defaultRoutes).find(r => r.routeTitle === formData.busRoute);
+                  const transFee = formData.transportOpted ? (selRoute?.totalFare || 5500) : 0;
+                  const discAmt = Number(formData.discountAmount || 0);
+                  const netEstimatedDues = Math.max(0, baseFee + transFee - discAmt);
+
+                  return (
+                    <div className="p-4 rounded-2xl bg-indigo-950 text-white space-y-2.5 shadow-md border border-indigo-800">
+                      <div className="flex items-center justify-between border-b border-indigo-800/80 pb-2">
+                        <span className="text-[11px] uppercase font-bold text-indigo-300 tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-amber-400" />
+                          Live Admission Fee Ledger Estimate (2026-2027)
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-700">
+                          Auto-Calculated
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                        <div className="p-2 rounded-xl bg-white/10 border border-white/10">
+                          <span className="text-[10px] text-indigo-200 block font-semibold">Class Base Fee</span>
+                          <span className="font-mono font-black text-white">₹{baseFee.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white/10 border border-white/10">
+                          <span className="text-[10px] text-indigo-200 block font-semibold">Transport Fare</span>
+                          <span className="font-mono font-black text-sky-300">
+                            {formData.transportOpted ? `+₹${transFee.toLocaleString('en-IN')}` : '₹0'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-white/10 border border-white/10">
+                          <span className="text-[10px] text-indigo-200 block font-semibold">Concession</span>
+                          <span className="font-mono font-black text-amber-300">
+                            {discAmt > 0 ? `-₹${discAmt.toLocaleString('en-IN')}` : '₹0'}
+                          </span>
+                        </div>
+                        <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30">
+                          <span className="text-[10px] text-emerald-300 block font-bold">Net Total Dues</span>
+                          <span className="font-mono font-black text-emerald-300 text-sm">₹{netEstimatedDues.toLocaleString('en-IN')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">Medical Notes / Known Allergies</label>
                   <input
@@ -1375,7 +1466,7 @@ export default function StudentManagement() {
 
                 <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-[11px] flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                  <span>Submitting admission will automatically provision a Student Portal account with auto-generated secure credentials & assign transport fee to official ledger.</span>
+                  <span>Submitting admission will automatically provision a Student Portal account with auto-generated secure credentials & assign transport fee + scholarship concession to official ledger.</span>
                 </div>
 
                 <div className="flex justify-between pt-3 border-t border-slate-200">
