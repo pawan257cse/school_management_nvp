@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   getStudentsApi, getStudentByIdApi, createStudentApi, updateStudentApi, deleteStudentApi, getClassesApi,
-  resetUserPasswordApi, createUserApi, getTransportApi
+  resetUserPasswordApi, createUserApi, getTransportApi, getStudentFeeLedgerApi
 } from '../../services/api';
 import {
   Users, UserPlus, Search, Filter, Edit, Trash2, CheckCircle2,
   Phone, MapPin, Eye, EyeOff, Printer, Shield, Calendar, Award, Bus, Heart,
-  Copy, Check, X, AlertCircle, Sparkles, KeyRound, School, Navigation
+  Copy, Check, X, AlertCircle, Sparkles, KeyRound, School, Navigation, Receipt
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 
@@ -17,6 +17,9 @@ export default function StudentManagement() {
   const [selectedClass, setSelectedClass] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Full Profile Dossier Modal State
+  const [studentLedger, setStudentLedger] = useState(null);
 
   // Default NVP Transport routes fallback chart
   const defaultRoutes = [
@@ -194,6 +197,7 @@ export default function StudentManagement() {
 
   const handleViewProfile = async (st) => {
     setViewingStudent(st);
+    setStudentLedger(null);
     setProfileLoading(true);
     setPortalAccount(null);
     setCopiedPass(false);
@@ -202,10 +206,17 @@ export default function StudentManagement() {
     setPassUpdateMsg(null);
 
     try {
-      const res = await getStudentByIdApi(st._id);
-      if (res.data.success) {
+      const [res, ledgerRes] = await Promise.all([
+        getStudentByIdApi(st._id),
+        getStudentFeeLedgerApi(st._id).catch(() => ({ data: { success: false } }))
+      ]);
+
+      if (res.data?.success) {
         setViewingStudent(res.data.student);
         setPortalAccount(res.data.portalAccount);
+      }
+      if (ledgerRes.data?.success) {
+        setStudentLedger(ledgerRes.data.ledger);
       }
     } catch (err) {
       console.error('Failed to fetch full student profile:', err);
@@ -714,6 +725,94 @@ export default function StudentManagement() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Card 5: Student Live Fee Ledger & Dues Status */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3 md:col-span-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-heading font-black text-xs uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                    <Receipt className="w-4 h-4 text-emerald-600" />
+                    Official Fee Ledger & Dues Breakdown (2026-2027)
+                  </h4>
+                  {studentLedger && (
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
+                      studentLedger.status === 'Paid' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : studentLedger.status === 'Partial'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      {studentLedger.status === 'Paid' ? 'Fee Cleared ✓' : `${studentLedger.status} Dues`}
+                    </span>
+                  )}
+                </div>
+
+                {studentLedger ? (
+                  <div className="space-y-3">
+                    {/* 4 Summary Stat Pills */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Base Fee</span>
+                        <span className="font-mono font-black text-slate-900 text-sm">₹{studentLedger.totalBaseFee?.toLocaleString('en-IN')}</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
+                        <span className="text-[10px] font-bold text-amber-700 uppercase block">Scholarship / Discount</span>
+                        <span className="font-mono font-black text-amber-800 text-sm">
+                          {studentLedger.discountAmount > 0 ? `-₹${studentLedger.discountAmount?.toLocaleString('en-IN')}` : '₹0'}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase block">Total Paid</span>
+                        <span className="font-mono font-black text-emerald-800 text-sm">₹{studentLedger.totalPaid?.toLocaleString('en-IN')}</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-200/80">
+                        <span className="text-[10px] font-bold text-rose-700 uppercase block">Pending Dues</span>
+                        <span className="font-mono font-black text-rose-800 text-sm">₹{studentLedger.pendingAmount?.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    {/* Fee Category Breakdown */}
+                    {studentLedger.feeHeads?.length > 0 && (
+                      <div className="bg-slate-50 rounded-xl p-3 space-y-1 border border-slate-100">
+                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Fee Demand Heads</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {studentLedger.feeHeads.map((h, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/60">
+                              <span className="font-medium text-slate-700 text-[11px] truncate max-w-[140px]">{h.headName}</span>
+                              <span className="font-mono font-extrabold text-slate-900 text-[11px]">₹{h.amount?.toLocaleString('en-IN')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recent Receipts List */}
+                    {studentLedger.paymentHistory?.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Issued Computer Receipts ({studentLedger.paymentHistory.length})</div>
+                        <div className="divide-y divide-slate-100 rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden">
+                          {studentLedger.paymentHistory.map((rec) => (
+                            <div key={rec._id} className="p-2.5 flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-emerald-700">{rec.receiptNo}</span>
+                                <span className="text-slate-600">• {rec.feeType}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono font-extrabold text-slate-900">₹{rec.amount?.toLocaleString('en-IN')}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">{new Date(rec.paymentDate).toLocaleDateString('en-IN')}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-xs text-slate-400 font-medium">Loading live fee ledger...</div>
+                )}
               </div>
             </div>
 
