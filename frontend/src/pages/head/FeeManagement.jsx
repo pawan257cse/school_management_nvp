@@ -756,68 +756,123 @@ export default function FeeManagement() {
          ========================================================================= */}
       {activeTab === 'structures' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading font-bold text-base text-slate-900">
-              Class Fee Structures (Academic Year {academicYear})
-            </h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <div>
+              <h2 className="font-heading font-black text-base text-slate-900 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-sky-600" />
+                Official Class Fee Structures ({structures.length} Classes Defined)
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Session {academicYear} • Standardized tuition, exam, admission fee & installment schedules.
+              </p>
+            </div>
+            
+            <button
+              onClick={() => {
+                setStructureForm({
+                  classId: classes[0]?._id || '',
+                  academicYear,
+                  feeHeads: [
+                    { headName: 'Tuition Fee', amount: 12000, frequency: 'Annual' },
+                    { headName: 'Exam Fee', amount: 1500, frequency: 'Annual' },
+                    { headName: 'Admission Fee', amount: 500, frequency: 'Annual' }
+                  ],
+                  installments: [
+                    { installmentNo: 1, title: 'FIRST TERM (APRIL-AUG)', dueDate: '2026-04-10', amount: 7500 },
+                    { installmentNo: 2, title: 'SECOND TERM (OCT-FEB)', dueDate: '2026-10-10', amount: 6500 }
+                  ]
+                });
+                setIsStructureModalOpen(true);
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>+ Add / Edit Class Fee</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {structures.map((s) => (
-              <div key={s._id} className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4 relative">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      Class {s.class?.name || s.className}
-                    </span>
-                    <h3 className="font-bold text-slate-900 mt-2 text-sm">{s.className} Standard Fee Structure</h3>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleOpenEditStructure(s)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition border border-slate-200"
-                      title="Edit Fee Structure"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStructure(s._id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-slate-200"
-                      title="Delete Fee Structure"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
+              <div 
+                key={s._id} 
+                className="group relative bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-emerald-300 transition-all duration-200 overflow-hidden flex flex-col justify-between"
+              >
+                {/* Top Accent Gradient Line */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600" />
 
-                {/* Fee Heads Breakdown */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Fee Category Breakdown:</div>
-                  {s.feeHeads?.map((h, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs text-slate-700">
-                      <span className="font-medium">{h.headName}</span>
-                      <span className="font-bold font-mono">₹{h.amount?.toLocaleString('en-IN')}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Term Installments Breakdown */}
-                {s.installments?.length > 0 && (
-                  <div className="space-y-1 pt-2 border-t border-slate-100">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Term Installments:</div>
-                    {s.installments.map((inst, i) => (
-                      <div key={i} className="flex items-center justify-between text-[11px] text-slate-600">
-                        <span className="font-semibold">{inst.title}</span>
-                        <span className="font-bold font-mono text-indigo-700">₹{inst.amount?.toLocaleString('en-IN')}</span>
+                <div className="p-4 space-y-3">
+                  {/* Card Top Row: Class Badge & Action Controls */}
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-900 text-white font-heading font-black text-xs shadow-2xs">
+                        Class {s.class?.name || s.className}
+                      </span>
+                      <div>
+                        <h3 className="font-heading font-bold text-slate-900 text-xs leading-tight">
+                          Fee Structure
+                        </h3>
+                        <p className="text-[10px] font-semibold text-slate-400">
+                          {academicYear}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
 
-                {/* Total */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                  <span className="font-bold text-slate-700 text-xs">Total Standard Annual Fee:</span>
-                  <span className="text-lg font-heading font-black text-emerald-600">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEditStructure(s)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition border border-slate-100"
+                        title="Edit Fee Structure"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStructure(s._id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-slate-100"
+                        title="Delete Fee Structure"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Fee Components List */}
+                  <div className="bg-slate-50/80 rounded-xl p-2.5 space-y-1.5 border border-slate-100/80">
+                    <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      <span>Fee Heads</span>
+                      <span>Amount</span>
+                    </div>
+                    <div className="space-y-1 divide-y divide-slate-200/40">
+                      {s.feeHeads?.map((h, i) => (
+                        <div key={i} className="pt-1 first:pt-0 flex items-center justify-between text-xs">
+                          <span className="text-slate-600 font-medium truncate max-w-[130px]">{h.headName}</span>
+                          <span className="font-mono font-extrabold text-slate-900">₹{h.amount?.toLocaleString('en-IN')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Term Installment Badges */}
+                  {s.installments?.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        Installment Schedule
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {s.installments.map((inst, i) => (
+                          <div key={i} className="p-2 rounded-xl bg-indigo-50/60 border border-indigo-100/80 text-center">
+                            <div className="text-[9px] font-bold text-indigo-700 truncate uppercase">{inst.title}</div>
+                            <div className="text-xs font-mono font-black text-indigo-950 mt-0.5">₹{inst.amount?.toLocaleString('en-IN')}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Total Fee Container */}
+                <div className="p-3 bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white flex items-center justify-between border-t border-emerald-500/20">
+                  <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">Total Annual Fee</span>
+                  <span className="text-base font-heading font-black tracking-tight text-emerald-300 font-mono">
                     ₹{s.totalBaseFee?.toLocaleString('en-IN')}
                   </span>
                 </div>
