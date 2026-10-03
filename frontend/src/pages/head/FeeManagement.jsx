@@ -44,6 +44,7 @@ export default function FeeManagement() {
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedStudentLedger, setSelectedStudentLedger] = useState(null);
+  const [selectedStudentItems, setSelectedStudentItems] = useState([]);
   const [editingReceipt, setEditingReceipt] = useState(null);
   const [editReceiptForm, setEditReceiptForm] = useState({
     amount: '',
@@ -238,17 +239,102 @@ export default function FeeManagement() {
     }
   };
 
-  // Open collect modal pre-filled for a specific student
-  const handleOpenCollectModalForStudent = (studentId, pendingAmt = 0) => {
-    setCollectForm({
-      studentId,
-      amount: pendingAmt > 0 ? pendingAmt : '',
-      feeType: 'Tuition Fee (Quarterly)',
-      paymentMethod: 'Cash',
-      transactionRefNo: '',
-      remarks: ''
+  // Open collect modal pre-filled for a specific student with interactive item checkboxes
+  const handleOpenCollectModalForStudent = async (studentId, pendingAmt = 0) => {
+    try {
+      if (studentId) {
+        const res = await getStudentFeeLedgerApi(studentId, { academicYear });
+        if (res.data?.success) {
+          const ledger = res.data.ledger;
+          setSelectedStudentLedger(ledger);
+
+          const items = [];
+          if (ledger.feeHeads) {
+            ledger.feeHeads.forEach((h, idx) => {
+              items.push({
+                id: `head_${idx}`,
+                title: h.headName,
+                amount: h.amount,
+                paidAmount: 0,
+                frequency: h.frequency,
+                checked: true
+              });
+            });
+          }
+          if (ledger.installments) {
+            ledger.installments.forEach(inst => {
+              items.push({
+                id: `inst_${inst.installmentNo}`,
+                title: inst.title,
+                amount: inst.amount,
+                paidAmount: inst.paidAmount || 0,
+                status: inst.status,
+                checked: inst.status !== 'Paid'
+              });
+            });
+          }
+
+          setSelectedStudentItems(items);
+
+          const initialSelectedSum = items
+            .filter(i => i.checked)
+            .reduce((sum, i) => sum + Math.max(0, i.amount - (i.paidAmount || 0)), 0);
+
+          const checkedTitles = items
+            .filter(i => i.checked)
+            .map(i => i.title)
+            .join(', ');
+
+          setCollectForm({
+            studentId,
+            amount: initialSelectedSum > 0 ? initialSelectedSum : (pendingAmt > 0 ? pendingAmt : ''),
+            feeType: checkedTitles || 'Tuition Fee (Term)',
+            paymentMethod: 'Cash',
+            transactionRefNo: '',
+            remarks: ''
+          });
+        }
+      } else {
+        setCollectForm({
+          studentId: '',
+          amount: '',
+          feeType: 'Tuition Fee',
+          paymentMethod: 'Cash',
+          transactionRefNo: '',
+          remarks: ''
+        });
+        setSelectedStudentItems([]);
+      }
+    } catch (err) {
+      console.error('Error loading student ledger for fee collection:', err);
+    } finally {
+      setIsCollectModalOpen(true);
+    }
+  };
+
+  const handleToggleFeeItem = (itemId) => {
+    const updatedItems = selectedStudentItems.map(item => {
+      if (item.id === itemId) {
+        return { ...item, checked: !item.checked };
+      }
+      return item;
     });
-    setIsCollectModalOpen(true);
+    setSelectedStudentItems(updatedItems);
+
+    const newSum = updatedItems
+      .filter(i => i.checked)
+      .reduce((sum, i) => sum + Math.max(0, i.amount - (i.paidAmount || 0)), 0);
+
+    const checkedTitles = updatedItems
+      .filter(i => i.checked)
+      .map(i => i.title)
+      .join(', ');
+
+    setCollectForm(prev => ({
+      ...prev,
+      amount: newSum > 0 ? newSum : '',
+      feeType: checkedTitles || 'Tuition Fee'
+    }));
   };
 
   // Submit payment
@@ -1043,52 +1129,150 @@ export default function FeeManagement() {
       )}
 
       {/* =========================================================================
-          MODAL 3: COLLECT FEE PAYMENT MODAL
+          MODAL 3: COLLECT FEE PAYMENT WITH CHECKBOX SELECTION
          ========================================================================= */}
       {isCollectModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-heading font-black text-slate-900">Record Fee Payment & Issue Receipt</h3>
-            <form onSubmit={handleCollectSubmit} className="space-y-3">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-200">
+              <div>
+                <h3 className="text-lg font-heading font-black text-slate-900 flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-emerald-600" />
+                  Fee Collection & Receipt Counter
+                </h3>
+                <p className="text-xs text-slate-500">Tick items to collect or enter custom amount</p>
+              </div>
+              <button 
+                onClick={() => setIsCollectModalOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCollectSubmit} className="space-y-4 text-xs">
+              {/* Student Selector */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Select Student *</label>
                 <select
                   required
                   value={collectForm.studentId}
-                  onChange={(e) => setCollectForm({ ...collectForm, studentId: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 bg-white"
+                  onChange={(e) => handleOpenCollectModalForStudent(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-emerald-500 bg-white"
                 >
-                  <option value="">Choose Student</option>
+                  <option value="">-- Select Student to Load Fees --</option>
                   {studentsList.map((st) => (
                     <option key={st._id} value={st._id}>
-                      {st.name} (Class {st.class?.name} - ADM #{st.admissionNo})
+                      {st.name} (Class {st.class?.name || 'N/A'} - ADM #{st.admissionNo})
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Student Summary & Discount Card if selected */}
+              {selectedStudentLedger && (
+                <div className="p-3.5 rounded-2xl bg-slate-900 text-white space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-base text-white">{selectedStudentLedger.studentName}</span>
+                      <span className="text-[11px] text-slate-400 block font-mono">ADM: {selectedStudentLedger.admissionNo} • {selectedStudentLedger.className}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDiscountModal(selectedStudentLedger)}
+                      className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] transition-colors"
+                    >
+                      🏷️ Discount (₹{selectedStudentLedger.discountAmount})
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-center text-[11px]">
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Base Fee</span>
+                      <span className="font-bold text-white">₹{selectedStudentLedger.totalBaseFee.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Paid</span>
+                      <span className="font-bold text-emerald-400">₹{selectedStudentLedger.totalPaid.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px] uppercase font-bold">Net Due</span>
+                      <span className="font-extrabold text-rose-400">₹{selectedStudentLedger.pendingAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Interactive Fee Items Tick / Checkbox Options */}
+              {selectedStudentItems.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    ☑ Select Fee Heads & Term Installments to Collect:
+                  </label>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {selectedStudentItems.map((item) => (
+                      <div 
+                        key={item.id}
+                        onClick={() => handleToggleFeeItem(item.id)}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                          item.checked 
+                            ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-500' 
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={item.checked}
+                            onChange={() => {}} 
+                            className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <div>
+                            <span className={`font-bold text-xs ${item.checked ? 'text-emerald-950' : 'text-slate-800'}`}>
+                              {item.title}
+                            </span>
+                            {item.status && (
+                              <span className={`ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                                item.status === 'Paid' ? 'bg-emerald-200 text-emerald-900' : 'bg-amber-100 text-amber-900'
+                              }`}>
+                                {item.status}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-extrabold text-xs text-slate-900 font-mono">
+                            ₹{Math.max(0, item.amount - (item.paidAmount || 0)).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Amount & Payment Method Row */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Amount (₹) *</label>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Total Collection Amount (₹) *</label>
                   <input
                     type="number"
                     required
                     min="1"
                     value={collectForm.amount}
                     onChange={(e) => setCollectForm({ ...collectForm, amount: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Payment Method</label>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Payment Method *</label>
                   <select
                     value={collectForm.paymentMethod}
                     onChange={(e) => setCollectForm({ ...collectForm, paymentMethod: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-emerald-500 bg-white"
                   >
                     <option value="Cash">Cash</option>
                     <option value="UPI">UPI / QR Code</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
                     <option value="Cheque">Cheque</option>
                     <option value="Online Payment">Online Payment</option>
                   </select>
@@ -1096,38 +1280,41 @@ export default function FeeManagement() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Transaction Ref / Cheque No</label>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Fee Category / Description</label>
                 <input
                   type="text"
-                  placeholder="e.g. UPI-982138910 or Cheque #00128"
-                  value={collectForm.transactionRefNo}
-                  onChange={(e) => setCollectForm({ ...collectForm, transactionRefNo: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Fee Category / Installment</label>
-                <input
-                  type="text"
+                  required
                   value={collectForm.feeType}
                   onChange={(e) => setCollectForm({ ...collectForm, feeType: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                  placeholder="e.g. FIRST TERM (APRIL-AUG)"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Remarks</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Fee received at counter"
-                  value={collectForm.remarks}
-                  onChange={(e) => setCollectForm({ ...collectForm, remarks: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Transaction Ref / Cheque No</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. UPI/982138910"
+                    value={collectForm.transactionRefNo}
+                    onChange={(e) => setCollectForm({ ...collectForm, transactionRefNo: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Remarks</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Counter Cash"
+                    value={collectForm.remarks}
+                    onChange={(e) => setCollectForm({ ...collectForm, remarks: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3">
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCollectModalOpen(false)}
@@ -1137,9 +1324,9 @@ export default function FeeManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20"
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5"
                 >
-                  Generate Receipt & Save
+                  <Printer className="w-4 h-4" /> Issue Receipt & Save
                 </button>
               </div>
             </form>
