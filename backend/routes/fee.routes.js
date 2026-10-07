@@ -19,11 +19,33 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
     feeStructure = await FeeStructure.findOne({ class: student.class._id, academicYear });
   }
 
-  // Base Academic Fee calculation
-  let academicBaseFee = feeStructure ? feeStructure.totalBaseFee : (student.class?.annualFee || 12000);
-  let feeHeads = [
-    { headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`, amount: academicBaseFee, frequency: 'Annual' }
-  ];
+  // Base Academic Fee calculation (0 if no FeeStructure or annualFee defined)
+  let academicBaseFee = 0;
+  let feeHeads = [];
+
+  if (feeStructure) {
+    academicBaseFee = feeStructure.totalBaseFee || 0;
+    if (feeStructure.feeHeads && feeStructure.feeHeads.length > 0) {
+      feeHeads = feeStructure.feeHeads.map(h => ({
+        headName: h.headName,
+        amount: h.amount,
+        frequency: h.frequency || 'Annual'
+      }));
+    } else if (academicBaseFee > 0) {
+      feeHeads.push({
+        headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`,
+        amount: academicBaseFee,
+        frequency: 'Annual'
+      });
+    }
+  } else if (student.class?.annualFee && student.class.annualFee > 0) {
+    academicBaseFee = student.class.annualFee;
+    feeHeads.push({
+      headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`,
+      amount: academicBaseFee,
+      frequency: 'Annual'
+    });
+  }
 
   let transportFeeAmount = 0;
   // Automatic Transport Fee Calculation if student has opted for School Bus Transport
@@ -126,6 +148,8 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
     fatherName: student.fatherName || '',
     contactNumber: student.contactNumber || student.fatherPhone || '',
     academicYear,
+    academicBaseFee,
+    transportFeeAmount,
     totalBaseFee,
     feeHeads,
     discountAmount,

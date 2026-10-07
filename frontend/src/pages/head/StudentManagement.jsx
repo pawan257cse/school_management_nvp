@@ -222,7 +222,7 @@ export default function StudentManagement() {
       } else {
         const studentObj = res.data?.student || st;
         const selClass = classes.find(c => c._id === (studentObj.class?._id || studentObj.class));
-        const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 12000;
+        const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 0;
         const transFee = studentObj.transportOpted ? (studentObj.busRoute?.includes('Hudas') ? 6600 : studentObj.busRoute?.includes('Nimbi') ? 2200 : 5500) : 0;
         const totalBase = baseFee + transFee;
         const feeHeads = [
@@ -826,7 +826,7 @@ export default function StudentManagement() {
                       <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
                         <span className="text-[10px] font-bold text-slate-400 uppercase block">Academic Class Fee</span>
                         <span className="font-mono font-black text-slate-900 text-base">
-                          ₹{(studentLedger.academicBaseFee || (studentLedger.totalBaseFee - (viewingStudent.transportOpted ? 5500 : 0)) || 12000)?.toLocaleString('en-IN')}
+                          ₹{(studentLedger.academicBaseFee ?? (studentLedger.totalBaseFee - (viewingStudent.transportOpted ? (studentLedger.transportFeeAmount || 5500) : 0)))?.toLocaleString('en-IN')}
                         </span>
                       </div>
 
@@ -1461,7 +1461,7 @@ export default function StudentManagement() {
                 {/* Live Estimated Fee Breakdown Card */}
                 {(() => {
                   const selClass = classes.find(c => c._id === formData.class);
-                  const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 10000;
+                  const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 0;
                   const selRoute = (transportRoutes.length > 0 ? transportRoutes : defaultRoutes).find(r => r.routeTitle === formData.busRoute);
                   const transFee = formData.transportOpted ? (selRoute?.totalFare || 5500) : 0;
                   const discAmt = Number(formData.discountAmount || 0);
