@@ -133,7 +133,7 @@ export default function App() {
           <Route path="/student/timetable" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentTimetable /></ProtectedLayout>} />
           <Route path="/student/attendance" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentAttendance /></ProtectedLayout>} />
           <Route path="/student/results" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentResults /></ProtectedLayout>} />
-          <Route path="/student/fees" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL']}><StudentFees /></ProtectedLayout>} />
+          <Route path="/student/fees" element={<ProtectedLayout allowedRoles={['STUDENT', 'HEAD', 'PRINCIPAL', 'TEACHER']}><StudentFees /></ProtectedLayout>} />
 
           {/* HEAD Super Admin Routes */}
           <Route path="/head-dashboard" element={<ProtectedLayout allowedRoles={['HEAD']}><HeadDashboard /></ProtectedLayout>} />

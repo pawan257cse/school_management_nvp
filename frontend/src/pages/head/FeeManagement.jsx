@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { 
   getFeeClassOverviewApi, getFeeStructuresApi, createFeeStructureApi, deleteFeeStructureApi,
   getStudentFeeLedgerApi, applyFeeDiscountApi, getFeePaymentsApi, recordFeePaymentApi,
@@ -527,7 +527,7 @@ export default function FeeManagement() {
             }`}
           >
             <Receipt className="w-4 h-4 text-amber-400" />
-            <span>Receipt Registry</span>
+            <span>Receipts Registry</span>
           </button>
 
           <button
@@ -539,6 +539,14 @@ export default function FeeManagement() {
             <BarChart3 className="w-4 h-4 text-purple-400" />
             <span>Fee Reports & Analytics</span>
           </button>
+
+          <Link
+            to="/student/fees"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition flex items-center gap-2 shrink-0 border border-slate-200"
+          >
+            <CreditCard className="w-4 h-4 text-rose-500" />
+            <span>Student Fee Dues</span>
+          </Link>
         </div>
 
         {/* Global Academic Session Selector */}
