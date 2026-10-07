@@ -8,6 +8,45 @@ const Transport = require('../models/Transport');
 const { protect } = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 
+// NVP Official Fee Chart helper for class fee lookup
+const getNvpOfficialFeeForClassName = (cName) => {
+  const norm = String(cName || '').trim().toUpperCase();
+  if (norm.includes('PG') || norm.includes('PLAY')) {
+    return { admission: 500, exam: 1000, tuition: 10500, total: 11500, term1: 6500, term2: 5000 };
+  }
+  if (norm.includes('LKG') || norm.includes('L.K.G')) {
+    return { admission: 500, exam: 1000, tuition: 11500, total: 12500, term1: 6500, term2: 6000 };
+  }
+  if (norm.includes('UKG') || norm.includes('U.K.G')) {
+    return { admission: 500, exam: 1000, tuition: 12500, total: 13500, term1: 7500, term2: 6000 };
+  }
+  if (norm.includes('VIII') || norm === '8' || norm.includes('8TH') || norm.includes('CLASS 8')) {
+    return { admission: 500, exam: 1500, tuition: 18500, total: 20000, term1: 10000, term2: 10000 };
+  }
+  if (norm.includes('VII') || norm === '7' || norm.includes('7TH') || norm.includes('CLASS 7')) {
+    return { admission: 500, exam: 1500, tuition: 17500, total: 19000, term1: 10000, term2: 9000 };
+  }
+  if (norm.includes('VI') || norm === '6' || norm.includes('6TH') || norm.includes('CLASS 6')) {
+    return { admission: 500, exam: 1500, tuition: 16500, total: 18000, term1: 9000, term2: 9000 };
+  }
+  if (norm.includes('V') || norm === '5' || norm.includes('5TH') || norm.includes('CLASS 5')) {
+    return { admission: 500, exam: 1500, tuition: 16500, total: 18000, term1: 9000, term2: 9000 };
+  }
+  if (norm.includes('IV') || norm === '4' || norm.includes('4TH') || norm.includes('CLASS 4')) {
+    return { admission: 500, exam: 1500, tuition: 15500, total: 17000, term1: 9000, term2: 8000 };
+  }
+  if (norm.includes('III') || norm === '3' || norm.includes('3RD') || norm.includes('CLASS 3')) {
+    return { admission: 500, exam: 1500, tuition: 15500, total: 17000, term1: 9000, term2: 8000 };
+  }
+  if (norm.includes('II') || norm === '2' || norm.includes('2ND') || norm.includes('CLASS 2')) {
+    return { admission: 500, exam: 1500, tuition: 14500, total: 16000, term1: 8000, term2: 8000 };
+  }
+  if (norm.includes('I') || norm === '1' || norm.includes('1ST') || norm.includes('CLASS 1')) {
+    return { admission: 500, exam: 1500, tuition: 13500, total: 15000, term1: 8000, term2: 7000 };
+  }
+  return { admission: 500, exam: 1500, tuition: 15000, total: 17000, term1: 9000, term2: 8000 };
+};
+
 // Helper to compute a student's live fee ledger
 const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') => {
   const student = await Student.findById(studentId).populate('class', 'name section');
@@ -15,19 +54,20 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
 
   // Find fee structure for student's class
   let feeStructure = null;
+  const classNameStr = student.class?.name || (typeof student.class === 'string' ? student.class : '');
   if (student.class) {
     const classId = student.class._id || student.class;
-    const className = student.class.name || '';
+    const cleanClass = classNameStr.replace(/^Class\s+/i, '').trim();
     feeStructure = await FeeStructure.findOne({
       $or: [
         { class: classId, academicYear },
-        { className: `Class ${className}`, academicYear },
-        { className: className, academicYear }
+        { className: new RegExp(cleanClass, 'i'), academicYear },
+        { className: new RegExp(classNameStr, 'i'), academicYear }
       ]
     });
   }
 
-  // Base Academic Fee calculation (0 if no FeeStructure or annualFee defined)
+  // Base Academic Fee calculation
   let academicBaseFee = 0;
   let feeHeads = [];
 
@@ -41,18 +81,31 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
       }));
     } else if (academicBaseFee > 0) {
       feeHeads.push({
-        headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`,
+        headName: `Academic Fee (${classNameStr ? 'Class ' + classNameStr : 'Standard'})`,
         amount: academicBaseFee,
         frequency: 'Annual'
       });
     }
-  } else if (student.class?.annualFee && student.class.annualFee > 0) {
+  }
+
+  if (academicBaseFee === 0 && (student.class?.annualFee > 0)) {
     academicBaseFee = student.class.annualFee;
     feeHeads.push({
-      headName: `Academic Fee (${student.class ? 'Class ' + student.class.name : 'Class Standard'})`,
+      headName: `Academic Fee (${classNameStr ? 'Class ' + classNameStr : 'Standard'})`,
       amount: academicBaseFee,
       frequency: 'Annual'
     });
+  }
+
+  // Final fallback to NVP Official Fee Chart if no fee structure in DB yet
+  if (academicBaseFee === 0 && classNameStr) {
+    const nvpFee = getNvpOfficialFeeForClassName(classNameStr);
+    academicBaseFee = nvpFee.total;
+    feeHeads = [
+      { headName: 'Admission Fee (New)', amount: nvpFee.admission, frequency: 'One-Time' },
+      { headName: 'Exam Fee', amount: nvpFee.exam, frequency: 'Annual' },
+      { headName: 'Tuition Fee', amount: nvpFee.tuition, frequency: 'Annual' }
+    ];
   }
 
   let transportFeeAmount = 0;

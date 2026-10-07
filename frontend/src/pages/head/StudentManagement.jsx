@@ -221,18 +221,31 @@ export default function StudentManagement() {
         setStudentLedger(ledgerRes.data.ledger);
       } else {
         const studentObj = res.data?.student || st;
-        const selClass = classes.find(c => c._id === (studentObj.class?._id || studentObj.class));
-        const baseFee = selClass?.totalBaseFee || selClass?.annualFee || 0;
+        const classNameStr = studentObj.class?.name || (typeof studentObj.class === 'string' ? studentObj.class : '') || 'Class 5';
+        const norm = String(classNameStr).trim().toUpperCase();
+        let nvpFee = { admission: 500, exam: 1500, tuition: 15500, total: 17000 };
+        if (norm.includes('PG') || norm.includes('PLAY')) nvpFee = { admission: 500, exam: 1000, tuition: 10500, total: 11500 };
+        else if (norm.includes('LKG')) nvpFee = { admission: 500, exam: 1000, tuition: 11500, total: 12500 };
+        else if (norm.includes('UKG')) nvpFee = { admission: 500, exam: 1000, tuition: 12500, total: 13500 };
+        else if (norm.includes('VIII') || norm === '8' || norm.includes('CLASS 8')) nvpFee = { admission: 500, exam: 1500, tuition: 18500, total: 20000 };
+        else if (norm.includes('VII') || norm === '7' || norm.includes('CLASS 7')) nvpFee = { admission: 500, exam: 1500, tuition: 17500, total: 19000 };
+        else if (norm.includes('VI') || norm === '6' || norm.includes('CLASS 6')) nvpFee = { admission: 500, exam: 1500, tuition: 16500, total: 18000 };
+        else if (norm.includes('V') || norm === '5' || norm.includes('CLASS 5')) nvpFee = { admission: 500, exam: 1500, tuition: 16500, total: 18000 };
+        else if (norm.includes('IV') || norm === '4' || norm.includes('CLASS 4')) nvpFee = { admission: 500, exam: 1500, tuition: 15500, total: 17000 };
+        else if (norm.includes('III') || norm === '3' || norm.includes('CLASS 3')) nvpFee = { admission: 500, exam: 1500, tuition: 15500, total: 17000 };
+        else if (norm.includes('II') || norm === '2' || norm.includes('CLASS 2')) nvpFee = { admission: 500, exam: 1500, tuition: 14500, total: 16000 };
+        else if (norm.includes('I') || norm === '1' || norm.includes('CLASS 1')) nvpFee = { admission: 500, exam: 1500, tuition: 13500, total: 15000 };
+
+        const baseFee = nvpFee.total;
         const transFee = studentObj.transportOpted ? (studentObj.busRoute?.includes('Hudas') ? 6600 : studentObj.busRoute?.includes('Nimbi') ? 2200 : 5500) : 0;
         const totalBase = baseFee + transFee;
         const feeHeads = [
-          { headName: 'Tuition Fee', amount: Math.round(baseFee * 0.6) },
-          { headName: 'Exam Fee', amount: Math.round(baseFee * 0.15) },
-          { headName: 'Computer & Lab Fee', amount: Math.round(baseFee * 0.15) },
-          { headName: 'Development Fee', amount: Math.round(baseFee * 0.1) }
+          { headName: 'Admission Fee (New)', amount: nvpFee.admission },
+          { headName: 'Exam Fee', amount: nvpFee.exam },
+          { headName: 'Tuition Fee', amount: nvpFee.tuition }
         ];
         if (studentObj.transportOpted) {
-          feeHeads.push({ headName: `Transport Fee (${studentObj.busRoute || 'Commute'})`, amount: transFee });
+          feeHeads.push({ headName: `Transport Fare (${studentObj.busRoute || 'Bus'})`, amount: transFee });
         }
         setStudentLedger({
           totalBaseFee: totalBase,
@@ -242,6 +255,10 @@ export default function StudentManagement() {
           pendingAmount: totalBase,
           status: 'Pending',
           feeHeads: feeHeads,
+          installments: [
+            { installmentNo: 1, title: 'FIRST TERM (APRIL-AUG)', amount: Math.round(totalBase * 0.55), paidAmount: 0, status: 'Pending' },
+            { installmentNo: 2, title: 'SECOND TERM (OCT-FEB)', amount: Math.round(totalBase * 0.45), paidAmount: 0, status: 'Pending' }
+          ],
           paymentHistory: []
         });
       }

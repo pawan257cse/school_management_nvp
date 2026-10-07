@@ -112,99 +112,60 @@
 }
 
 /* ============================================================
-   PRINT STYLES — Used for printing timetables, assignments, etc.
+   PRINT STYLES — Used for printing timetables, receipts, etc.
    ============================================================ */
 @media print {
-  /* Hide all chrome elements */
-  .no-print,
-  aside,
-  header,
-  nav,
-  .sidebar,
-  [class*="lg:pl-72"],
-  button:not(.print-visible) {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
-  /* Reset layout */
   body {
     background: white !important;
     color: black !important;
-    font-family: 'Plus Jakarta Sans', Arial, sans-serif !important;
-    font-size: 12pt !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  /* Expand main content to full width */
-  .flex-1.lg\:pl-72,
-  [class*="lg:pl-"] {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
+  /* Hide all UI elements by default during print */
+  body * {
+    visibility: hidden !important;
   }
 
-  main {
-    max-width: 100% !important;
-    padding: 10px !important;
-    margin: 0 !important;
-  }
-
-  /* Make cards and tables print-friendly */
-  .bg-white,
-  [class*="bg-slate"],
-  [class*="bg-indigo"],
-  [class*="bg-gradient"] {
-    background: white !important;
-    color: black !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc !important;
-  }
-
-  /* Preserve border colors */
-  table, th, td {
-    border: 1px solid #999 !important;
-    color: black !important;
-    background: white !important;
-  }
-
-  thead {
-    background: #f0f0f0 !important;
-    color: black !important;
-  }
-
-  /* Hide interactive elements */
-  button, select, input, .modal-overlay {
-    display: none !important;
-  }
-
-  /* Printable zone — shows only if class is present */
+  /* Make printable elements visible */
+  .printable-receipt,
+  .printable-receipt *,
   .printable-paper,
-  .printable-zone {
-    display: block !important;
+  .printable-paper * {
     visibility: visible !important;
-    position: static !important;
+  }
+
+  .printable-receipt {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     width: 100% !important;
-    background: white !important;
-    color: black !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    border: 2px solid #000000 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Text color overrides */
-  [class*="text-white"],
-  [class*="text-slate"],
-  [class*="text-indigo"],
-  [class*="text-emerald"],
-  [class*="text-purple"] {
-    color: black !important;
-  }
-
-  .no-print {
+  .no-print,
+  button:not(.print-visible),
+  .modal-backdrop,
+  header,
+  nav,
+  aside,
+  .sidebar {
     display: none !important;
+    visibility: hidden !important;
   }
 
   @page {
-    size: A4;
-    margin: 15mm;
+    size: portrait A4;
+    margin: 10mm;
   }
 }
 

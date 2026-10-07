@@ -238,6 +238,82 @@ export default function FeeManagement() {
       alert(err.response?.data?.message || 'Failed to update receipt');
     }
   };
+
+  // Helper to auto-fill official NVP Fee Chart for class structure
+  const handleAutoFillNvpFeeChart = (targetClassId) => {
+    const classId = targetClassId || structureForm.classId;
+    const selCls = classes.find(c => c._id === classId);
+    const classNameStr = selCls?.name || '';
+    const norm = String(classNameStr).trim().toUpperCase();
+
+    let spec = { admission: 500, exam: 1500, tuition: 15500, total: 17000, term1: 9000, term2: 8000 };
+    if (norm.includes('PG') || norm.includes('PLAY')) {
+      spec = { admission: 500, exam: 1000, tuition: 10500, total: 11500, term1: 6500, term2: 5000 };
+    } else if (norm.includes('LKG')) {
+      spec = { admission: 500, exam: 1000, tuition: 11500, total: 12500, term1: 6500, term2: 6000 };
+    } else if (norm.includes('UKG')) {
+      spec = { admission: 500, exam: 1000, tuition: 12500, total: 13500, term1: 7500, term2: 6000 };
+    } else if (norm.includes('VIII') || norm === '8' || norm.includes('CLASS 8')) {
+      spec = { admission: 500, exam: 1500, tuition: 18500, total: 20000, term1: 10000, term2: 10000 };
+    } else if (norm.includes('VII') || norm === '7' || norm.includes('CLASS 7')) {
+      spec = { admission: 500, exam: 1500, tuition: 17500, total: 19000, term1: 10000, term2: 9000 };
+    } else if (norm.includes('VI') || norm === '6' || norm.includes('CLASS 6')) {
+      spec = { admission: 500, exam: 1500, tuition: 16500, total: 18000, term1: 9000, term2: 9000 };
+    } else if (norm.includes('V') || norm === '5' || norm.includes('CLASS 5')) {
+      spec = { admission: 500, exam: 1500, tuition: 16500, total: 18000, term1: 9000, term2: 9000 };
+    } else if (norm.includes('IV') || norm === '4' || norm.includes('CLASS 4')) {
+      spec = { admission: 500, exam: 1500, tuition: 15500, total: 17000, term1: 9000, term2: 8000 };
+    } else if (norm.includes('III') || norm === '3' || norm.includes('CLASS 3')) {
+      spec = { admission: 500, exam: 1500, tuition: 15500, total: 17000, term1: 9000, term2: 8000 };
+    } else if (norm.includes('II') || norm === '2' || norm.includes('CLASS 2')) {
+      spec = { admission: 500, exam: 1500, tuition: 14500, total: 16000, term1: 8000, term2: 8000 };
+    } else if (norm.includes('I') || norm === '1' || norm.includes('CLASS 1')) {
+      spec = { admission: 500, exam: 1500, tuition: 13500, total: 15000, term1: 8000, term2: 7000 };
+    }
+
+    setStructureForm(prev => ({
+      ...prev,
+      classId,
+      feeHeads: [
+        { headName: 'ADMISSION FEES (New)', amount: spec.admission, frequency: 'One-Time' },
+        { headName: 'EXAM FEES', amount: spec.exam, frequency: 'Annual' },
+        { headName: 'TUTION FEES', amount: spec.tuition, frequency: 'Annual' }
+      ],
+      installments: [
+        { installmentNo: 1, title: 'FIRST TERM (APRIL-AUG)', amount: spec.term1, dueDate: '2026-08-31' },
+        { installmentNo: 2, title: 'SECOND TERM (OCT-FEB)', amount: spec.term2, dueDate: '2027-02-28' }
+      ]
+    }));
+  };
+
+  // Helper for quick collection presets (All, Term 1, Term 2, Clear)
+  const applyCollectPreset = (type) => {
+    if (!selectedStudentItems || selectedStudentItems.length === 0) return;
+    const updated = selectedStudentItems.map(item => {
+      if (type === 'ALL') return { ...item, checked: true };
+      if (type === 'CLEAR') return { ...item, checked: false };
+      if (type === 'TERM1') {
+        const isT1 = item.title.toUpperCase().includes('TERM 1') || item.title.toUpperCase().includes('FIRST') || item.title.toUpperCase().includes('ADMISSION') || item.title.toUpperCase().includes('EXAM');
+        return { ...item, checked: isT1 };
+      }
+      if (type === 'TERM2') {
+        const isT2 = item.title.toUpperCase().includes('TERM 2') || item.title.toUpperCase().includes('SECOND');
+        return { ...item, checked: isT2 };
+      }
+      return item;
+    });
+
+    setSelectedStudentItems(updated);
+    const newSum = updated.filter(i => i.checked).reduce((sum, i) => sum + Math.max(0, i.amount - (i.paidAmount || 0)), 0);
+    const checkedTitles = updated.filter(i => i.checked).map(i => i.title).join(', ');
+
+    setCollectForm(prev => ({
+      ...prev,
+      amount: newSum > 0 ? newSum : '',
+      feeType: checkedTitles || 'Tuition Fee'
+    }));
+  };
+
   // Open Edit Structure Modal pre-filled
   const handleOpenEditStructure = (struct) => {
     setStructureForm({
@@ -1306,9 +1382,41 @@ export default function FeeManagement() {
               {/* Interactive Fee Items Tick / Checkbox Options */}
               {selectedStudentItems.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                    ☑ Select Fee Heads & Term Installments to Collect:
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                      ☑ Select Fee Heads & Term Installments to Collect:
+                    </label>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => applyCollectPreset('ALL')}
+                        className="px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyCollectPreset('TERM1')}
+                        className="px-2 py-0.5 rounded bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold"
+                      >
+                        Term 1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyCollectPreset('TERM2')}
+                        className="px-2 py-0.5 rounded bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold"
+                      >
+                        Term 2
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyCollectPreset('CLEAR')}
+                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     {selectedStudentItems.map((item) => (
                       <div 
@@ -1444,14 +1552,29 @@ export default function FeeManagement() {
             <h3 className="text-lg font-heading font-black text-slate-900">Define Class Fee Structure ({academicYear})</h3>
             <form onSubmit={handleStructureSubmit} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Class *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase">Select Target Class *</label>
+                  {structureForm.classId && (
+                    <button
+                      type="button"
+                      onClick={() => handleAutoFillNvpFeeChart(structureForm.classId)}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 transition"
+                    >
+                      ⚡ Auto-Fill NVP Official Fee Chart
+                    </button>
+                  )}
+                </div>
                 <select
                   required
                   value={structureForm.classId}
-                  onChange={(e) => setStructureForm({ ...structureForm, classId: e.target.value })}
+                  onChange={(e) => {
+                    const cid = e.target.value;
+                    setStructureForm(prev => ({ ...prev, classId: cid }));
+                    if (cid) handleAutoFillNvpFeeChart(cid);
+                  }}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 bg-white"
                 >
-                  <option value="">Select Class</option>
+                  <option value="">-- Select Class --</option>
                   {classes.map(c => (
                     <option key={c._id} value={c._id}>Class {c.name}</option>
                   ))}
