@@ -59,6 +59,7 @@ export default function StudentManagement() {
     srnNo: '',
     admissionNo: '',
     rollNo: '',
+    password: '',
     class: '',
     section: 'A',
     academicYear: '2026-2027',
@@ -294,10 +295,16 @@ export default function StudentManagement() {
         setIsAddModalOpen(false);
         fetchData();
         if (res.data.success) {
+          const firstNameRaw = (formData.name || 'Student').trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+          const firstName = firstNameRaw ? (firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase()) : 'Student';
+          const defaultGenPass = `${firstName}@${res.data.srnNo || formData.srnNo || '101'}`;
+
           setNewAdmissionSuccess({
             name: formData.name,
-            admissionNo: res.data.loginId,
-            password: res.data.generatedPassword,
+            srnNo: res.data.srnNo || formData.srnNo,
+            admissionNo: res.data.loginId || res.data.username || formData.admissionNo,
+            username: res.data.username || res.data.loginId,
+            generatedPassword: res.data.generatedPassword || formData.password || defaultGenPass,
             className: classes.find(c => c._id === formData.class)?.name || 'Class',
             section: formData.section
           });
@@ -989,6 +996,40 @@ export default function StudentManagement() {
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
+                </div>
+
+                {/* Portal Password Generator Box */}
+                <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200/90 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-indigo-950 flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
+                      Student Portal Login Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstNameRaw = (formData.name || 'Student').trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+                        const firstName = firstNameRaw ? (firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase()) : 'Student';
+                        const srn = formData.srnNo || formData.rollNo || formData.admissionNo || '101';
+                        const generated = `${firstName}@${srn}`;
+                        setFormData({ ...formData, password: generated });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center gap-1 shadow-xs transition cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Auto Generate Password</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bhavya@370"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-indigo-300 font-mono font-bold text-indigo-950 focus:ring-2 focus:ring-indigo-500 bg-white text-xs"
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    Type a custom password or click <strong className="text-indigo-700">Auto Generate Password</strong> (format: <span className="font-mono text-indigo-900 bg-indigo-100 px-1 py-0.5 rounded">&lt;FirstName&gt;@&lt;SRN&gt;</span>).
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

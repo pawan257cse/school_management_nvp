@@ -233,13 +233,16 @@ router.post('/', protect, checkRole('HEAD', 'PRINCIPAL'), async (req, res) => {
     });
 
     // Auto-provision Student Portal Login Account
-    const firstNameRaw = name.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
-    const firstName = firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase();
+    const firstNameRaw = (name || 'Student').trim().split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+    const firstName = firstNameRaw ? (firstNameRaw.charAt(0).toUpperCase() + firstNameRaw.slice(1).toLowerCase()) : 'Student';
 
     // Username = firstName + srnNo (e.g. bhavya370)
     const username = `${firstName.toLowerCase()}${finalSrnNo}`;
-    // Password = FirstName@SRN (e.g. Bhavya@370)
-    const plainPassword = `${firstName}@${finalSrnNo}`;
+    // Password = custom password if provided, else FirstName@SRN (e.g. Bhavya@370)
+    const plainPassword = (req.body.password && req.body.password.trim()) 
+      ? req.body.password.trim() 
+      : `${firstName}@${finalSrnNo}`;
+
     const passwordHash = await bcrypt.hash(plainPassword, 10);
     const studentLoginEmail = `${username}@student.school.local`;
 
