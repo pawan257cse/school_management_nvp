@@ -502,7 +502,17 @@ const seedInitialData = async () => {
     // 7. Import 93 Official Real Students
     await importOfficialStudents();
 
-    // 8. Synchronize Class Student Counts
+    // 8. Seed Official School Fee Structures & Transport Routes
+    try {
+      const seedFeeAndTransport = require('../scripts/seed_official_fee_and_transport');
+      if (typeof seedFeeAndTransport === 'function') {
+        await seedFeeAndTransport();
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // 9. Synchronize Class Student Counts
     for (const cName of classNames) {
       const cls = classMap[cName];
       if (cls) {

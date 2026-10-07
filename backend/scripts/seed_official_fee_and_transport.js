@@ -15,7 +15,7 @@ const officialFeeSpecs = [
   { className: '4', admissionFee: 500, examFee: 1500, tuitionFee: 15500, term1: 9000, term2: 8000 },
   { className: '5', admissionFee: 500, examFee: 1500, tuitionFee: 16500, term1: 9000, term2: 9000 },
   { className: '6', admissionFee: 500, examFee: 1500, tuitionFee: 16500, term1: 9000, term2: 9000 },
-  { className: '7', admissionFee: 500, examFee: 1500, tuitionFee: 17500, term1: 10000, term2: 9500 },
+  { className: '7', admissionFee: 500, examFee: 1500, tuitionFee: 17500, term1: 10000, term2: 9000 },
   { className: '8', admissionFee: 500, examFee: 1500, tuitionFee: 18500, term1: 10000, term2: 10000 }
 ];
 
@@ -110,11 +110,17 @@ async function seedOfficialFeeAndTransport() {
     }
 
     console.log('\n=== OFFICIAL NVP FEE & TRANSPORT CHART SEEDED SUCCESSFULLY ===');
-    process.exit(0);
+    return true;
   } catch (err) {
     console.error('Error seeding fee and transport chart:', err);
-    process.exit(1);
+    throw err;
   }
 }
 
-seedOfficialFeeAndTransport();
+module.exports = seedOfficialFeeAndTransport;
+
+if (require.main === module) {
+  seedOfficialFeeAndTransport()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
