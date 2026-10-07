@@ -38,7 +38,6 @@ import InventoryManagement from './pages/head/InventoryManagement';
 import LibraryManagement from './pages/head/LibraryManagement';
 import CommunicationHub from './pages/head/CommunicationHub';
 import AccountsManagement from './pages/head/AccountsManagement';
-import HostelManagement from './pages/head/HostelManagement';
 
 // Timetable & Student Portal Pages
 import TimetableManagement from './pages/principal/TimetableManagement';
@@ -159,7 +158,6 @@ export default function App() {
           <Route path="/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
           <Route path="/head/library" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><LibraryManagement /></ProtectedLayout>} />
           <Route path="/transport" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><TransportManagement /></ProtectedLayout>} />
-          <Route path="/hostel" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><HostelManagement /></ProtectedLayout>} />
           <Route path="/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
           <Route path="/head/inventory" element={<ProtectedLayout allowedRoles={['HEAD', 'PRINCIPAL']}><InventoryManagement /></ProtectedLayout>} />
           

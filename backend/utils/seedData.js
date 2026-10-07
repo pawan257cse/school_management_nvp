@@ -26,13 +26,6 @@ const periodTimes = [
  */
 const seedInitialData = async () => {
   try {
-    const studentCountCheck = await Student.countDocuments();
-    const teacherCountCheck = await User.countDocuments({ role: { $in: ['TEACHER', 'PRINCIPAL'] } });
-    if (studentCountCheck >= 93 && teacherCountCheck >= 10) {
-      console.log('[System Init] NVP School Database is already fully populated (' + studentCountCheck + ' students, ' + teacherCountCheck + ' teachers). Skipping re-seed.');
-      return;
-    }
-
     console.log('[System Init] Synchronizing NVP School Database State...');
 
     const salt = await bcrypt.genSalt(10);
@@ -69,22 +62,43 @@ const seedInitialData = async () => {
     const allSubjectDocs = await Subject.find({ status: 'active' });
     const allSubjectIds = allSubjectDocs.map(s => s._id);
 
-    // 2. Standard Classes Setup (PG to 7)
+    // 2. Standard Classes Setup (PG to 7) with Exact Class-wise Subjects
     const classNames = ['PG', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7'];
+    const classSpecificSubjects = {
+      PG: ['Oral', 'English', 'Hindi', 'Games & Activity', 'Mathematics', 'Diary & Rhymes'],
+      LKG: ['Hindi', 'Mathematics', 'English', 'General Knowledge', 'Diary & Rhymes', 'Oral'],
+      UKG: ['Mathematics', 'General Knowledge', 'Hindi', 'English', 'Oral', 'Diary & Rhymes'],
+      '1': ['EVS', 'Hindi', 'English', 'Mathematics', 'Computer', 'Games & Activity', 'General Knowledge'],
+      '2': ['Hindi', 'EVS', 'Computer', 'English', 'Mathematics', 'General Knowledge', 'Games & Activity'],
+      '3': ['Computer', 'EVS', 'Hindi', 'Mathematics', 'English', 'General Knowledge'],
+      '4': ['EVS', 'Mathematics', 'English', 'Computer', 'General Knowledge', 'Hindi'],
+      '5': ['Hindi', 'EVS', 'Mathematics', 'English', 'Computer'],
+      '6': ['English', 'Computer', 'Hindi', 'Mathematics', 'Social Science', 'Sanskrit', 'Science'],
+      '7': ['Mathematics', 'English', 'Social Science', 'General Knowledge', 'Hindi', 'Science', 'Sanskrit', 'Computer']
+    };
+
     const classMap = {};
 
     for (const name of classNames) {
+      const targetSubNames = classSpecificSubjects[name] || [];
+      const targetSubIds = targetSubNames.map(sName => {
+        return subMap[sName.toUpperCase()]?._id;
+      }).filter(Boolean);
+
+      // Fallback to all subject IDs if mapping returns empty
+      const assignedSubIds = targetSubIds.length > 0 ? targetSubIds : allSubjectIds;
+
       let cls = await Class.findOne({ name, section: 'A' });
       if (!cls) {
         cls = await Class.create({
           name,
           section: 'A',
-          subjects: allSubjectIds,
+          subjects: assignedSubIds,
           studentCount: 0,
           status: 'active'
         });
       } else {
-        cls.subjects = allSubjectIds;
+        cls.subjects = assignedSubIds;
         cls.status = 'active';
         await cls.save();
       }

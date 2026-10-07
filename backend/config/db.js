@@ -1,21 +1,37 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const { Resolver } = require('dns').promises;
 
-const connectDB = async () => {
-  try {
-    const mongoUri = process.env.MONGODB_URI;
+// Set Google & Cloudflare DNS globally to fix Windows node.js SRV lookup failures
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // ignore if not allowed
+}
 
-    if (mongoUri) {
-      try {
-        console.log('[MongoDB] Connecting to Cloud Database (MONGODB_URI)...');
-        const conn = await mongoose.connect(mongoUri, {
-          serverSelectionTimeoutMS: 8000,
-        });
-        console.log(`[MongoDB] Connected successfully to live database: ${conn.connection.host}`);
-        return;
-      } catch (cloudErr) {
-        console.warn(`[MongoDB Warning] Standard SRV connection failed (${cloudErr.message}). Attempting custom DNS resolution...`);
-        
+const connectDB = async () => {
+  const mongoUri = process.env.MONGODB_URI;
+
+  if (!mongoUri) {
+    console.error('[MongoDB Fatal] MONGODB_URI is not defined in environment variables!');
+    process.exit(1);
+  }
+
+  // Attempt standard connection up to 3 times
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      console.log(`[MongoDB] Connecting to Persistent Live Database (Attempt ${attempt})...`);
+      const conn = await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 10000,
+      });
+      console.log(`[MongoDB] Successfully connected to live persistent database: ${conn.connection.host}`);
+      return;
+    } catch (cloudErr) {
+      console.warn(`[MongoDB Warning] Connection attempt ${attempt} failed: ${cloudErr.message}`);
+      if (attempt < 3) {
+        await new Promise(res => setTimeout(res, 2000));
+      } else {
+        // Final fallback: Direct DNS SRV host resolution
         try {
           if (mongoUri.startsWith('mongodb+srv://')) {
             const urlObj = new URL(mongoUri.replace('mongodb+srv://', 'http://'));
@@ -31,7 +47,7 @@ const connectDB = async () => {
               const directHosts = srvs.map(s => `${s.name}:${s.port}`).join(',');
               const directUri = `mongodb://${authPart}${directHosts}/${dbName}?ssl=true&authSource=admin&retryWrites=true&w=majority`;
 
-              console.log('[MongoDB] Connecting to Cloud Database via direct DNS resolved hosts...');
+              console.log('[MongoDB] Connecting via direct DNS resolved hosts...');
               const conn = await mongoose.connect(directUri, {
                 serverSelectionTimeoutMS: 15000
               });
@@ -43,25 +59,10 @@ const connectDB = async () => {
           console.error(`[MongoDB Error] Direct DNS fallback failed: ${directDnsErr.message}`);
         }
 
-        if (process.env.NODE_ENV === 'production' || process.env.STRICT_DB === 'true') {
-          throw cloudErr;
-        }
+        console.error('[MongoDB Fatal Error] Could not connect to MongoDB Atlas persistent storage. Server will not run on temporary memory to avoid data loss.');
+        process.exit(1);
       }
     }
-
-    if (process.env.ALLOW_MEMORY_DB === 'true') {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const mongod = await MongoMemoryServer.create();
-      const uri = mongod.getUri();
-      const conn = await mongoose.connect(uri);
-      console.log(`[MongoDB Memory Server] Connected to temporary memory DB: ${conn.connection.host}`);
-    } else {
-      console.error('[MongoDB Error] Database connection failed and ALLOW_MEMORY_DB is false. Stopping server to prevent RAM data loss.');
-      process.exit(1);
-    }
-  } catch (error) {
-    console.error(`[MongoDB Error] Database connection error: ${error.message}`);
-    process.exit(1);
   }
 };
 

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutGrid, GraduationCap, ClipboardCheck, BookOpen, 
-  Users, Library, Bus, Building2, Package, MessageSquare, 
+  Users, Library, Bus, Package, MessageSquare, 
   Mail, PhoneCall, Bell, Calendar, Award, BarChart3, Settings, 
   LogOut, ChevronRight, X
 } from 'lucide-react';
@@ -56,7 +56,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
     staff: false,
     accounts: false,
     transport: false,
-    hostel: false,
     inventory: false,
     communication: false,
     whatsapp: false,
@@ -191,17 +190,6 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       hasSubmenu: true,
       submenu: [
         { name: 'Bus Routes & Fleet', path: '/transport' },
-      ]
-    },
-    {
-      id: 'hostel',
-      name: 'Hostel',
-      icon: Building2,
-      tileBg: 'bg-fuchsia-600 text-white shadow-fuchsia-600/40',
-      path: '/hostel',
-      hasSubmenu: true,
-      submenu: [
-        { name: 'Hostel Allotments', path: '/hostel' },
       ]
     },
     {
