@@ -16,7 +16,15 @@ const calculateStudentFeeLedger = async (studentId, academicYear = '2026-2027') 
   // Find fee structure for student's class
   let feeStructure = null;
   if (student.class) {
-    feeStructure = await FeeStructure.findOne({ class: student.class._id, academicYear });
+    const classId = student.class._id || student.class;
+    const className = student.class.name || '';
+    feeStructure = await FeeStructure.findOne({
+      $or: [
+        { class: classId, academicYear },
+        { className: `Class ${className}`, academicYear },
+        { className: className, academicYear }
+      ]
+    });
   }
 
   // Base Academic Fee calculation (0 if no FeeStructure or annualFee defined)
