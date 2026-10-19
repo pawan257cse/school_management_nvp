@@ -4,12 +4,13 @@ const Class = require('../models/Class');
 const User = require('../models/User');
 const rawStudentData = require('../scripts/officialStudentData.json');
 
-const importOfficialStudents = async () => {
+const importOfficialStudents = async (force = false) => {
   try {
-    console.log('[System Init] Importing NVP Official Students (93 Real Records)...');
+    console.log('[System Init] Checking NVP Official Students (93 Real Records)...');
 
     const salt = await bcrypt.genSalt(10);
     let createdCount = 0;
+    let skippedCount = 0;
     let updatedCount = 0;
 
     for (const [className, studentList] of Object.entries(rawStudentData)) {
@@ -60,36 +61,38 @@ const importOfficialStudents = async () => {
         if (!studentDoc) {
           studentDoc = await Student.create(studentData);
           createdCount++;
-        } else {
+
+          // Student Username = firstName + srnNo (e.g., bhavya370)
+          const username = `${firstName.toLowerCase()}${srnNo}`;
+          // Student Password = FirstName@SRN (e.g., Bhavya@370)
+          const defaultPassword = `${firstName}@${srnNo}`;
+          const passHash = await bcrypt.hash(defaultPassword, salt);
+          const studentEmail = `${username}@student.school.local`;
+
+          await User.findOneAndUpdate(
+            { admissionNo: st.admissionNo },
+            {
+              name: st.name,
+              email: studentEmail,
+              passwordHash: passHash,
+              generatedPassword: defaultPassword,
+              role: 'STUDENT',
+              admissionNo: st.admissionNo,
+              studentClass: cls._id,
+              studentRef: studentDoc._id,
+              mobile: st.contactNumber || '',
+              status: 'active',
+              mustChangePassword: false
+            },
+            { upsert: true, new: true }
+          );
+        } else if (force) {
           Object.assign(studentDoc, studentData);
           await studentDoc.save();
           updatedCount++;
+        } else {
+          skippedCount++;
         }
-
-        // Student Username = firstName + srnNo (e.g., bhavya370)
-        const username = `${firstName.toLowerCase()}${srnNo}`;
-        // Student Password = FirstName@SRN (e.g., Bhavya@370)
-        const defaultPassword = `${firstName}@${srnNo}`;
-        const passHash = await bcrypt.hash(defaultPassword, salt);
-        const studentEmail = `${username}@student.school.local`;
-
-        await User.findOneAndUpdate(
-          { admissionNo: st.admissionNo },
-          {
-            name: st.name,
-            email: studentEmail,
-            passwordHash: passHash,
-            generatedPassword: defaultPassword,
-            role: 'STUDENT',
-            admissionNo: st.admissionNo,
-            studentClass: cls._id,
-            studentRef: studentDoc._id,
-            mobile: st.contactNumber || '',
-            status: 'active',
-            mustChangePassword: false
-          },
-          { upsert: true, new: true }
-        );
       }
 
       // Update student count in Class

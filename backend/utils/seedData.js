@@ -22,11 +22,24 @@ const periodTimes = [
 /**
  * Bulletproof System Initializer:
  * Ensures 10 Active Classes (PG to Class 7), 14 Subjects, 10 Real Teachers, Principal, Head Admin,
- * 10 Class Timetables, and 93 Official Real Students are ALWAYS preserved and seeded in MongoDB Atlas.
+ * 10 Class Timetables, and 93 Official Real Students are seeded on fresh database setup.
+ * SKIPS automatically if database already contains data to prevent any data loss on restart.
  */
-const seedInitialData = async () => {
+const seedInitialData = async (force = false) => {
   try {
-    console.log('[System Init] Synchronizing NVP School Database State...');
+    // 🛡️ Safety Guard: Skip re-seeding if database is already populated
+    if (!force && process.env.FORCE_SEED !== 'true') {
+      const studentCountCheck = await Student.countDocuments();
+      const userCountCheck = await User.countDocuments();
+      const classCountCheck = await Class.countDocuments();
+
+      if (studentCountCheck > 0 || userCountCheck > 0 || classCountCheck > 0) {
+        console.log(`[System Init] Database already initialized (${studentCountCheck} students, ${userCountCheck} users, ${classCountCheck} classes). Skipping re-seed to preserve user data.`);
+        return;
+      }
+    }
+
+    console.log('[System Init] Initializing NVP School Database State (First-time Setup)...');
 
     const salt = await bcrypt.genSalt(10);
 
@@ -97,10 +110,6 @@ const seedInitialData = async () => {
           studentCount: 0,
           status: 'active'
         });
-      } else {
-        cls.subjects = assignedSubIds;
-        cls.status = 'active';
-        await cls.save();
       }
       classMap[name] = cls;
     }
@@ -310,7 +319,7 @@ const seedInitialData = async () => {
           status: 'active',
           mustChangePassword: false
         });
-      } else {
+      } else if (force) {
         userDoc.role = f.role;
         userDoc.employeeId = f.empId;
         userDoc.classes = classIds;
@@ -325,9 +334,11 @@ const seedInitialData = async () => {
 
       if (f.ctClass && classMap[f.ctClass]) {
         const targetClass = classMap[f.ctClass];
-        targetClass.classTeacher = userDoc._id;
-        targetClass.attendanceTeacher = userDoc._id;
-        await targetClass.save();
+        if (!targetClass.classTeacher || force) {
+          targetClass.classTeacher = userDoc._id;
+          targetClass.attendanceTeacher = userDoc._id;
+          await targetClass.save();
+        }
       }
     }
 
@@ -486,27 +497,30 @@ const seedInitialData = async () => {
         periods: formattedPeriods
       }));
 
-      await Timetable.findOneAndUpdate(
-        { class: cls._id, academicYear: '2026-2027' },
-        {
-          class: cls._id,
-          className: 'Class ' + cls.name,
-          section: cls.section || 'A',
-          academicYear: '2026-2027',
-          schedule: weeklySchedule
-        },
-        { upsert: true, new: true }
-      );
+      const existingTimetable = await Timetable.findOne({ class: cls._id, academicYear: '2026-2027' });
+      if (!existingTimetable || force) {
+        await Timetable.findOneAndUpdate(
+          { class: cls._id, academicYear: '2026-2027' },
+          {
+            class: cls._id,
+            className: 'Class ' + cls.name,
+            section: cls.section || 'A',
+            academicYear: '2026-2027',
+            schedule: weeklySchedule
+          },
+          { upsert: true, new: true }
+        );
+      }
     }
 
     // 7. Import 93 Official Real Students
-    await importOfficialStudents();
+    await importOfficialStudents(force);
 
     // 8. Seed Official School Fee Structures & Transport Routes
     try {
       const seedFeeAndTransport = require('../scripts/seed_official_fee_and_transport');
       if (typeof seedFeeAndTransport === 'function') {
-        await seedFeeAndTransport();
+        await seedFeeAndTransport(force);
       }
     } catch (e) {
       // ignore

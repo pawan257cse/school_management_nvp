@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "seed": "node -e \"require('dotenv').config(); require('./config/db')().then(() => require('./utils/seedData')(true)).then(() => { console.log('[Seeder] Manual seed completed.'); process.exit(0); }).catch(e => { console.error(e); process.exit(1); });\"",
     "reset-admin": "node scripts/resetAdmin.js"
   },
   "dependencies": {

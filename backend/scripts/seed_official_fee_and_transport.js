@@ -29,7 +29,7 @@ const officialTransportChart = [
   { routeTitle: 'Nimbi Local', vehicleNo: 'RJ 37 PA 1007', totalFare: 2200, firstInstallment: 1200, secondInstallment: 1000, driverName: 'Nimbi Local Driver', driverPhone: '+91 98290 10007' }
 ];
 
-async function seedOfficialFeeAndTransport() {
+async function seedOfficialFeeAndTransport(force = false) {
   try {
     await connectDB();
     console.log('[Seeder] Connected to MongoDB Atlas...');
@@ -58,11 +58,15 @@ async function seedOfficialFeeAndTransport() {
       const existingStruct = await FeeStructure.findOne({ class: cls._id, academicYear: '2026-2027' });
 
       if (existingStruct) {
-        existingStruct.feeHeads = feeHeads;
-        existingStruct.totalBaseFee = totalBaseFee;
-        existingStruct.installments = installments;
-        await existingStruct.save();
-        console.log(`[Fee] Updated Fee Structure for Class ${spec.className} (Total: ₹${totalBaseFee})`);
+        if (force) {
+          existingStruct.feeHeads = feeHeads;
+          existingStruct.totalBaseFee = totalBaseFee;
+          existingStruct.installments = installments;
+          await existingStruct.save();
+          console.log(`[Fee] Updated Fee Structure for Class ${spec.className} (Total: ₹${totalBaseFee})`);
+        } else {
+          console.log(`[Fee] Preserved existing Fee Structure for Class ${spec.className}`);
+        }
       } else {
         await FeeStructure.create({
           class: cls._id,
@@ -82,14 +86,18 @@ async function seedOfficialFeeAndTransport() {
     for (const tr of officialTransportChart) {
       const existing = await Transport.findOne({ routeTitle: tr.routeTitle });
       if (existing) {
-        existing.vehicleNo = tr.vehicleNo;
-        existing.totalFare = tr.totalFare;
-        existing.firstInstallment = tr.firstInstallment;
-        existing.secondInstallment = tr.secondInstallment;
-        existing.monthlyFee = Math.round(tr.totalFare / 10);
-        existing.pickupPoints = [tr.routeTitle];
-        await existing.save();
-        console.log(`[Transport] Updated Route: ${tr.routeTitle} (Total: ₹${tr.totalFare}, 1st Inst: ₹${tr.firstInstallment}, 2nd Inst: ₹${tr.secondInstallment})`);
+        if (force) {
+          existing.vehicleNo = tr.vehicleNo;
+          existing.totalFare = tr.totalFare;
+          existing.firstInstallment = tr.firstInstallment;
+          existing.secondInstallment = tr.secondInstallment;
+          existing.monthlyFee = Math.round(tr.totalFare / 10);
+          existing.pickupPoints = [tr.routeTitle];
+          await existing.save();
+          console.log(`[Transport] Updated Route: ${tr.routeTitle} (Total: ₹${tr.totalFare}, 1st Inst: ₹${tr.firstInstallment}, 2nd Inst: ₹${tr.secondInstallment})`);
+        } else {
+          console.log(`[Transport] Preserved existing Route: ${tr.routeTitle}`);
+        }
       } else {
         await Transport.create({
           vehicleNo: tr.vehicleNo,
